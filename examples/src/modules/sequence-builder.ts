@@ -1,0 +1,61 @@
+import type { SequenceBuilderInput } from "@nibblearn/core";
+
+export const sequenceBuilderDemo = {
+  id: "campaign-launch-order",
+  type: "sequence-builder",
+  title: "Launching a paid media campaign",
+  instructions:
+    "Put the seven stages of a Brightline Media campaign launch in the order they happen. Drag the rows or use the arrow buttons.",
+  content: {
+    items: [
+      {
+        id: "brief",
+        text: "Receive and clarify the client brief",
+        description:
+          "Everything downstream depends on the objective, budget, audience and timing agreed here.",
+      },
+      {
+        id: "research",
+        text: "Research the audience and the competition",
+        description:
+          "Audience insights and competitor spend shape the channel mix before any money is committed.",
+      },
+      {
+        id: "plan",
+        text: "Build the media plan and budget split",
+        description:
+          "Channels, flighting and the budget split are proposed only once the research is in.",
+      },
+      {
+        id: "creative",
+        text: "Produce and approve creative assets",
+        description:
+          "Creative is cut to the formats the plan requires, so it follows the plan, not the other way round.",
+      },
+      {
+        id: "setup",
+        text: "Set up campaigns, tracking and QA",
+        description:
+          "Ads, audiences and conversion tracking are configured and checked before anything goes live.",
+      },
+      {
+        id: "launch",
+        text: "Launch and optimise in-flight",
+        description:
+          "Once live, bids, budgets and creative rotation are tuned against the plan's targets.",
+      },
+      {
+        id: "report",
+        text: "Report results and recommend next steps",
+        description: "The wrap-up report closes the loop and feeds the next brief.",
+      },
+    ],
+    explanation:
+      "The sequence runs from understanding (brief, research) to planning, to production (creative, setup), and finally to execution and learning (launch, report). Skipping a step usually means redoing a later one.",
+    hint: "You cannot plan what you have not researched, and you cannot build what you have not planned.",
+  },
+  behavior: { allowRetry: true, maxAttempts: 3, showExplanation: true, showPositions: true },
+  feedback: {
+    complete: "That is the Brightline launch playbook. Keep it handy for your first campaign.",
+  },
+} satisfies SequenceBuilderInput;
