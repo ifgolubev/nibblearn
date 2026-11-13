@@ -1,0 +1,251 @@
+/* ==========================================================================
+   Nibblearn design tokens
+   Every value can be overridden by consumers on .nb-root or any ancestor.
+   Default theme: neutral zinc surfaces, an indigo-blue accent, a warm amber
+   highlight for celebrations, near-black dark mode, friendly grotesque display type.
+   ========================================================================== */
+
+.nb-root {
+  /* Typography */
+  --nb-font:
+    "Inter", "Inter Variable", "Inter var", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Display face for titles and big numbers. Load "Bricolage Grotesque" (600-800) yourself,
+     e.g. from Google Fonts or @fontsource; the stack falls back to Inter/system. */
+  --nb-font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", var(--nb-font);
+  --nb-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* Set to "uppercase" for shouty display headings. */
+  --nb-title-transform: none;
+  --nb-title-weight: 700;
+  --nb-title-tracking: -0.025em;
+  --nb-text-xs: 0.75rem;
+  --nb-text-sm: 0.875rem;
+  --nb-text-md: 1rem;
+  --nb-text-lg: 1.125rem;
+  --nb-text-xl: 1.5rem;
+  --nb-text-2xl: 2rem;
+  --nb-text-3xl: 2.75rem;
+  --nb-leading-tight: 1.1;
+  --nb-leading: 1.55;
+  --nb-weight-normal: 400;
+  --nb-weight-medium: 500;
+  --nb-weight-semibold: 600;
+  --nb-weight-bold: 700;
+
+  /* Spacing (4px grid) */
+  --nb-space-1: 0.25rem;
+  --nb-space-2: 0.5rem;
+  --nb-space-3: 0.75rem;
+  --nb-space-4: 1rem;
+  --nb-space-5: 1.25rem;
+  --nb-space-6: 1.5rem;
+  --nb-space-8: 2rem;
+  --nb-space-10: 2.5rem;
+  --nb-space-12: 3rem;
+
+  /* Radii */
+  --nb-radius-sm: 8px;
+  --nb-radius-md: 12px;
+  --nb-radius-lg: 18px;
+  --nb-radius-xl: 26px;
+  --nb-radius-full: 999px;
+  /* Buttons are pills by default; set to var(--nb-radius-md) for squarer buttons. */
+  --nb-btn-radius: var(--nb-radius-full);
+
+  /* Motion */
+  --nb-duration-fast: 120ms;
+  --nb-duration: 200ms;
+  --nb-duration-slow: 360ms;
+  --nb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --nb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --nb-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Layout */
+  --nb-max-width: 44rem;
+  --nb-touch-target: 44px;
+
+  /* ---------- Light theme ---------- */
+  color-scheme: light;
+  --nb-bg: #ffffff;
+  --nb-surface: #ffffff;
+  --nb-surface-2: #f7f7f8;
+  --nb-surface-3: #efeff1;
+  --nb-fg: #18181b;
+  --nb-fg-muted: #52525b;
+  --nb-fg-subtle: #5f5f69;
+  --nb-border: #e7e7ea;
+  --nb-border-strong: #d4d4d8;
+  --nb-accent: #3b5bdb;
+  --nb-accent-hover: #364fc7;
+  --nb-accent-active: #2f44ad;
+  --nb-accent-fg: #ffffff;
+  --nb-accent-soft: #eef1fd;
+  --nb-accent-soft-fg: #2f44ad;
+  --nb-accent-ring: rgba(59, 91, 219, 0.28);
+  --nb-success: #15803d;
+  --nb-success-fg: #ffffff;
+  --nb-success-soft: #ecfdf3;
+  --nb-success-soft-fg: #14532d;
+  --nb-success-border: #86efac;
+  --nb-danger: #be123c;
+  --nb-danger-fg: #ffffff;
+  --nb-danger-soft: #fff1f3;
+  --nb-danger-soft-fg: #9f1239;
+  --nb-danger-border: #fda4b4;
+  --nb-warning: #c2410c;
+  --nb-warning-fg: #ffffff;
+  --nb-warning-soft: #fff7ed;
+  --nb-warning-soft-fg: #9a3412;
+  --nb-warning-border: #fdba74;
+  --nb-info: #0369a1;
+  --nb-info-soft: #effaff;
+  --nb-info-soft-fg: #075985;
+  --nb-info-border: #7dd3fc;
+  --nb-highlight: #f59e0b;
+  --nb-highlight-fg: #3b2300;
+  --nb-highlight-soft: #fff8e6;
+  --nb-pink: #e64980;
+  --nb-pink-fg: #ffffff;
+  --nb-violet: #7c6cf0;
+  --nb-sky: #0ea5e9;
+  --nb-focus: #3b5bdb;
+  --nb-overlay: rgba(12, 12, 15, 0.5);
+  --nb-shadow-xs: 0 1px 2px rgba(16, 16, 20, 0.06);
+  --nb-shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.06), 0 1px 3px rgba(16, 16, 20, 0.08);
+  --nb-shadow-md: 0 6px 16px -4px rgba(16, 16, 20, 0.1), 0 2px 4px -1px rgba(16, 16, 20, 0.06);
+  --nb-shadow-lg: 0 18px 44px -14px rgba(16, 16, 20, 0.18), 0 4px 10px -4px rgba(16, 16, 20, 0.08);
+  --nb-shadow-xl: 0 30px 70px -18px rgba(16, 16, 20, 0.26);
+  --nb-shadow-press: 0 2px 0 0 rgba(16, 16, 20, 0.08);
+  --nb-glow: 0 0 0 1px rgba(59, 91, 219, 0.08), 0 10px 30px -12px rgba(59, 91, 219, 0.4);
+  --nb-lime: var(--nb-highlight);
+  --nb-lime-fg: var(--nb-highlight-fg);
+  --nb-lime-soft: var(--nb-highlight-soft);
+  --nb-navy: var(--nb-bg);
+}
+
+/* ---------- Dark theme ---------- */
+.nb-root[data-nb-theme="dark"],
+:where(.dark, [data-theme="dark"], [data-mode="dark"]) .nb-root:not([data-nb-theme="light"]) {
+  color-scheme: dark;
+  --nb-bg: #0c0c0f;
+  --nb-surface: #131316;
+  --nb-surface-2: #1a1a1f;
+  --nb-surface-3: #232329;
+  --nb-fg: #f4f4f5;
+  --nb-fg-muted: #a1a1aa;
+  --nb-fg-subtle: #8e8e98;
+  --nb-border: #27272e;
+  --nb-border-strong: #3a3a42;
+  --nb-accent: #91a7ff;
+  --nb-accent-hover: #a5b4fc;
+  --nb-accent-active: #7b93f5;
+  --nb-accent-fg: #0c0c0f;
+  --nb-accent-soft: rgba(145, 167, 255, 0.14);
+  --nb-accent-soft-fg: #c5d0ff;
+  --nb-accent-ring: rgba(145, 167, 255, 0.45);
+  --nb-success: #4ade80;
+  --nb-success-fg: #052e14;
+  --nb-success-soft: rgba(74, 222, 128, 0.13);
+  --nb-success-soft-fg: #a7f3c4;
+  --nb-success-border: rgba(74, 222, 128, 0.45);
+  --nb-danger: #fb7185;
+  --nb-danger-fg: #2b0510;
+  --nb-danger-soft: rgba(251, 113, 133, 0.14);
+  --nb-danger-soft-fg: #fecdd6;
+  --nb-danger-border: rgba(251, 113, 133, 0.45);
+  --nb-warning: #fbbf24;
+  --nb-warning-fg: #2a1700;
+  --nb-warning-soft: rgba(251, 191, 36, 0.13);
+  --nb-warning-soft-fg: #fde68a;
+  --nb-warning-border: rgba(251, 191, 36, 0.45);
+  --nb-info: #38bdf8;
+  --nb-info-soft: rgba(56, 189, 248, 0.13);
+  --nb-info-soft-fg: #bae6fd;
+  --nb-info-border: rgba(56, 189, 248, 0.45);
+  --nb-highlight: #fbbf24;
+  --nb-highlight-fg: #2a1700;
+  --nb-highlight-soft: rgba(251, 191, 36, 0.12);
+  --nb-pink: #f472b6;
+  --nb-pink-fg: #2d0619;
+  --nb-violet: #a594ff;
+  --nb-sky: #38bdf8;
+  --nb-focus: #c5d0ff;
+  --nb-overlay: rgba(0, 0, 0, 0.6);
+  --nb-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --nb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --nb-shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.55), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+  --nb-shadow-lg: 0 18px 44px -14px rgba(0, 0, 0, 0.75), 0 4px 10px -4px rgba(0, 0, 0, 0.5);
+  --nb-shadow-xl: 0 30px 70px -18px rgba(0, 0, 0, 0.85);
+  --nb-shadow-press: 0 2px 0 0 rgba(0, 0, 0, 0.5);
+  --nb-glow: 0 0 0 1px rgba(145, 167, 255, 0.16), 0 10px 30px -12px rgba(145, 167, 255, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .nb-root[data-nb-theme="system"] {
+    color-scheme: dark;
+    --nb-bg: #0c0c0f;
+    --nb-surface: #131316;
+    --nb-surface-2: #1a1a1f;
+    --nb-surface-3: #232329;
+    --nb-fg: #f4f4f5;
+    --nb-fg-muted: #a1a1aa;
+    --nb-fg-subtle: #8e8e98;
+    --nb-border: #27272e;
+    --nb-border-strong: #3a3a42;
+    --nb-accent: #91a7ff;
+    --nb-accent-hover: #a5b4fc;
+    --nb-accent-active: #7b93f5;
+    --nb-accent-fg: #0c0c0f;
+    --nb-accent-soft: rgba(145, 167, 255, 0.14);
+    --nb-accent-soft-fg: #c5d0ff;
+    --nb-accent-ring: rgba(145, 167, 255, 0.45);
+    --nb-success: #4ade80;
+    --nb-success-fg: #052e14;
+    --nb-success-soft: rgba(74, 222, 128, 0.13);
+    --nb-success-soft-fg: #a7f3c4;
+    --nb-success-border: rgba(74, 222, 128, 0.45);
+    --nb-danger: #fb7185;
+    --nb-danger-fg: #2b0510;
+    --nb-danger-soft: rgba(251, 113, 133, 0.14);
+    --nb-danger-soft-fg: #fecdd6;
+    --nb-danger-border: rgba(251, 113, 133, 0.45);
+    --nb-warning: #fbbf24;
+    --nb-warning-fg: #2a1700;
+    --nb-warning-soft: rgba(251, 191, 36, 0.13);
+    --nb-warning-soft-fg: #fde68a;
+    --nb-warning-border: rgba(251, 191, 36, 0.45);
+    --nb-info: #38bdf8;
+    --nb-info-soft: rgba(56, 189, 248, 0.13);
+    --nb-info-soft-fg: #bae6fd;
+    --nb-info-border: rgba(56, 189, 248, 0.45);
+    --nb-highlight: #fbbf24;
+    --nb-highlight-fg: #2a1700;
+    --nb-highlight-soft: rgba(251, 191, 36, 0.12);
+    --nb-pink: #f472b6;
+    --nb-pink-fg: #2d0619;
+    --nb-violet: #a594ff;
+    --nb-sky: #38bdf8;
+    --nb-focus: #c5d0ff;
+    --nb-overlay: rgba(0, 0, 0, 0.6);
+    --nb-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --nb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+    --nb-shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.55), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+    --nb-shadow-lg: 0 18px 44px -14px rgba(0, 0, 0, 0.75), 0 4px 10px -4px rgba(0, 0, 0, 0.5);
+    --nb-shadow-xl: 0 30px 70px -18px rgba(0, 0, 0, 0.85);
+    --nb-shadow-press: 0 2px 0 0 rgba(0, 0, 0, 0.5);
+    --nb-glow: 0 0 0 1px rgba(145, 167, 255, 0.16), 0 10px 30px -12px rgba(145, 167, 255, 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-root {
+    --nb-duration-fast: 0ms;
+    --nb-duration: 0ms;
+    --nb-duration-slow: 0ms;
+  }
+}
+.nb-root[data-nb-motion="reduced"] {
+  --nb-duration-fast: 0ms;
+  --nb-duration: 0ms;
+  --nb-duration-slow: 0ms;
+}

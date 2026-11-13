@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "marketing-basics",
+  "title": "Marketing Basics",
+  "modules": [
+    {
+      "id": "intro",
+      "type": "story-cards",
+      "content": { "cards": [{ "title": "Welcome!", "body": "Let's learn the fundamentals." }] }
+    },
+    {
+      "id": "metrics",
+      "type": "flashcards",
+      "content": { "cards": [{ "front": "CTR", "back": "Click-through rate" }] }
+    }
+  ]
+}

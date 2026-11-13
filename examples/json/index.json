@@ -1,0 +1,136 @@
+{
+  "modules": [
+    {
+      "export": "branchingScenarioDemo",
+      "file": "modules/branching-scenario.json",
+      "id": "unhappy-client"
+    },
+    {
+      "export": "budgetAllocatorDemo",
+      "file": "modules/budget-allocator.json",
+      "id": "spring-media-plan"
+    },
+    {
+      "export": "categorySortDemo",
+      "file": "modules/category-sort.json",
+      "id": "who-does-what"
+    },
+    {
+      "export": "choiceChallengeDemo",
+      "file": "modules/choice-challenge.json",
+      "id": "kpi-challenge"
+    },
+    {
+      "export": "conversationDemo",
+      "file": "modules/conversation.json",
+      "id": "friday-five-pm"
+    },
+    {
+      "export": "estimateDemo",
+      "file": "modules/estimate.json",
+      "id": "benchmark-instincts"
+    },
+    {
+      "export": "fillBlanksDemo",
+      "file": "modules/fill-blanks.json",
+      "id": "metric-formulas"
+    },
+    {
+      "export": "flashcardsDemo",
+      "file": "modules/flashcards.json",
+      "id": "metric-deck"
+    },
+    {
+      "export": "hotspotExplorerDemo",
+      "file": "modules/hotspot-explorer.json",
+      "id": "pulse-dashboard-tour"
+    },
+    {
+      "export": "imageCompareDemo",
+      "file": "modules/image-compare.json",
+      "id": "cro-sprint-landing"
+    },
+    {
+      "export": "inboxTriageDemo",
+      "file": "modules/inbox-triage.json",
+      "id": "monday-inbox"
+    },
+    {
+      "export": "labelDiagramDemo",
+      "file": "modules/label-diagram.json",
+      "id": "display-ad-anatomy"
+    },
+    {
+      "export": "matchPairsDemo",
+      "file": "modules/match-pairs.json",
+      "id": "metric-match"
+    },
+    {
+      "export": "priorityMatrixDemo",
+      "file": "modules/priority-matrix.json",
+      "id": "monday-morning-triage"
+    },
+    {
+      "export": "processExplorerDemo",
+      "file": "modules/process-explorer.json",
+      "id": "campaign-lifecycle"
+    },
+    {
+      "export": "screenshotWalkthroughDemo",
+      "file": "modules/screenshot-walkthrough.json",
+      "id": "orbit-crm-call-note"
+    },
+    {
+      "export": "sequenceBuilderDemo",
+      "file": "modules/sequence-builder.json",
+      "id": "campaign-launch-order"
+    },
+    {
+      "export": "spotTheMistakeDemo",
+      "file": "modules/spot-the-mistake.json",
+      "id": "campaign-setup-review"
+    },
+    {
+      "export": "storyCardsDemo",
+      "file": "modules/story-cards.json",
+      "id": "agency-welcome"
+    },
+    {
+      "export": "trueFalseDemo",
+      "file": "modules/true-false.json",
+      "id": "metric-myths"
+    },
+    {
+      "export": "whatIfSimulatorDemo",
+      "file": "modules/what-if-simulator.json",
+      "id": "acquisition-cost-explorer"
+    },
+    {
+      "export": "wordBuilderDemo",
+      "file": "modules/word-builder.json",
+      "id": "build-it-right"
+    }
+  ],
+  "lessons": [
+    {
+      "export": "clientCommunicationLesson",
+      "file": "lessons/client-communication.json",
+      "id": "client-communication"
+    },
+    {
+      "export": "launchingACampaignLesson",
+      "file": "lessons/launching-a-campaign.json",
+      "id": "launching-a-campaign"
+    },
+    {
+      "export": "marketingMetricsLesson",
+      "file": "lessons/marketing-metrics.json",
+      "id": "marketing-metrics"
+    },
+    {
+      "export": "welcomeToTheAgencyLesson",
+      "file": "lessons/welcome-to-the-agency.json",
+      "id": "welcome-to-the-agency"
+    }
+  ]
+}

@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "id": "welcome-to-the-agency",
+  "title": "Welcome to the Agency",
+  "description": "Your first hour at **Brightline Media**: how we are organised, who does what, how a project moves through the building, and where to find things when you are stuck.",
+  "objectives": [
+    "Describe what Brightline Media does and who its clients are",
+    "Name the four departments and what each one owns",
+    "Explain how a campaign moves from brief to report",
+    "Know where to look for information before asking"
+  ],
+  "language": "en",
+  "intro": {
+    "show": true,
+    "estimatedMinutes": 8
+  },
+  "gamification": {
+    "points": true,
+    "celebration": true,
+    "streaks": true
+  },
+  "completion": {
+    "rule": "all-modules"
+  },
+  "metadata": {
+    "author": "Nibblearn examples",
+    "audience": "New hires",
+    "version": "1.0"
+  },
+  "modules": [
+    {
+      "id": "welcome-story",
+      "type": "story-cards",
+      "title": "Welcome to the agency",
+      "instructions": "Six short cards to get you oriented at Brightline Media.",
+      "content": {
+        "cards": [
+          {
+            "eyebrow": "Chapter 1",
+            "title": "Hello, and welcome to Brightline Media",
+            "layout": "cover",
+            "body": "We're a performance marketing agency of **48 people** across Lisbon and Tallinn.\n\nOver the next few minutes you'll meet the teams, learn how a campaign moves through the agency, and pick up the one rule every account runs on."
+          },
+          {
+            "eyebrow": "Who we are",
+            "title": "Three teams, one scoreboard",
+            "body": "**Strategy** shapes the plan and owns the client relationship.\n\n**Creative** turns the plan into ads, landing pages and copy that earn attention.\n\n**Performance** runs the media, reads the numbers and decides what to scale next.",
+            "expandable": {
+              "label": "How the teams hand off",
+              "body": "A brief starts in Strategy, moves to Creative for production, and lands in Performance for launch. Every Monday the three leads review one shared dashboard. Nobody owns a metric alone, which is why the handoff notes matter more than the org chart."
+            }
+          },
+          {
+            "eyebrow": "By the numbers",
+            "layout": "stat",
+            "stat": {
+              "value": "3.4×",
+              "label": "median ROAS across retained accounts last quarter"
+            },
+            "body": "That figure is why clients stay. It is also why we treat every euro of ad spend as if it were our own."
+          },
+          {
+            "eyebrow": "From the founders",
+            "layout": "quote",
+            "title": "Mara Lindqvist, co-founder",
+            "body": "A good campaign is not the one with the prettiest ad. It is the one where we can explain, in one sentence, why the number moved."
+          },
+          {
+            "eyebrow": "The one rule",
+            "title": "Every claim has a metric",
+            "body": "When you say a campaign is *working*, you say which number says so and over what period.\n\nIf you can't name the metric, the claim is a feeling. Feelings are welcome in retros, not in client reports.",
+            "check": {
+              "question": "A teammate says the new video ads \"feel strong\". What's the right follow-up?",
+              "options": [
+                {
+                  "text": "Ask which metric moved and over what period",
+                  "correct": true
+                },
+                {
+                  "text": "Add the ads to the client report as a win"
+                },
+                {
+                  "text": "Scale the budget while the momentum lasts"
+                }
+              ],
+              "explanation": "At Brightline Media a claim without a metric is just an impression. Ask for the number first, then decide."
+            }
+          },
+          {
+            "eyebrow": "You're set",
+            "title": "What happens next",
+            "body": "Tomorrow you'll shadow a Monday dashboard review with your team lead.\n\nBefore then, run through the **Metric deck** flashcards and the **Metric myths** quiz. Both take under ten minutes.",
+            "expandable": {
+              "label": "Your first-week checklist",
+              "body": "Day 1: accounts and tools access.\n\nDay 2: shadow the Monday dashboard review.\n\nDay 3: pair with Performance on one live account.\n\nDay 5: present one observation from the account to your lead. One sentence, one metric."
+            }
+          }
+        ]
+      },
+      "behavior": {
+        "progressiveReveal": true,
+        "allowBack": true,
+        "showProgress": true,
+        "requireChecks": true
+      },
+      "feedback": {
+        "complete": "That's the lay of the land. Welcome aboard."
+      }
+    },
+    {
+      "id": "department-deck",
+      "type": "flashcards",
+      "title": "The four departments",
+      "instructions": "Flip each card. Mark it **Got it** when you could explain it to a client.",
+      "content": {
+        "cards": [
+          {
+            "front": "Strategy",
+            "back": "Turns the client's business goal into a measurable plan: audience, channels, budget split and KPIs.",
+            "tag": "Department"
+          },
+          {
+            "front": "Media Buying",
+            "back": "Builds and runs the campaigns in the ad platforms. Owns bids, targeting, pacing and day-to-day optimisation.",
+            "tag": "Department"
+          },
+          {
+            "front": "Analytics",
+            "back": "Owns tracking, dashboards and reporting. If a number is on a slide, Analytics can tell you where it came from.",
+            "tag": "Department"
+          },
+          {
+            "front": "Account Management",
+            "back": "The client's single point of contact. Runs briefs, approvals, expectations and the weekly status call.",
+            "tag": "Department"
+          },
+          {
+            "front": "Creative Studio",
+            "back": "Designs ads and landing pages. Works with Strategy on messaging and with Media Buying on formats.",
+            "tag": "Partner team",
+            "hint": "Not one of the four core departments, but you will work with them every week."
+          },
+          {
+            "front": "The Weekly",
+            "back": "Monday 10:00 all-hands: every account gives a 60-second update. Red / amber / green only — details go in the channel.",
+            "tag": "Ritual"
+          }
+        ]
+      },
+      "behavior": {
+        "requireMastery": true,
+        "allowShuffle": true
+      }
+    },
+    {
+      "id": "campaign-lifecycle-tour",
+      "type": "process-explorer",
+      "title": "How a campaign moves through the agency",
+      "instructions": "Select each stage to see who owns it, how long it takes and what has to be true before it starts.",
+      "content": {
+        "stages": [
+          {
+            "id": "brief",
+            "title": "Client brief",
+            "summary": "Goals, audience, budget and timing are agreed.",
+            "icon": "clipboard-list",
+            "owner": "Account team",
+            "duration": "1–2 days",
+            "details": "The account manager runs a 45-minute briefing call and turns it into a one-page brief. A brief is only *done* when the client has signed off on the objective, the primary KPI and the budget.\n\nAmbiguous briefs are the number one cause of rework later, so push back on vague goals like “more awareness” until they become measurable.",
+            "checklist": [
+              "One measurable objective and primary KPI",
+              "Budget and flight dates confirmed",
+              "Audience and exclusions written down",
+              "Brief signed off by the client"
+            ]
+          },
+          {
+            "id": "strategy",
+            "title": "Strategy",
+            "summary": "Channels, messaging angles and a media split are proposed.",
+            "icon": "compass",
+            "owner": "Strategy lead",
+            "duration": "3–4 days",
+            "dependsOn": ["brief"],
+            "details": "Strategy translates the brief into a plan: which channels, what the core message is, how the budget splits across them and what results are realistic.\n\nThe output is a short deck plus a media plan spreadsheet with projected reach, clicks and cost per result for each channel.",
+            "checklist": [
+              "Channel mix with rationale",
+              "Messaging angles per audience",
+              "Media plan with projections",
+              "Client approval recorded"
+            ]
+          },
+          {
+            "id": "creative",
+            "title": "Creative production",
+            "summary": "Copy, visuals and video are produced in every required format.",
+            "icon": "palette",
+            "owner": "Creative team",
+            "duration": "1–2 weeks",
+            "dependsOn": ["strategy"],
+            "details": "Designers and copywriters produce the assets listed in the media plan: static images, short video cuts and ad copy variants. Every asset is reviewed against the brand guide before it goes to the client.\n\nAim for at least **three** distinct concepts per audience so optimisation has something to choose between.",
+            "checklist": [
+              "Concepts approved internally",
+              "Assets exported in every placement size",
+              "Copy variants proof-read",
+              "Client approval on final assets"
+            ]
+          },
+          {
+            "id": "tracking",
+            "title": "Tracking setup",
+            "summary": "Pixels, conversions and UTM naming are verified before spend starts.",
+            "icon": "radar",
+            "owner": "Analytics",
+            "duration": "2 days",
+            "dependsOn": ["strategy"],
+            "details": "Nothing launches without working measurement. Analytics installs or verifies pixels, defines conversion events and applies the agency UTM convention to every link.\n\nA test conversion is recorded in each platform and in the client's analytics before the launch checklist is signed.",
+            "checklist": [
+              "Pixels firing on all key pages",
+              "Conversion events defined and tested",
+              "UTM parameters follow the naming convention",
+              "Dashboard connected to live data"
+            ]
+          },
+          {
+            "id": "launch",
+            "title": "Launch",
+            "summary": "Campaigns go live after a four-eyes check.",
+            "icon": "rocket",
+            "owner": "Media buyer",
+            "duration": "1 day",
+            "dependsOn": ["creative", "tracking"],
+            "details": "The media buyer builds the campaigns, a second person reviews targeting, budgets and links, and the campaigns go live. The first 24 hours are watched closely for delivery issues and disapproved ads.\n\nThe client gets a short launch confirmation with screenshots of the live ads.",
+            "checklist": [
+              "Four-eyes check completed",
+              "Daily budgets match the media plan",
+              "Launch confirmation sent to the client"
+            ]
+          },
+          {
+            "id": "optimisation",
+            "title": "Optimisation",
+            "summary": "Budgets and creative are adjusted weekly against the KPI.",
+            "icon": "sliders-horizontal",
+            "owner": "Media buyer",
+            "duration": "Ongoing",
+            "dependsOn": ["launch"],
+            "details": "Each week the media buyer reviews performance against the plan, shifts budget towards what works and pauses what does not. Creative fatigue usually shows after two to three weeks: when frequency climbs and click-through drops, the team requests a creative refresh.",
+            "checklist": [
+              "Weekly performance review logged",
+              "Budget shifts documented",
+              "Underperforming ads paused",
+              "Creative refresh requested when fatigue appears"
+            ],
+            "branches": [
+              {
+                "label": "Request a creative refresh",
+                "to": "creative"
+              }
+            ]
+          },
+          {
+            "id": "reporting",
+            "title": "Reporting",
+            "summary": "Results, learnings and next steps are shared with the client.",
+            "icon": "bar-chart-3",
+            "owner": "Account team",
+            "duration": "2 days",
+            "dependsOn": ["optimisation"],
+            "details": "At the end of the flight the account team compiles a report: results against the KPI, what was learned about audiences and creative, and a recommendation for the next campaign.\n\nThe best reports lead with **three insights**, not thirty charts.",
+            "checklist": [
+              "Results vs. KPI and projections",
+              "Three key learnings",
+              "Recommendation for the next campaign",
+              "Report presented live to the client"
+            ]
+          }
+        ]
+      },
+      "behavior": {
+        "layout": "auto",
+        "requireAll": true
+      }
+    },
+    {
+      "id": "where-to-find-things",
+      "type": "choice-challenge",
+      "title": "Where would you look?",
+      "instructions": "Three situations from your first week. Pick the best first move.",
+      "content": {
+        "questions": [
+          {
+            "prompt": "A client asks for last month's ROAS on their search campaign. Where do you look first?",
+            "options": [
+              {
+                "text": "The Pulse Analytics dashboard for the account",
+                "correct": true,
+                "explanation": "Dashboards are the source of truth for performance numbers."
+              },
+              {
+                "text": "Ask the media buyer on Slack",
+                "explanation": "Fine as a follow-up, but the number should already be in the dashboard."
+              },
+              {
+                "text": "The campaign brief",
+                "explanation": "The brief holds targets, not results."
+              }
+            ],
+            "explanation": "Numbers live in dashboards. Briefs hold goals. People explain context."
+          },
+          {
+            "prompt": "You are not sure which naming convention to use for a new campaign.",
+            "options": [
+              {
+                "text": "Check the Playbook page “Campaign naming”",
+                "correct": true,
+                "explanation": "Every convention is written down in the Playbook."
+              },
+              {
+                "text": "Invent a sensible name and fix it later",
+                "explanation": "Renaming campaigns breaks reporting history."
+              },
+              {
+                "text": "Copy whatever the last campaign used",
+                "explanation": "The last campaign might be the exception, not the rule."
+              }
+            ],
+            "hint": "We write things down so nobody has to guess."
+          },
+          {
+            "prompt": "Select everything that belongs in the client's shared channel.",
+            "options": [
+              {
+                "text": "Status updates and approvals",
+                "correct": true
+              },
+              {
+                "text": "Questions about the brief",
+                "correct": true
+              },
+              {
+                "text": "Internal debates about the client's decisions",
+                "explanation": "Internal discussion stays internal."
+              },
+              {
+                "text": "Links to final reports",
+                "correct": true
+              }
+            ],
+            "explanation": "If the client would be surprised to read it, it does not belong in a shared channel."
+          }
+        ]
+      },
+      "behavior": {
+        "partialCredit": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "id": "build-it-right",
+  "type": "word-builder",
+  "title": "Build it right",
+  "instructions": "Tap the tiles in order to build each formula and team rule. Tap a placed tile to send it back. One tile in every bank does not belong.",
+  "content": {
+    "items": [
+      {
+        "id": "roas",
+        "prompt": "Build the formula for **ROAS**.",
+        "tokens": [
+          "ROAS",
+          "=",
+          "Revenue",
+          "÷",
+          "Ad spend"
+        ],
+        "distractors": [
+          "Clicks",
+          "×"
+        ],
+        "display": "formula",
+        "hint": "ROAS stands for *return on ad spend* — the denominator is in the name.",
+        "explanation": "ROAS = revenue ÷ ad spend. A ROAS of 3.4× means every dollar of spend brought back $3.40 in revenue. It ignores margin, so read it next to CPA."
+      },
+      {
+        "id": "cpa",
+        "prompt": "Build the formula for **CPA**.",
+        "tokens": [
+          "CPA",
+          "=",
+          "Spend",
+          "÷",
+          "Conversions"
+        ],
+        "distractors": [
+          "Impressions",
+          "+"
+        ],
+        "display": "formula",
+        "hint": "CPA is what *one result* cost, so divide by the number of results.",
+        "explanation": "CPA = spend ÷ conversions. Northwind Outdoor's March CPA of $21.40 means each sale or sign-up cost just over twenty dollars to win."
+      },
+      {
+        "id": "brief-first",
+        "prompt": "Put Brightline's first rule of every kickoff in order.",
+        "tokens": [
+          "Confirm",
+          "the",
+          "brief",
+          "before",
+          "you",
+          "build",
+          "the",
+          "campaign"
+        ],
+        "distractors": [
+          "after"
+        ],
+        "hint": "The sentence starts with a verb and ends with what you build.",
+        "explanation": "A confirmed brief — objective, audience, budget and the KPI that defines success — stops the team from building the wrong campaign beautifully."
+      },
+      {
+        "id": "escalate",
+        "prompt": "Complete the account-team rule for when something goes wrong.",
+        "tokens": [
+          "Escalate",
+          "early",
+          "and",
+          "bring",
+          "a",
+          "proposed",
+          "fix"
+        ],
+        "distractors": [
+          "late"
+        ],
+        "hint": "Timing first, then what you walk in with.",
+        "explanation": "Clients forgive problems; they rarely forgive surprises. Raising an issue early, with a fix already sketched, keeps the conversation about solutions instead of blame."
+      }
+    ]
+  },
+  "behavior": {
+    "allowRetry": true,
+    "maxAttempts": 3,
+    "showExplanation": true,
+    "showCounter": true
+  },
+  "feedback": {
+    "complete": "Two formulas and two habits every Brightline account manager uses before lunch on a Monday."
+  }
+}

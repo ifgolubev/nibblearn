@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "types": ["vite/client"],
+    "paths": {
+      "@nibblearn/core": ["../../packages/core/src/index.ts"],
+      "@nibblearn/react": ["../../packages/react/src/index.ts"],
+      "@nibblearn/react/styles.css": ["../../packages/react/src/styles/index.css"],
+      "@nibblearn/examples": ["../../examples/src/index.ts"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}
