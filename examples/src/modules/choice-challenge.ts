@@ -1,0 +1,55 @@
+import type { ChoiceChallengeInput } from "@nibblearn/core";
+
+export const choiceChallengeDemo = {
+  id: "kpi-challenge",
+  type: "choice-challenge",
+  title: "Pick the right KPI",
+  instructions: "Three quick questions about campaign metrics.",
+  content: {
+    questions: [
+      {
+        prompt: "Which KPI best measures the **efficiency** of an acquisition campaign?",
+        context: "Think about what ties spend directly to results.",
+        options: [
+          { text: "Impressions", explanation: "Impressions measure reach, not efficiency." },
+          {
+            text: "Cost per acquisition (CPA)",
+            correct: true,
+            explanation: "CPA tells you what each result costs.",
+          },
+          {
+            text: "Click-through rate (CTR)",
+            explanation: "CTR measures ad relevance, not cost efficiency.",
+          },
+          { text: "Follower count", explanation: "Followers say nothing about acquisition cost." },
+        ],
+        explanation:
+          "Efficiency is about outcomes per unit of spend. CPA divides spend by the number of acquisitions, which makes it the most direct efficiency metric.",
+        hint: "Efficiency metrics usually have the word *cost* in them.",
+      },
+      {
+        prompt: "Select every metric that is calculated from **spend**.",
+        options: [
+          { text: "CPC — cost per click", correct: true },
+          { text: "CPM — cost per thousand impressions", correct: true },
+          { text: "CTR — click-through rate" },
+          { text: "ROAS — return on ad spend", correct: true },
+        ],
+        explanation:
+          "CTR is clicks ÷ impressions; it never looks at spend. The other three all divide or multiply by spend.",
+      },
+      {
+        prompt:
+          "A campaign has a CTR of 4% and a conversion rate of 0.5%. What is the most likely issue?",
+        options: [
+          { text: "The ads are not relevant to the audience" },
+          { text: "The landing page is not converting visitors", correct: true },
+          { text: "The budget is too low" },
+        ],
+        explanation:
+          "A high CTR shows the ads work. A very low conversion rate means visitors leave after clicking, which points to the landing page.",
+      },
+    ],
+  },
+  behavior: { shuffleOptions: false, partialCredit: true },
+} satisfies ChoiceChallengeInput;

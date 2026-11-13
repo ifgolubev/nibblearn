@@ -1,0 +1,79 @@
+{
+  "id": "benchmark-instincts",
+  "type": "estimate",
+  "title": "Benchmark instincts",
+  "instructions": "How well do you know the Northwind Outdoor account? Drag the slider to your best estimate for each number from Brightline Media's March reporting, then lock it in. All figures are illustrative.",
+  "content": {
+    "currency": "USD",
+    "questions": [
+      {
+        "id": "ctr",
+        "prompt": "What was Northwind's account-wide **click-through rate** in March?",
+        "context": "Clicks ÷ impressions across search, social, display, email and affiliate.",
+        "min": 0,
+        "max": 0.1,
+        "step": 0.001,
+        "answer": 0.028,
+        "format": "percent",
+        "tolerance": 0.004,
+        "hint": "Search pulls the blend up; display pulls it down. Most blended accounts land in low single digits.",
+        "explanation": "**2.8%** — 28 clicks for every 1,000 impressions, flat on February. A blended CTR hides a wide spread: search ads usually sit far above it, display banners far below."
+      },
+      {
+        "id": "cpa",
+        "prompt": "What did one conversion cost Northwind on average in March (**CPA**)?",
+        "min": 5,
+        "max": 60,
+        "step": 0.1,
+        "answer": 21.4,
+        "format": "currency",
+        "tolerance": 2,
+        "explanation": "**$21.40**, down 8.1% on February. That is why the Spring Launch search campaign targets a CPA of $22: just above today's average, so the algorithm has room to scale."
+      },
+      {
+        "id": "ctv-cpm",
+        "prompt": "What does Brightline typically pay per 1,000 impressions on **premium CTV**?",
+        "context": "Living-room streaming apps, bought through private marketplace deals.",
+        "min": 5,
+        "max": 80,
+        "step": 1,
+        "answer": 38,
+        "format": "currency",
+        "tolerance": 4,
+        "hint": "Premium video is among the most expensive inventory: think several times a display CPM.",
+        "explanation": "About **$38 CPM**. CTV costs four to five times as much as open-exchange display per impression, but it earns full-screen, sound-on attention, which is why its returns scale so steadily in the spring media plan."
+      },
+      {
+        "id": "display-share",
+        "prompt": "What **share of March spend** went to display?",
+        "context": "Total spend was $48,200 across five channels.",
+        "min": 0,
+        "max": 0.6,
+        "step": 0.001,
+        "answer": 0.168,
+        "format": "percent",
+        "tolerance": 0.02,
+        "explanation": "**16.8%** — $8,100 of $48,200. Display returned only 1.9× ROAS against a 3.0× target, which makes it the first candidate for a budget conversation."
+      },
+      {
+        "id": "search-roas",
+        "prompt": "What **ROAS** did paid search deliver in March?",
+        "context": "Revenue ÷ spend on paid search only.",
+        "min": 0,
+        "max": 10,
+        "step": 0.1,
+        "answer": 4.1,
+        "format": "number",
+        "unit": "×",
+        "tolerance": 0.3,
+        "explanation": "**4.1×** — every dollar on search returned $4.10, comfortably above the account's 3.4× blend and Northwind's 3.0× target."
+      }
+    ]
+  },
+  "behavior": {
+    "showCounter": true
+  },
+  "feedback": {
+    "complete": "Good instincts come from reading the dashboard every Monday. Keep these benchmarks in mind when a number looks off."
+  }
+}

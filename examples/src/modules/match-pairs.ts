@@ -1,0 +1,67 @@
+import type { MatchPairsInput } from "@nibblearn/core";
+
+export const matchPairsDemo = {
+  id: "metric-match",
+  type: "match-pairs",
+  title: "Match the metric to its meaning",
+  instructions:
+    "Tap a metric, then tap its definition — or drag the metric onto the definition. Fewer mistakes, higher score.",
+  content: {
+    leftLabel: "Metric",
+    rightLabel: "What it tells you",
+    pairs: [
+      {
+        left: "CPM",
+        right: "What 1,000 ad impressions cost",
+        explanation:
+          "Cost per mille. A CPM of $8 means every thousand impressions cost $8 — useful for comparing reach-focused placements.",
+      },
+      {
+        left: "CPC",
+        right: "What a single click costs",
+        explanation:
+          "Cost per click. Spend ÷ clicks. The Northwind Outdoor account averages $1.40 on search and $0.62 on social.",
+      },
+      {
+        left: "CTR",
+        right: "Share of impressions that turned into clicks",
+        explanation:
+          "Click-through rate. Clicks ÷ impressions. A 2% CTR means 2 clicks for every 100 impressions.",
+      },
+      {
+        left: "CPA",
+        right: "What one acquisition (lead or sale) costs",
+        explanation:
+          "Cost per acquisition. Spend ÷ conversions. It is the efficiency metric most clients care about.",
+      },
+      {
+        left: "ROAS",
+        right: "Revenue earned for every unit of ad spend",
+        explanation:
+          "Return on ad spend. Revenue ÷ spend. A ROAS of 4.0 means $4 of revenue for every $1 spent.",
+      },
+      {
+        left: "Frequency",
+        right: "Average number of times one person saw the ad",
+        explanation:
+          "Impressions ÷ reach. When frequency climbs past 4–5 on social, creative fatigue usually follows.",
+      },
+      {
+        left: "Reach",
+        right: "Number of unique people who saw the ad",
+        explanation:
+          "Unlike impressions, reach counts each person once — the right metric for awareness goals.",
+      },
+      {
+        left: "Conversion rate",
+        right: "Share of visitors who completed the goal",
+        explanation:
+          "Conversions ÷ clicks (or sessions). A high CTR with a low conversion rate points at the landing page, not the ad.",
+      },
+    ],
+  },
+  behavior: { shuffle: true, timer: true, pairsPerRound: 4, drag: true },
+  feedback: {
+    complete: "You now speak fluent media metrics. The explanations below are worth a second read.",
+  },
+} satisfies MatchPairsInput;

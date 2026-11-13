@@ -1,0 +1,48 @@
+# Release workflow using Changesets and npm trusted publishing (OIDC).
+#
+# Manual setup required once (see docs/release.md):
+#  1. On npmjs.com, for each package (@nibblearn/core, @nibblearn/react) configure
+#     "Trusted publisher" → GitHub Actions with this repository and workflow file name `release.yml`.
+#  2. The very first publish of a new package may need to be done manually.
+#  3. No NPM_TOKEN secret is required when trusted publishing is configured.
+name: Release
+
+# Manual only: with no pending changesets this workflow runs `changeset publish`,
+# so it must never start on its own. Run it from the Actions tab when a release is intended.
+on:
+  workflow_dispatch:
+
+concurrency: release-${{ github.ref }}
+
+permissions:
+  contents: write # create release PRs / tags
+  pull-requests: write # open the "Version Packages" PR
+  id-token: write # npm provenance via OIDC
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository == 'ifgolubev/nibblearn'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm check:package
+      - name: Create release PR or publish
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          version: pnpm version-packages
+          publish: pnpm changeset publish
+          commit: "chore: version packages"
+          title: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"

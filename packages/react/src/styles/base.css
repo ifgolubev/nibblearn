@@ -1,0 +1,162 @@
+/* Scoped base styles. Only affects elements inside .nb-root. */
+.nb-root {
+  font-family: var(--nb-font);
+  font-size: var(--nb-text-md);
+  line-height: var(--nb-leading);
+  color: var(--nb-fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11", "ss01", "calt";
+  box-sizing: border-box;
+  container-type: inline-size;
+  container-name: nb;
+}
+:where(.nb-root) *,
+:where(.nb-root) *::before,
+:where(.nb-root) *::after {
+  box-sizing: inherit;
+}
+:where(.nb-root) :where(h1, h2, h3, h4, p, ul, ol, figure) {
+  margin: 0;
+}
+:where(.nb-root) :where(ul, ol) {
+  padding: 0;
+  list-style: none;
+}
+:where(.nb-root) :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+:where(.nb-root) :where(button) {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+:where(.nb-root) :where(button:disabled) {
+  cursor: not-allowed;
+}
+:where(.nb-root) :where(img, svg) {
+  display: block;
+  max-width: 100%;
+}
+:where(.nb-root) :where(:focus) {
+  outline: none;
+}
+:where(.nb-root) :where(:focus-visible) {
+  outline: 2px solid var(--nb-focus);
+  outline-offset: 2px;
+  border-radius: var(--nb-radius-sm);
+}
+:where(.nb-root) :where(code) {
+  font-family: var(--nb-font-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+  background: var(--nb-surface-3);
+}
+:where(.nb-root) ::selection {
+  background: color-mix(in srgb, var(--nb-accent) 22%, transparent);
+}
+/* iOS zooms into inputs below 16px; keep text inputs at 16px+ on touch devices. */
+@media (pointer: coarse) {
+  :where(.nb-root)
+    :where(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea, select) {
+    font-size: max(16px, 1em);
+  }
+}
+:where(.nb-root) :where(p) {
+  text-wrap: pretty;
+}
+:where(.nb-root) :where(strong, b) {
+  font-weight: var(--nb-weight-semibold);
+}
+
+.nb-sr-only {
+  display: block;
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Generic helpers */
+.nb-muted {
+  color: var(--nb-fg-muted);
+}
+.nb-subtle {
+  color: var(--nb-fg-subtle);
+}
+.nb-text-sm {
+  font-size: var(--nb-text-sm);
+}
+.nb-text-xs {
+  font-size: var(--nb-text-xs);
+}
+.nb-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nb-space-4);
+}
+.nb-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nb-space-2);
+}
+.nb-row--between {
+  justify-content: space-between;
+}
+.nb-row--wrap {
+  flex-wrap: wrap;
+}
+.nb-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Rich text */
+.nb-rich {
+  overflow-wrap: anywhere;
+}
+.nb-rich p + p {
+  margin-top: var(--nb-space-3);
+}
+.nb-rich em {
+  font-style: italic;
+}
+
+/* Image with fallback */
+.nb-image {
+  position: relative;
+  border-radius: var(--nb-radius-md);
+  overflow: hidden;
+  background: var(--nb-surface-2);
+}
+.nb-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.nb-image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nb-space-2);
+  min-height: 7rem;
+  color: var(--nb-fg-subtle);
+  font-size: var(--nb-text-sm);
+  border: 1px dashed var(--nb-border-strong);
+}
+.nb-image__caption {
+  font-size: var(--nb-text-xs);
+  color: var(--nb-fg-muted);
+  padding: var(--nb-space-2) var(--nb-space-3);
+}

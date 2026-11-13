@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@nibblearn/core": ["../../packages/core/src/index.ts"],
+      "@nibblearn/react": ["../../packages/react/src/index.ts"],
+      "@nibblearn/examples": ["../../examples/src/index.ts"]
+    }
+  },
+  "include": ["src", ".storybook"]
+}

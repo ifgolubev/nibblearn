@@ -1,0 +1,218 @@
+import type { ConversationInput } from "@nibblearn/core";
+
+export const conversationDemo = {
+  id: "friday-five-pm",
+  type: "conversation",
+  title: "Urgent client message on Friday 5pm",
+  instructions:
+    "Priya runs marketing at Harbor Supply Co. It is 5:02pm on a Friday and she has just messaged you. Pick the reply you would actually send.",
+  content: {
+    contact: {
+      name: "Priya Nair",
+      role: "Marketing Lead, Harbor Supply Co.",
+      status: "Online",
+    },
+    start: "ping",
+    nodes: [
+      {
+        id: "ping",
+        messages: [
+          { text: "Hey, are you still around?" },
+          {
+            text: "The spring sale ads are showing the **old 15% code** instead of the 25% one. Our support inbox is filling up and the sale went live an hour ago.",
+          },
+        ],
+        responses: [
+          {
+            text: "I'm here. Pausing the affected ads now and I'll confirm in 5 minutes which placements had the old code.",
+            next: "paused",
+            tone: "Proactive",
+            effectiveness: 0.95,
+            feedback:
+              "You answered the question she did not ask: *is anyone handling this?* Concrete action plus a time box lowers her stress immediately.",
+          },
+          {
+            text: "That's odd, the brief we got had 15% in it. Can you double check what was sent over?",
+            next: "defensive",
+            tone: "Defensive",
+            effectiveness: 0.2,
+            feedback:
+              "Even if the brief was wrong, 5pm on a Friday with a live sale is not the moment. She hears *not our problem* while customers are seeing the wrong code.",
+          },
+          {
+            text: "Oh no, sorry to hear that! Let me look into it and get back to you.",
+            next: "vague",
+            tone: "Vague",
+            effectiveness: 0.45,
+            feedback:
+              "Warm but empty. *Get back to you* when? Doing what? With a live problem, the client needs a specific next action.",
+          },
+        ],
+      },
+      {
+        id: "paused",
+        messages: [
+          { from: "system", text: "5 minutes later" },
+          { text: "Okay, thank you. I can see spend has stopped." },
+          {
+            text: "It was three of the five ad sets, right? Those are the ones people are complaining about.",
+          },
+        ],
+        responses: [
+          {
+            text: "Correct, three ad sets. The fix is a creative swap, about 20 minutes to rebuild and resubmit. I'd rather push the right version tonight than leave the sale dark over the weekend. Okay with you?",
+            next: "fixed",
+            tone: "Proactive",
+            effectiveness: 0.9,
+            feedback:
+              "You confirmed the scope, gave an estimate, and offered a recommendation with a reason. Asking for her go-ahead keeps her in control.",
+          },
+          {
+            text: "Yes. I'll fix it Monday first thing so we don't rush changes at this hour.",
+            next: "monday",
+            tone: "Cautious",
+            effectiveness: 0.4,
+            feedback:
+              "Caution is reasonable, but a sale is running *now*. Leaving it paused all weekend turns a 20-minute fix into a lost weekend of revenue.",
+          },
+        ],
+      },
+      {
+        id: "fixed",
+        messages: [
+          { from: "system", text: "25 minutes later" },
+          { text: "Live again with 25%. Just placed a test order myself, code works." },
+          { text: "Honestly I was dreading this message. Thanks for jumping on it." },
+        ],
+        responses: [
+          {
+            text: "Glad it's sorted. I'll send a short note Monday on how the old code slipped through and what we're changing so it doesn't happen again. Enjoy your weekend.",
+            next: "end-strong",
+            tone: "Accountable",
+            effectiveness: 0.95,
+            feedback:
+              "You closed the loop *and* pre-empted the post-mortem question before she had to ask it. This is how trust is built after a mistake.",
+          },
+          {
+            text: "No problem at all! Have a great weekend.",
+            next: "end-good",
+            tone: "Friendly",
+            effectiveness: 0.65,
+            feedback:
+              "Perfectly pleasant, but it leaves the *why did this happen* conversation for Monday, when she may already be asking it.",
+          },
+        ],
+      },
+      {
+        id: "monday",
+        messages: [
+          { from: "system", text: "Saturday, 10:14" },
+          {
+            text: "Sale is our biggest weekend of the quarter and ads are off. Can we really not get this live today?",
+          },
+        ],
+        responses: [
+          {
+            text: "You're right, I should have offered that last night. Rebuilding the three ad sets now, live within the hour.",
+            next: "end-good",
+            tone: "Accountable",
+            effectiveness: 0.75,
+            feedback:
+              "A quick, specific recovery. You lost some goodwill overnight, but owning it without excuses gets most of it back.",
+          },
+          {
+            text: "I can't make changes to live campaigns on weekends without a change request from your side.",
+            next: "end-poor",
+            tone: "Rigid",
+            effectiveness: 0.1,
+            feedback:
+              "Process is there to protect the client, not to stop you from helping them. Quoting it during their biggest weekend reads as hiding.",
+          },
+        ],
+      },
+      {
+        id: "defensive",
+        messages: [
+          {
+            text: "I'm not trying to assign blame, I'm trying to stop customers from seeing the wrong discount.",
+          },
+          { text: "Can you pause them or not?" },
+        ],
+        responses: [
+          {
+            text: "Yes, sorry, pausing the affected ad sets now. I'll confirm in 5 minutes and we can sort out the brief on Monday.",
+            next: "paused",
+            tone: "Accountable",
+            effectiveness: 0.7,
+            feedback:
+              "Good recovery. You dropped the argument and moved to action. Parking the brief question for Monday is the right call.",
+          },
+          {
+            text: "I can, but I want to be clear this wasn't an error on our side.",
+            next: "end-poor",
+            tone: "Defensive",
+            effectiveness: 0.05,
+            feedback:
+              "Twice defensive. She now has a live problem *and* an agency that seems more worried about fault than fixing it.",
+          },
+        ],
+      },
+      {
+        id: "vague",
+        messages: [
+          { from: "system", text: "20 minutes later" },
+          { text: "Any update? Support says 40 tickets now." },
+        ],
+        responses: [
+          {
+            text: "Yes. Three of five ad sets had the old code. They're paused as of now and I can have the corrected version live in about 20 minutes if you want me to push it tonight.",
+            next: "fixed",
+            tone: "Proactive",
+            effectiveness: 0.8,
+            feedback:
+              "Specific, scoped and actionable. Twenty minutes late, but this is the message she needed from the start.",
+          },
+          {
+            text: "Still digging into it, will let you know as soon as I have something.",
+            next: "end-poor",
+            tone: "Vague",
+            effectiveness: 0.15,
+            feedback:
+              "Forty tickets and no action. Vague updates during an incident are worse than silence because they confirm nothing is happening.",
+          },
+        ],
+      },
+      {
+        id: "end-strong",
+        messages: [{ text: "That would be great. Really appreciate it. Have a good one." }],
+        outcome: "success",
+        summary:
+          "You treated an awkward Friday message as a chance to show how the agency behaves under pressure: act first, scope the problem, recommend with a reason, close the loop. Priya will remember the recovery more than the mistake.",
+      },
+      {
+        id: "end-good",
+        messages: [{ text: "Thanks. Talk Monday." }],
+        outcome: "neutral",
+        summary:
+          "The problem got fixed and the relationship is intact, but there was room to be faster or more explicit about what happens next. Notice where a specific commitment would have saved a follow-up message.",
+      },
+      {
+        id: "end-poor",
+        messages: [
+          { from: "system", text: "Monday, 09:03" },
+          {
+            text: "Hi. Can we set up a call with your account director this week? We need to talk about how incidents get handled.",
+          },
+        ],
+        outcome: "failure",
+        summary:
+          "Priya did not need an explanation, a brief review, or a process reminder. She needed the wrong discount to stop appearing. When a client is in a live problem, lead with action and keep accountability conversations for later.",
+      },
+    ],
+  },
+  behavior: {
+    typingIndicator: true,
+    showFeedback: true,
+    allowRetry: true,
+  },
+} satisfies ConversationInput;
