@@ -1,0 +1,55 @@
+.nb-carousel__slide {
+  display: grid;
+  gap: var(--nb-space-3);
+  min-height: 8rem;
+  padding: var(--nb-space-4);
+  border: 1px solid var(--nb-border);
+  border-radius: var(--nb-radius-lg);
+  background: var(--nb-surface);
+  touch-action: pan-y;
+}
+.nb-carousel__title {
+  font-family: var(--nb-font-display);
+  font-size: var(--nb-text-lg);
+  font-weight: var(--nb-title-weight);
+  letter-spacing: var(--nb-title-tracking);
+}
+.nb-carousel__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nb-space-3);
+  margin-top: var(--nb-space-3);
+}
+.nb-carousel__arrow {
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 0;
+  justify-content: center;
+}
+.nb-carousel__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+.nb-carousel__dot {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--nb-radius-full);
+}
+.nb-carousel__dot::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  background: var(--nb-border-strong);
+  transition:
+    transform var(--nb-duration-fast) ease,
+    background var(--nb-duration-fast) ease;
+}
+.nb-carousel__dot[aria-current="true"]::before {
+  background: var(--nb-accent);
+  transform: scale(1.35);
+}

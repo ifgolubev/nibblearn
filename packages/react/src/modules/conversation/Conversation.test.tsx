@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Conversation } from "./Conversation";
 import { conversationSchema, type ConversationProvider } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const base = {
   id: "conv",
@@ -201,6 +202,26 @@ describe("Conversation", () => {
     expect(await screen.findByRole("button", { name: /On it/ })).toBeInTheDocument();
   });
 
+  it("never duplicates the transcript when the config object changes", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<Conversation config={config} />);
+    await user.click(await screen.findByRole("button", { name: /On it/ }));
+    expect(await screen.findByText("It's back up, thank you!")).toBeInTheDocument();
+    // Same content in a new object (e.g. re-parsed JSON): the learner's transcript stays.
+    rerender(<Conversation config={structuredClone(config)} />);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(screen.getByText("It's back up, thank you!")).toBeInTheDocument();
+    expect(screen.getAllByText("Hey, do you have a minute?")).toHaveLength(1);
+    // A text edit starts over with the edited text, once.
+    const edited = structuredClone(config);
+    edited.content.nodes[0]!.messages[0]!.text = "Hi, got a minute?";
+    rerender(<Conversation config={edited} />);
+    expect(await screen.findByText("Hi, got a minute?")).toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 30));
+    expect(screen.getAllByText("Hi, got a minute?")).toHaveLength(1);
+    expect(screen.queryByText("Hey, do you have a minute?")).toBeNull();
+  });
+
   it("renders an error state for invalid config", () => {
     render(
       <Conversation
@@ -214,5 +235,40 @@ describe("Conversation", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/could not be loaded/);
+  });
+
+  it("restores the transcript instantly and continues from the last turn", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<Conversation config={config} onStateChange={onStateChange} />);
+    await user.click(await screen.findByRole("button", { name: /On it\. Checking now\./ }));
+    expect(await screen.findByText("It's back up, thank you!")).toBeInTheDocument();
+    await screen.findByRole("button", { name: /Glad to help\./ });
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<Conversation config={config} initialState={saved} />);
+    // No playback: everything is there on the first render.
+    expect(screen.getByRole("log")).toHaveTextContent("The landing page is down.");
+    expect(screen.getByRole("log")).toHaveTextContent("On it. Checking now.");
+    expect(screen.getByText("It's back up, thank you!")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Glad to help\./ }));
+    expect(await screen.findByText("Conversation summary")).toBeInTheDocument();
+  });
+
+  it("restores a finished conversation without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<Conversation config={config} onStateChange={onStateChange} />);
+    await user.click(await screen.findByRole("button", { name: /On it\. Checking now\./ }));
+    await user.click(await screen.findByRole("button", { name: /Glad to help\./ }));
+    expect(await screen.findByText("Conversation summary")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<Conversation config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("Conversation summary")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

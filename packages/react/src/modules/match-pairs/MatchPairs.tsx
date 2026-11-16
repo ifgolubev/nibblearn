@@ -25,10 +25,13 @@ import clsx from "clsx";
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { AnimatedFeedback } from "../../primitives/Feedback";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./match-pairs.css";
@@ -57,14 +60,7 @@ function formatTime(totalSeconds: number): string {
   return `${mm}:${ss}`;
 }
 
-export function MatchPairs({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: MatchPairsProps) {
+export function MatchPairs({ config: rawConfig, ...rest }: MatchPairsProps) {
   const parsed = useMemo(() => matchPairsSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -74,16 +70,7 @@ export function MatchPairs({
       />
     );
   }
-  return (
-    <MatchPairsInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <MatchPairsInner config={parsed.data} {...rest} />;
 }
 
 function MatchPairsInner({
@@ -91,6 +78,10 @@ function MatchPairsInner({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: MatchPairsProps) {
@@ -100,11 +91,16 @@ function MatchPairsInner({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   // Keying on runId remounts the game with fresh state (and a fresh shuffle) on every reset.
   return (
     <MatchPairsGame
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -136,14 +132,27 @@ function MatchPairsGame({ config, life, hideHeader, className }: GameProps) {
   // A fresh random seed for every mount (= every run) so retry reshuffles.
   const [seed] = useState(() => seedFromString(config.id, life.runId));
 
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [matched, setMatched] = useState<string[]>([]);
-  const [hidden, setHidden] = useState<string[]>([]);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const pairIds = pairs.map((p) => p.id);
+  const [roundIndex, setRoundIndex] = usePersistedState(
+    life,
+    "round",
+    0,
+    G.int(0, Math.max(0, Math.ceil(total / perRound) - 1)),
+  );
+  const [matched, setMatched] = usePersistedState<string[]>(
+    life,
+    "matched",
+    [],
+    G.arrayOf(G.oneOf(pairIds), total),
+  );
+  // Matched tiles collapse after a short delay; restored ones start collapsed.
+  const [hidden, setHidden] = useState<string[]>(() => matched);
   const [selected, setSelected] = useState<Selection | null>(null);
   const [wrong, setWrong] = useState<{ left: string; right: string } | null>(null);
   const [showMiss, setShowMiss] = useState(false);
-  const [mistakes, setMistakes] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [mistakes, setMistakes] = usePersistedState(life, "mistakes", 0, G.int(0, 100_000));
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
   const [elapsed, setElapsed] = useState(0);
   const [dragging, setDragging] = useState<string | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -194,7 +203,7 @@ function MatchPairsGame({ config, life, hideHeader, className }: GameProps) {
       life.complete({ score, correct: total, total, details: { mistakes: finalMistakes, rounds } });
       announce(`${t("match.complete")} ${t("a11y.moduleComplete")}`);
     },
-    [total, life, rounds, announce, t],
+    [total, setFinished, life, rounds, announce, t],
   );
 
   // Advance rounds when every visible pair is matched.
@@ -209,7 +218,7 @@ function MatchPairsGame({ config, life, hideHeader, className }: GameProps) {
       }
     }, ROUND_MS);
     return () => clearTimeout(id);
-  }, [visible, matched, finished, isLastRound, finish, mistakes, later]);
+  }, [visible, matched, finished, isLastRound, finish, mistakes, later, setRoundIndex]);
 
   const attemptMatch = useCallback(
     (leftId: string, rightId: string) => {
@@ -222,18 +231,29 @@ function MatchPairsGame({ config, life, hideHeader, className }: GameProps) {
         setMatched((prev) => (prev.includes(leftId) ? prev : [...prev, leftId]));
         setShowMiss(false);
         later(() => setHidden((prev) => [...prev, leftId]), COLLAPSE_MS);
-        life.emit("module:answer", { pairId: leftId, correct: true });
+        life.emit("module:answer", {
+          pairId: leftId,
+          itemId: leftId,
+          response: rightId,
+          correct: true,
+        });
         announce(t("match.pairMatched", { left: left.left, right: right.right }));
       } else {
         setMistakes((m) => m + 1);
         setWrong({ left: leftId, right: rightId });
         setShowMiss(true);
         later(() => setWrong(null), SHAKE_MS);
-        life.emit("module:answer", { leftId, rightId, correct: false });
+        life.emit("module:answer", {
+          leftId,
+          rightId,
+          itemId: leftId,
+          response: rightId,
+          correct: false,
+        });
         announce(`${t("a11y.incorrectAnswer")} ${t("match.notAPair")}`);
       }
     },
-    [byId, life, later, announce, t],
+    [byId, life, setMatched, later, announce, t, setMistakes],
   );
 
   const tap = useCallback(
@@ -242,7 +262,7 @@ function MatchPairsGame({ config, life, hideHeader, className }: GameProps) {
       if (!selected) {
         setSelected({ side, id });
         setShowMiss(false);
-        life.emit("module:interact", { side, id });
+        life.emit("module:interact", { action: "select", side, id });
         return;
       }
       if (selected.side === side) {
@@ -607,7 +627,9 @@ function Tile({
         {...listeners}
       >
         <span className="nb-match__tile-text">
-          <RichText text={text} />
+          <NoLinks>
+            <RichText text={text} />
+          </NoLinks>
         </span>
         <span className="nb-match__tile-mark" aria-hidden>
           {matched ? <Check strokeWidth={3} /> : state === "wrong" ? <X strokeWidth={3} /> : null}

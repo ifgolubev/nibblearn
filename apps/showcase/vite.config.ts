@@ -14,6 +14,15 @@ export default defineConfig({
         find: "@nibblearn/react/styles.css",
         replacement: r("../../packages/react/src/styles/index.css"),
       },
+      {
+        find: "@nibblearn/editor/styles.css",
+        replacement: r("../../packages/editor/src/styles.css"),
+      },
+      { find: "@nibblearn/editor", replacement: r("../../packages/editor/src/index.ts") },
+      {
+        find: /^@nibblearn\/core\/examples$/,
+        replacement: r("../../packages/core/src/examples/index.ts"),
+      },
       { find: "@nibblearn/react", replacement: r("../../packages/react/src/index.ts") },
       { find: "@nibblearn/core", replacement: r("../../packages/core/src/index.ts") },
       { find: "@nibblearn/examples", replacement: r("../../examples/src/index.ts") },

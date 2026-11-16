@@ -45,6 +45,10 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -73,14 +77,7 @@ interface ItemRecord {
   placed: string[];
 }
 
-export function WordBuilder({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: WordBuilderProps) {
+export function WordBuilder({ config: rawConfig, ...rest }: WordBuilderProps) {
   const parsed = useMemo(() => wordBuilderSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -90,29 +87,25 @@ export function WordBuilder({
       />
     );
   }
-  return (
-    <WordBuilderInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <WordBuilderInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts WordBuilderRun with fresh state (keyed by runId). */
 function WordBuilderInner(props: WordBuilderProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "word-builder",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <WordBuilderRun key={life.runId} {...props} life={life} />;
+  return <WordBuilderRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 /* ----------------------------------------------------------------------------
@@ -269,10 +262,15 @@ function ItemView({
   const tiles = useMemo(() => buildWordTiles(item, seed), [item, seed]);
   const tileById = useMemo(() => new Map(tiles.map((tile) => [tile.id, tile])), [tiles]);
 
-  const [placed, setPlaced] = useState<string[]>([]);
-  const [evaluation, setEvaluation] = useState<WordOrderEvaluation | null>(null);
-  const [attempts, setAttempts] = useState(0);
-  const [locked, setLocked] = useState(false);
+  // Progress of this item is saved in the module's state snapshot, keyed by item index.
+  const key = (name: string) => `item${index}.${name}`;
+  const [placed, setPlaced] = usePersistedState<string[]>(life, key("placed"), [], (raw) => {
+    const list = G.arrayOf(G.oneOf(tiles.map((tile) => tile.id)), tiles.length)(raw);
+    return list && new Set(list).size === list.length ? list : undefined;
+  });
+  const [checked, setChecked] = usePersistedState(life, key("checked"), false, G.bool);
+  const [attempts, setAttempts] = usePersistedState(life, key("attempts"), 0, G.int(0, 100_000));
+  const [locked, setLocked] = usePersistedState(life, key("locked"), false, G.bool);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const bankRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -281,13 +279,17 @@ function ItemView({
   /** Clicks that follow a drag (pointer or keyboard) must not send the tile back. */
   const suppressClickUntil = useRef(0);
 
-  const checked = evaluation !== null;
-  const editable = !checked && !locked;
   const placedSet = useMemo(() => new Set(placed), [placed]);
   const placedTexts = useMemo(
     () => placed.map((id) => tileById.get(id)?.text ?? ""),
     [placed, tileById],
   );
+  // The evaluation is derived from the placed tiles (they do not change while checked).
+  const evaluation = useMemo<WordOrderEvaluation | null>(
+    () => (checked && placed.length > 0 ? evaluateWordOrder(item, placedTexts) : null),
+    [checked, placed.length, item, placedTexts],
+  );
+  const editable = !checked && !locked;
   const exhausted = behavior.maxAttempts > 0 && attempts >= behavior.maxAttempts;
   const canRetry = checked && !locked && behavior.allowRetry && !exhausted;
   const canReveal = canRetry && attempts >= 2;
@@ -335,7 +337,7 @@ function ItemView({
         nextFree ? bankRefs.current.get(nextFree.id) : (checkRef.current ?? undefined),
       );
     },
-    [editable, placedSet, tileById, placed, life, index, announce, t, tiles, focusLater],
+    [editable, placedSet, tileById, placed, life, index, announce, t, tiles, focusLater, setPlaced],
   );
 
   const remove = useCallback(
@@ -360,7 +362,7 @@ function ItemView({
         );
       }
     },
-    [editable, placed, tileById, life, index, announce, t, focusLater],
+    [editable, placed, tileById, life, index, announce, t, focusLater, setPlaced],
   );
 
   const onPlacedActivate = useCallback(
@@ -415,7 +417,7 @@ function ItemView({
       life.emit("module:interact", { itemIndex: index, action: "move", token, from, to });
       announce(t("a11y.movedTo", { item: token, position: to + 1 }));
     },
-    [endDrag, placed, tileById, life, index, announce, t],
+    [endDrag, placed, tileById, life, index, announce, t, setPlaced],
   );
 
   const check = useCallback(() => {
@@ -424,12 +426,13 @@ function ItemView({
     const n = attempts + 1;
     setAttempts(n);
     life.attempt();
-    setEvaluation(ev);
+    setChecked(true);
     const out = behavior.maxAttempts > 0 && n >= behavior.maxAttempts;
     const done = ev.correct || !behavior.allowRetry || out;
     life.emit("module:answer", {
       itemIndex: index,
       placed: placedTexts,
+      response: placedTexts,
       correct: ev.correct,
       correctCount: ev.correctCount,
       attempts: n,
@@ -467,18 +470,21 @@ function ItemView({
     announce,
     t,
     onResolve,
+    setAttempts,
+    setChecked,
+    setLocked,
   ]);
 
   const retry = useCallback(() => {
     if (!evaluation) return;
     const keep = placed.slice(0, evaluation.prefix);
     setPlaced(keep);
-    setEvaluation(null);
+    setChecked(false);
     life.emit("module:interact", { itemIndex: index, action: "retry", kept: keep.length });
     announce(t("word.cleared"));
     const firstFree = tiles.find((tile) => !keep.includes(tile.id));
     focusLater(() => (firstFree ? bankRefs.current.get(firstFree.id) : checkRef.current));
-  }, [evaluation, placed, life, index, announce, t, tiles, focusLater]);
+  }, [evaluation, placed, life, index, announce, t, tiles, focusLater, setPlaced, setChecked]);
 
   const reveal = useCallback(() => {
     if (!evaluation) return;
@@ -495,7 +501,7 @@ function ItemView({
       ),
       placed: placedTexts,
     });
-  }, [evaluation, life, index, announce, t, item, attempts, placedTexts, onResolve]);
+  }, [evaluation, life, index, announce, t, item, attempts, placedTexts, onResolve, setLocked]);
 
   const tileState = (i: number): TileState => {
     if (!evaluation) return "idle";
@@ -700,12 +706,12 @@ function ItemView({
               variant="primary"
               onClick={onNext}
               trailing={<ArrowRight aria-hidden />}
-              autoFocus
+              autoFocus={life.autoFocus}
             >
               {isLast ? t("common.finish") : t("common.next")}
             </Button>
           ) : canRetry ? (
-            <Button key="retry" variant="primary" onClick={retry} autoFocus>
+            <Button key="retry" variant="primary" onClick={retry} autoFocus={life.autoFocus}>
               {t("common.retry")}
             </Button>
           ) : (
@@ -743,15 +749,35 @@ function WordBuilderRun({
   const total = items.length;
 
   const [seed] = useState(() => behavior.shuffleSeed ?? seedFromString(config.id, life.runId));
-  const [index, setIndex] = useState(0);
-  const [records, setRecords] = useState<ItemRecord[]>([]);
-  const [finished, setFinished] = useState(false);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const [index, setIndex] = usePersistedState(life, "index", 0, G.int(0, total - 1));
+  const [records, setRecords] = usePersistedState<ItemRecord[]>(life, "records", [], (raw) => {
+    const base = G.arrayOf(
+      G.shape({
+        correct: G.bool,
+        revealed: G.bool,
+        attempts: G.int(0, 100_000),
+        score: G.range(0, 1),
+        // Every tile can be placed (tokens plus distractor tiles), so allow generous room.
+        placed: G.arrayOf(G.str, 64),
+      }),
+      total,
+    )(raw);
+    if (!base) return undefined;
+    // Keep the optional item id when it matches the content.
+    return base.map((r, i) => (items[i]?.id ? { ...r, id: items[i]!.id } : r));
+  });
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "items"], total, (i) => {
+    setIndex(i);
+    setFinished(false);
+  });
   const item = items[index]!;
   const resolved = records.length > index;
 
   const onResolve = useCallback(
     (record: ItemRecord) => setRecords((prev) => [...prev.slice(0, index), record]),
-    [index],
+    [index, setRecords],
   );
 
   const onNext = useCallback(() => {
@@ -765,7 +791,7 @@ function WordBuilderRun({
       return;
     }
     setIndex(index + 1);
-  }, [resolved, index, total, records, life, announce, t]);
+  }, [resolved, index, total, records, life, announce, t, setFinished, setIndex]);
 
   const retryAll = useCallback(() => {
     life.reset();
@@ -872,7 +898,7 @@ function WordBuilderRun({
             seed={seed + index * 977}
             behavior={behavior}
             feedback={config.feedback}
-            focusOnMount={index > 0}
+            focusOnMount={index > 0 && life.autoFocus}
             announce={announce}
             life={life}
             onResolve={onResolve}

@@ -18,9 +18,13 @@ const order = [
   "theming",
   "progress",
   "events",
+  "xapi",
   "custom-modules",
   "embedding",
+  "authoring",
   "schema-reference",
+  "json-schema",
+  "migrations",
   "accessibility",
   "release",
 ];
@@ -87,6 +91,23 @@ export function DocsPage() {
               return <CodeBlock code={text} lang={match?.[1] ?? "text"} />;
             },
             pre: ({ children }) => <>{children}</>,
+            // Wide tables scroll inside their own focusable region instead of widening the page.
+            table: ({ children }) => (
+              <div className="docs-table" role="region" aria-label="Table" tabIndex={0}>
+                <table>{children}</table>
+              </div>
+            ),
+            // GFM task-list checkboxes are read-only; give them a name.
+            input: ({ type, checked }) =>
+              type === "checkbox" ? (
+                <input
+                  type="checkbox"
+                  checked={Boolean(checked)}
+                  disabled
+                  readOnly
+                  aria-label={checked ? "Done" : "Not done"}
+                />
+              ) : null,
           }}
         >
           {doc.content}

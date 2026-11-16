@@ -30,13 +30,18 @@
   white-space: nowrap;
   user-select: none;
 }
-.nb-btn:active:not(:disabled) {
+.nb-btn:active:not(:disabled, [aria-disabled="true"]) {
   /* Tactile press: a slight scale reads as "pushed" without moving the layout. */
   transform: scale(0.97);
   box-shadow: none;
 }
-.nb-btn:disabled {
+.nb-btn:disabled,
+.nb-btn[aria-disabled="true"] {
   opacity: 0.5;
+}
+/* aria-disabled buttons stay focusable (they keep keyboard focus) but do nothing. */
+.nb-btn[aria-disabled="true"] {
+  cursor: default;
 }
 .nb-btn--primary {
   --_bg: var(--nb-accent);
@@ -44,12 +49,12 @@
   --_border: transparent;
   --_shadow: var(--nb-shadow-sm), 0 2px 0 0 var(--nb-accent-active);
 }
-.nb-btn--primary:hover:not(:disabled) {
+.nb-btn--primary:hover:not(:disabled, [aria-disabled="true"]) {
   box-shadow:
     var(--nb-glow),
     0 2px 0 0 var(--nb-accent-active);
 }
-.nb-btn--primary:hover:not(:disabled) {
+.nb-btn--primary:hover:not(:disabled, [aria-disabled="true"]) {
   --_bg: var(--nb-accent-hover);
   filter: none;
 }
@@ -83,7 +88,7 @@
   --_shadow: none;
 }
 @media (hover: hover) and (pointer: fine) {
-  .nb-btn--ghost:hover:not(:disabled) {
+  .nb-btn--ghost:hover:not(:disabled, [aria-disabled="true"]) {
     --_bg: var(--nb-surface-2);
     --_fg: var(--nb-fg);
     filter: none;
@@ -664,6 +669,10 @@
   height: 56px;
   border-radius: var(--nb-radius-sm);
   object-fit: cover;
+}
+.nb-option__image--empty {
+  display: block;
+  background: var(--nb-surface-3);
 }
 .nb-option__mark {
   flex: none;

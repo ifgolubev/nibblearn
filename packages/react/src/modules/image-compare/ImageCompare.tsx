@@ -29,6 +29,9 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -49,14 +52,7 @@ const LETTERS = "ABCDE";
 /** Half the handle width plus a small inset (px). */
 const HANDLE_HALF = 34;
 
-export function ImageCompare({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: ImageCompareProps) {
+export function ImageCompare({ config: rawConfig, ...rest }: ImageCompareProps) {
   const parsed = useMemo(() => imageCompareSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -66,29 +62,25 @@ export function ImageCompare({
       />
     );
   }
-  return (
-    <ImageCompareInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <ImageCompareInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts ImageCompareRun with fresh state (keyed by runId). */
 function ImageCompareInner(props: ImageCompareProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "image-compare",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <ImageCompareRun key={life.runId} {...props} life={life} />;
+  return <ImageCompareRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 /** Floating-card position next to a marker (percentages of the stage). */
@@ -123,16 +115,28 @@ function ImageCompareRun({
   const annotationIds = useMemo(() => annotations.map((a) => a.id), [annotations]);
   const initial = clampComparePosition(behavior.initialPosition);
 
-  const [position, setPosition] = useState(initial);
+  // Progress is saved in the state snapshot (initialState / onStateChange). An unanswered
+  // question starts over; a finished module shows its result.
+  const [position, setPosition] = usePersistedState(life, "position", initial, G.range(0, 100));
   const [dragging, setDragging] = useState(false);
-  const [interacted, setInteracted] = useState(false);
-  const [reach, setReach] = useState<CompareReach>({ min: initial, max: initial });
-  const [opened, setOpened] = useState<string[]>([]);
+  const [interacted, setInteracted] = usePersistedState(life, "interacted", false, G.bool);
+  const [reach, setReach] = usePersistedState<CompareReach>(
+    life,
+    "reach",
+    { min: initial, max: initial },
+    G.shape<CompareReach>({ min: G.range(0, 100), max: G.range(0, 100) }),
+  );
+  const [opened, setOpened] = usePersistedState<string[]>(
+    life,
+    "opened",
+    [],
+    G.arrayOf(G.oneOf(annotationIds), annotationIds.length),
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [stageWidth, setStageWidth] = useState(0);
-  const [finished, setFinished] = useState(false);
-  const [score, setScore] = useState<number | undefined>(undefined);
-  const [attempts, setAttempts] = useState(0);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  const [score, setScore] = useState<number | undefined>(() => life.result?.score);
+  const [attempts, setAttempts] = usePersistedState(life, "attempts", 0, G.int(0, 100_000));
   const [naturalRatio, setNaturalRatio] = useState<number | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -178,7 +182,7 @@ function ImageCompareRun({
       });
       announce(t("a11y.moduleComplete"));
     },
-    [life, announce, t],
+    [life, announce, t, setFinished],
   );
 
   /** Runs after every reach / opened change made by the learner. */
@@ -207,7 +211,7 @@ function ImageCompareRun({
         checkExplored(next, openedRef.current);
       }
     },
-    [checkExplored],
+    [checkExplored, setPosition, setInteracted, setReach],
   );
 
   const positionFromClientX = (clientX: number): number => {
@@ -277,7 +281,7 @@ function ImageCompareRun({
       const target = revealPositionFor(a, positionRef.current);
       if (target !== positionRef.current) moveTo(target);
       setActiveId(a.id);
-      life.emit("module:interact", { annotationId: a.id });
+      life.emit("module:interact", { action: "open", annotationId: a.id });
       announce(a.title);
       if (!openedRef.current.includes(a.id)) {
         const next = [...openedRef.current, a.id];
@@ -287,7 +291,7 @@ function ImageCompareRun({
       }
       if (!fromList) requestAnimationFrame(() => cardRef.current?.focus({ preventScroll: true }));
     },
-    [moveTo, life, announce, checkExplored],
+    [moveTo, life, announce, checkExplored, setOpened],
   );
 
   const closeNote = useCallback(() => {
@@ -584,11 +588,17 @@ function ImageCompareRun({
           >
             <QuestionBlock
               moduleId={config.id}
+              canFocus={life.autoFocus}
               question={question}
               onAttempt={(n, ev, selected) => {
                 setAttempts(n);
                 life.attempt();
-                life.emit("module:answer", { selected, correct: ev.correct, attempts: n });
+                life.emit("module:answer", {
+                  selected,
+                  response: selected,
+                  correct: ev.correct,
+                  attempts: n,
+                });
                 announce(ev.correct ? t("a11y.correctAnswer") : t("a11y.incorrectAnswer"));
               }}
               onFinish={(n) => complete({ score: attemptScore(n), attempts: n })}
@@ -655,9 +665,11 @@ interface QuestionBlockProps {
   question: NonNullable<ImageCompareConfig["content"]["question"]>;
   onAttempt: (attempts: number, evaluation: ChoiceEvaluation, selected: string[]) => void;
   onFinish: (attempts: number) => void;
+  /** The module may move focus by itself (see `ModuleLifecycle.autoFocus`). */
+  canFocus: boolean;
 }
 
-function QuestionBlock({ moduleId, question, onAttempt, onFinish }: QuestionBlockProps) {
+function QuestionBlock({ moduleId, question, onAttempt, onFinish, canFocus }: QuestionBlockProps) {
   const { t } = useNibblearn();
   const options = useMemo(
     () => question.options.map((o, i) => ({ ...o, id: o.id ?? `opt${i}` })),
@@ -751,12 +763,12 @@ function QuestionBlock({ moduleId, question, onAttempt, onFinish }: QuestionBloc
           </Button>
         )}
         {evaluation && !solved && (
-          <Button variant="secondary" onClick={retry} autoFocus>
+          <Button variant="secondary" onClick={retry} autoFocus={canFocus}>
             {t("common.retry")}
           </Button>
         )}
         {solved && (
-          <Button variant="primary" onClick={() => onFinish(attempts)} autoFocus>
+          <Button variant="primary" onClick={() => onFinish(attempts)} autoFocus={canFocus}>
             {t("common.finish")}
           </Button>
         )}

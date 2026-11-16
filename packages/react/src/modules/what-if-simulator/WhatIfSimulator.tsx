@@ -17,6 +17,8 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -40,14 +42,7 @@ const INSIGHT_TONE: Record<"info" | "success" | "warning", FeedbackTone> = {
   warning: "partial",
 };
 
-export function WhatIfSimulator({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: WhatIfSimulatorProps) {
+export function WhatIfSimulator({ config: rawConfig, ...rest }: WhatIfSimulatorProps) {
   const parsed = useMemo(() => whatIfSimulatorSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -57,16 +52,7 @@ export function WhatIfSimulator({
       />
     );
   }
-  return (
-    <WhatIfSimulatorInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <WhatIfSimulatorInner config={parsed.data} {...rest} />;
 }
 
 /* ----------------------------------------------------------------------------
@@ -312,6 +298,10 @@ function WhatIfSimulatorInner({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: WhatIfSimulatorProps) {
@@ -323,25 +313,49 @@ function WhatIfSimulatorInner({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   const { message, announce } = useAnnounce();
   const { content, behavior } = config;
   const format = useFormatter(content.currency);
 
   interface RunState {
-    runId: number;
+    /** Run key: lifecycle run plus config structure (see runKey). */
+    runId: string;
     inputs: SimulatorScope;
     /** Largest absolute value seen per output this run; drives relative bar lengths. */
     peaks: Record<string, number>;
   }
   const freshState = useCallback(
-    (runId: number): RunState => ({ runId, inputs: defaultInputs(config), peaks: {} }),
+    (runId: string): RunState => ({ runId, inputs: defaultInputs(config), peaks: {} }),
     [config],
   );
-  const [state, setState] = useState<RunState>(() => freshState(life.runId));
+  // The inputs are saved in the state snapshot (initialState / onStateChange).
+  const [state, setState] = useState<RunState>(() => {
+    const fresh = freshState(runKey(life, config));
+    const saved = G.recordOf(
+      G.num,
+      G.oneOf(content.inputs.map((i) => i.id)),
+    )(life.restore("inputs"));
+    if (!saved) return fresh;
+    const inputs = { ...fresh.inputs };
+    for (const input of content.inputs) {
+      const v = saved[input.id];
+      if (v !== undefined && v >= input.min && v <= input.max) inputs[input.id] = v;
+    }
+    return { ...fresh, inputs };
+  });
+  useEffect(() => {
+    life.persist("inputs", state.inputs);
+  }, [life, state.inputs]);
 
   // Reset local state on lifecycle reset (adjusted during render so children never see stale inputs).
-  if (state.runId !== life.runId) setState(freshState(life.runId));
+  const currentKey = runKey(life, config);
+  if (state.runId !== currentKey) setState(freshState(currentKey));
 
   const { inputs } = state;
   const scope = useMemo(() => computeOutputs(config, inputs), [config, inputs]);
@@ -391,7 +405,11 @@ function WhatIfSimulatorInner({
       if (interactTimer.current) clearTimeout(interactTimer.current);
       interactTimer.current = setTimeout(() => {
         interactTimer.current = null;
-        life.emit("module:interact", { inputs: { ...latestInputs.current }, ...extra });
+        life.emit("module:interact", {
+          action: "change",
+          inputs: { ...latestInputs.current },
+          ...extra,
+        });
       }, INTERACT_DEBOUNCE_MS);
     },
     [life],

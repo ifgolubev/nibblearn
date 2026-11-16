@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ScreenshotWalkthrough } from "./ScreenshotWalkthrough";
 import { screenshotWalkthroughSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const img = {
   src: "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2F%3E",
@@ -141,5 +142,37 @@ describe("ScreenshotWalkthrough", () => {
     rerender(<ScreenshotWalkthrough config={config} resetKey={2} />);
     await waitFor(() => expect(screen.getByText("Step 1 of 3")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+  });
+
+  it("restores the current step and miss count", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ScreenshotWalkthrough config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: "Click Contacts in the sidebar." }));
+    expect(await screen.findByText("Step 2 of 3")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<ScreenshotWalkthrough config={config} initialState={saved} />);
+    expect(screen.getByText("Step 2 of 3")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Simulated input" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ScreenshotWalkthrough config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: "Click Contacts in the sidebar." }));
+    await user.type(await screen.findByRole("textbox", { name: "Simulated input" }), "maya{Enter}");
+    expect(await screen.findByText("Step 3 of 3")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByText("Walkthrough complete")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<ScreenshotWalkthrough config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("Walkthrough complete")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

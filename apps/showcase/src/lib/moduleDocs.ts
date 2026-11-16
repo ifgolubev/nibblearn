@@ -1454,6 +1454,181 @@ export const moduleDocs: ModuleDoc[] = [
     ],
     wide: true,
   },
+  {
+    type: "callout",
+    name: "Callout",
+    tagline: "A highlighted note, tip or warning between paragraphs.",
+    category: "present",
+    icon: "MessageSquareWarning",
+    description:
+      "A coloured box for the one thing a learner must not miss: a rule, a tip, a warning or a success note. The text supports bold, italic, code, links and lists, and the variant is named for screen readers, not only shown as a colour.",
+    useCases: ["Rules and conventions", "Warnings before a risky step", "Tips and shortcuts"],
+    interactions: ["Read-only; counts as completed when shown"],
+    accessibility: [
+      'role="note" with the title as its name',
+      "Variant spoken as text (Tip, Warning…), icon is decorative",
+    ],
+    options: [
+      ...base,
+      {
+        path: "content.variant",
+        type: '"info" | "tip" | "warning" | "success" | "note"',
+        default: '"info"',
+        description: "Tone and icon.",
+      },
+      { path: "content.title", type: "string", description: "Short heading inside the box." },
+      {
+        path: "content.text",
+        type: "string",
+        description: "Body text with **bold**, links and lists.",
+      },
+    ],
+  },
+  {
+    type: "accordion",
+    name: "Accordion",
+    tagline: "Details on demand, one panel at a time.",
+    category: "present",
+    icon: "ListCollapse",
+    description:
+      "Collapsible panels for FAQs and reference details. Learners open what they need; the block can require every panel to be opened before it counts as completed.",
+    useCases: ["FAQs", "Policy details", "Optional deep dives"],
+    interactions: [
+      "Click or press Enter/Space on a heading to open it",
+      "One or several panels open at once",
+    ],
+    accessibility: [
+      "Headings with buttons, aria-expanded and aria-controls",
+      'Panels are role="region" labelled by their heading',
+    ],
+    options: [
+      ...base,
+      {
+        path: "content.items[]",
+        type: "{ id, title, text, image? }[]",
+        description: "1–30 panels.",
+      },
+      {
+        path: "behavior.allowMultiple",
+        type: "boolean",
+        default: "false",
+        description: "Allow several open panels.",
+      },
+      {
+        path: "behavior.defaultOpen",
+        type: '"none" | "first" | "all"',
+        default: '"none"',
+        description: "Panels open initially.",
+      },
+      {
+        path: "behavior.completeOn",
+        type: '"view" | "all-items"',
+        default: '"view"',
+        description: "Complete when shown, or once every panel was opened.",
+      },
+    ],
+  },
+  {
+    type: "tabs",
+    name: "Tabs",
+    tagline: "Compare parallel views without leaving the page.",
+    category: "present",
+    icon: "PanelTop",
+    description:
+      "Two to eight tabs for content that belongs side by side: funnel stages, roles, before and after. Follows the WAI-ARIA tabs pattern.",
+    useCases: ["Stages of a process", "Different roles or audiences", "Options to compare"],
+    interactions: ["Click a tab", "Arrow keys, Home and End move between tabs"],
+    accessibility: [
+      "tablist / tab / tabpanel roles with roving tabindex",
+      "The tab list scrolls instead of overflowing on narrow screens",
+    ],
+    options: [
+      ...base,
+      {
+        path: "content.tabs[]",
+        type: "{ id, label, text, image? }[]",
+        description: "2–8 tabs; labels up to 40 characters.",
+      },
+      {
+        path: "behavior.completeOn",
+        type: '"view" | "all-items"',
+        default: '"view"',
+        description: "Complete when shown, or once every tab was viewed.",
+      },
+    ],
+  },
+  {
+    type: "carousel",
+    name: "Carousel",
+    tagline: "Slides at the learner's pace, never on a timer.",
+    category: "present",
+    icon: "GalleryHorizontal",
+    description:
+      "A sequence of slides with a title, text and an optional image. Learners move with buttons, dots, arrow keys or a swipe; the carousel never advances on its own.",
+    useCases: ["Step-by-step walkthroughs", "Timelines", "Image galleries with captions"],
+    interactions: [
+      "Previous / Next buttons and dots",
+      "Arrow keys",
+      "Swipe on touch screens",
+      "Optional loop",
+    ],
+    accessibility: [
+      'aria-roledescription="carousel" and "slide" with "n of m" labels',
+      "No auto-rotation; slide changes are announced",
+    ],
+    options: [
+      ...base,
+      {
+        path: "content.slides[]",
+        type: "{ id, title?, text?, image? }[]",
+        description: "1–30 slides; each needs a title, text or image.",
+      },
+      {
+        path: "behavior.loop",
+        type: "boolean",
+        default: "false",
+        description: "Wrap around at the ends.",
+      },
+      {
+        path: "behavior.showDots",
+        type: "boolean",
+        default: "true",
+        description: "Show a dot per slide.",
+      },
+      {
+        path: "behavior.completeOn",
+        type: '"view" | "all-items"',
+        default: '"view"',
+        description: "Complete when shown, or once every slide was seen.",
+      },
+    ],
+  },
+  {
+    type: "columns",
+    name: "Columns",
+    tagline: "Side-by-side content that stacks on small screens.",
+    category: "present",
+    icon: "Columns2",
+    description:
+      "Two to four columns with an optional heading, text and image each. Two columns can use a 1:2 or 2:1 ratio. On narrow containers the columns stack.",
+    useCases: ["Do and don't", "Comparisons", "Short feature lists"],
+    interactions: ["Read-only; counts as completed when shown"],
+    accessibility: ["Each column is a labelled section", "Reading order follows the visual order"],
+    options: [
+      ...base,
+      {
+        path: "content.columns[]",
+        type: "{ id, title?, text?, image? }[]",
+        description: "2–4 columns.",
+      },
+      {
+        path: "layout.ratio",
+        type: '"equal" | "1-2" | "2-1"',
+        default: '"equal"',
+        description: "Width ratio for two columns.",
+      },
+    ],
+  },
 ];
 
 export const categories: { id: ModuleCategory; label: string; description: string }[] = [
@@ -1462,6 +1637,7 @@ export const categories: { id: ModuleCategory; label: string; description: strin
   { id: "explore", label: "Explore", description: "Discover by interacting" },
   { id: "decide", label: "Decide", description: "Make choices and see consequences" },
   { id: "simulate", label: "Simulate", description: "Play with the variables" },
+  { id: "present", label: "Present", description: "Structure and highlight content" },
 ];
 
 export function getModuleDoc(type: string) {

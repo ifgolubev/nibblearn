@@ -20,3 +20,4 @@ export * from "./word-builder";
 export * from "./priority-matrix";
 export * from "./label-diagram";
 export * from "./image-compare";
+export * from "./content-blocks";

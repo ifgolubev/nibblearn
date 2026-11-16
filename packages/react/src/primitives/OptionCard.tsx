@@ -1,8 +1,9 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import clsx from "clsx";
 import { Check, X } from "lucide-react";
-import { RichText } from "./RichText";
+import { NoLinks, RichText } from "./RichText";
 import type { Media } from "@nibblearn/core";
+import { useResolvedSrc } from "../hooks/useResolvedSrc";
 
 export type OptionState = "idle" | "selected" | "correct" | "incorrect" | "missed";
 
@@ -37,28 +38,43 @@ export const OptionCard = forwardRef<HTMLButtonElement, OptionCardProps>(functio
       data-state={state}
       {...rest}
     >
-      {shortcut && (
-        <span className="nb-option__key" aria-hidden>
-          {state === "selected" && multiple ? <Check strokeWidth={3} /> : shortcut}
+      <NoLinks>
+        {shortcut && (
+          <span className="nb-option__key" aria-hidden>
+            {state === "selected" && multiple ? <Check strokeWidth={3} /> : shortcut}
+          </span>
+        )}
+        {image && <OptionImage image={image} />}
+        <span className="nb-option__text">
+          <RichText text={text} />
         </span>
-      )}
-      {image && (
-        <img className="nb-option__image" src={image.src} alt={image.alt} draggable={false} />
-      )}
-      <span className="nb-option__text">
-        <RichText text={text} />
-      </span>
-      {children}
-      {showMark && (
-        <span className="nb-option__mark" aria-hidden>
-          {state === "incorrect" ? <X strokeWidth={3} /> : <Check strokeWidth={3} />}
-        </span>
-      )}
-      {explanation && showMark && (
-        <span className="nb-option__explanation">
-          <RichText text={explanation} />
-        </span>
-      )}
+        {children}
+        {showMark && (
+          <span className="nb-option__mark" aria-hidden>
+            {state === "incorrect" ? <X strokeWidth={3} /> : <Check strokeWidth={3} />}
+          </span>
+        )}
+        {explanation && showMark && (
+          <span className="nb-option__explanation">
+            <RichText text={explanation} />
+          </span>
+        )}
+      </NoLinks>
     </button>
   );
 });
+
+function OptionImage({ image }: { image: Media }) {
+  const resolved = useResolvedSrc(image.src);
+  if (!resolved.src)
+    return <span className="nb-option__image nb-option__image--empty" aria-hidden />;
+  return (
+    <img
+      className="nb-option__image"
+      src={resolved.src}
+      alt={image.alt}
+      draggable={false}
+      onError={() => resolved.retry()}
+    />
+  );
+}

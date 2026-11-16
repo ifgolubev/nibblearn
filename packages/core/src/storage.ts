@@ -1,4 +1,5 @@
 import type { ModuleResult } from "./events";
+import type { ModuleState } from "./state";
 
 /** Persisted lesson progress. Serialisable. */
 export interface LessonProgress {
@@ -10,6 +11,8 @@ export interface LessonProgress {
   startedAt: string;
   updatedAt: string;
   completedAt?: string;
+  /** Saved module sessions (see `ModuleState`), keyed by module id. Optional. */
+  moduleStates?: Record<string, ModuleState>;
 }
 
 /**

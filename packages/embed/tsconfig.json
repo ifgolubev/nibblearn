@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
+    "baseUrl": ".",
+    "paths": {
+      "@nibblearn/core": ["../core/src/index.ts"],
+      "@nibblearn/core/examples": ["../core/src/examples/index.ts"],
+      "@nibblearn/react": ["../react/src/index.ts"],
+      "@nibblearn/react/styles.css": ["../react/src/styles/index.css"]
+    }
+  },
+  "include": ["src", "test", "vite.config.ts", "vitest.config.ts"]
+}

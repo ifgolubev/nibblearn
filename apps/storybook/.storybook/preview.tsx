@@ -3,6 +3,7 @@ import { NibblearnProvider } from "@nibblearn/react";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/bricolage-grotesque";
 import "@nibblearn/react/styles.css";
+import "@nibblearn/editor/styles.css";
 
 const withNibblearn: Decorator = (Story, ctx) => {
   const theme = (ctx.globals.theme as "light" | "dark") ?? "light";

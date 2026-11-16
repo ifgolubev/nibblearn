@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MatchPairs } from "./MatchPairs";
 import { matchPairsSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = matchPairsSchema.parse({
   id: "m",
@@ -117,5 +118,46 @@ describe("MatchPairs", () => {
     rerender(<MatchPairs config={config} resetKey={2} />);
     await waitFor(() => expect(screen.getByText("0 of 3 matched")).toBeInTheDocument());
     await waitFor(() => expect(leftTile("CPA")).toHaveAttribute("data-state", "idle"));
+  });
+
+  it("restores matches and mistakes mid-round", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<MatchPairs config={config} onStateChange={onStateChange} />);
+    await user.click(leftTile("CPA"));
+    await user.click(rightTile("Click-through rate"));
+    await user.click(rightTile("Cost per acquisition"));
+    await user.click(leftTile("CPA"));
+    expect(screen.getByText("1 of 3 matched")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<MatchPairs config={config} initialState={saved} />);
+    expect(screen.getByText("1 of 3 matched")).toBeInTheDocument();
+    expect(screen.getByText("1 mistakes")).toBeInTheDocument();
+    expect(leftTile("CTR")).toHaveAttribute("data-state", "idle");
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const onComplete = vi.fn();
+    const first = render(
+      <MatchPairs config={config} onStateChange={onStateChange} onComplete={onComplete} />,
+    );
+    await user.click(leftTile("CPA"));
+    await user.click(rightTile("Cost per acquisition"));
+    await user.click(leftTile("CTR"));
+    await user.click(rightTile("Click-through rate"));
+    await user.click(await screen.findByRole("button", { name: "CPM" }, { timeout: 3000 }));
+    await user.click(rightTile("Cost per thousand impressions"));
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const again = vi.fn();
+    render(<MatchPairs config={config} initialState={saved} onComplete={again} />);
+    expect(screen.getByText("All pairs matched!")).toBeInTheDocument();
+    expect(again).not.toHaveBeenCalled();
   });
 });

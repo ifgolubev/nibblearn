@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import clsx from "clsx";
+import { NoLinks } from "./RichText";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "soft" | "ghost" | "success" | "danger";
@@ -40,9 +41,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       )}
       {...rest}
     >
-      {leading}
-      {children}
-      {trailing}
+      <NoLinks>
+        {leading}
+        {children}
+        {trailing}
+      </NoLinks>
     </button>
   );
 });

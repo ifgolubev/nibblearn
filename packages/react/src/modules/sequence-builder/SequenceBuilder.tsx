@@ -36,13 +36,16 @@ import clsx from "clsx";
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
 import { AnimatedFeedback } from "../../primitives/Feedback";
 import { Explanation } from "../../primitives/Explanation";
 import { Hint } from "../../primitives/Hint";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./sequence-builder.css";
@@ -51,14 +54,7 @@ export type SequenceBuilderProps = ModuleProps<SequenceBuilderConfig>;
 
 type RowState = "idle" | "correct" | "incorrect";
 
-export function SequenceBuilder({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: SequenceBuilderProps) {
+export function SequenceBuilder({ config: rawConfig, ...rest }: SequenceBuilderProps) {
   const parsed = useMemo(() => sequenceBuilderSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -68,16 +64,7 @@ export function SequenceBuilder({
       />
     );
   }
-  return (
-    <SequenceBuilderInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <SequenceBuilderInner config={parsed.data} {...rest} />;
 }
 
 function SequenceBuilderInner({
@@ -85,6 +72,10 @@ function SequenceBuilderInner({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: SequenceBuilderProps) {
@@ -94,10 +85,15 @@ function SequenceBuilderInner({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   return (
     <SequenceGame
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -131,11 +127,22 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   const [seed] = useState(() => behavior.shuffleSeed ?? seedFromString(config.id, life.runId));
-  const [order, setOrder] = useState<string[]>(() => shuffleDerangement(correctOrder, seed));
-  const [evaluation, setEvaluation] = useState<SequenceEvaluation | null>(null);
-  const [attempts, setAttempts] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [finished, setFinished] = useState(false);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const [order, setOrder] = usePersistedState<string[]>(
+    life,
+    "order",
+    () => shuffleDerangement(correctOrder, seed),
+    G.permutationOf(correctOrder),
+  );
+  const [checkedSaved, setChecked] = usePersistedState(life, "checked", false, G.bool);
+  const [attempts, setAttempts] = usePersistedState(life, "attempts", 0, G.int(0, 100_000));
+  const [revealed, setRevealed] = usePersistedState(life, "revealed", false, G.bool);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  // The evaluation is derived from the order, so restoring the order restores it too.
+  const evaluation = useMemo<SequenceEvaluation | null>(
+    () => (checkedSaved ? evaluateSequence(correctOrder, order) : null),
+    [checkedSaved, correctOrder, order],
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const checked = evaluation !== null;
@@ -155,10 +162,10 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
       if (checked || to < 0 || to >= total || from === to) return;
       setOrder((prev) => moveItem(prev, from, to));
       const item = byId.get(order[from]!);
-      life.emit("module:interact", { itemId: order[from], from, to });
+      life.emit("module:interact", { action: "move", itemId: order[from], from, to });
       announce(t("a11y.movedTo", { item: item?.text ?? "", position: to + 1 }));
     },
-    [checked, total, order, byId, life, announce, t],
+    [checked, total, setOrder, byId, order, life, announce, t],
   );
 
   const onDragStart = useCallback((e: DragStartEvent) => setActiveId(String(e.active.id)), []);
@@ -171,12 +178,12 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
       const to = order.indexOf(String(over.id));
       if (from < 0 || to < 0) return;
       setOrder((prev) => arrayMove(prev, from, to));
-      life.emit("module:interact", { itemId: active.id, from, to });
+      life.emit("module:interact", { action: "move", itemId: active.id, from, to });
       announce(
         t("a11y.movedTo", { item: byId.get(String(active.id))?.text ?? "", position: to + 1 }),
       );
     },
-    [order, byId, life, announce, t],
+    [order, setOrder, life, announce, t, byId],
   );
   const onDragCancel = useCallback(() => setActiveId(null), []);
 
@@ -186,13 +193,14 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
     const n = attempts + 1;
     setAttempts(n);
     life.attempt();
-    setEvaluation(ev);
+    setChecked(true);
     const willReveal =
       !ev.correct &&
       (!behavior.allowRetry || (behavior.maxAttempts > 0 && n >= behavior.maxAttempts));
     if (willReveal) setRevealed(true);
     life.emit("module:answer", {
       order,
+      response: order,
       correct: ev.correct,
       correctCount: ev.correctCount,
       attempts: n,
@@ -202,18 +210,32 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
         ? `${t("a11y.correctAnswer")} ${t("seq.allCorrect")}`
         : `${t("a11y.incorrectAnswer")} ${t("seq.correctCount", { correct: ev.correctCount, total })}`,
     );
-  }, [checked, correctOrder, order, attempts, life, behavior, announce, t, total]);
+  }, [
+    checked,
+    correctOrder,
+    order,
+    attempts,
+    setAttempts,
+    life,
+    setChecked,
+    behavior.allowRetry,
+    behavior.maxAttempts,
+    setRevealed,
+    announce,
+    t,
+    total,
+  ]);
 
   const retry = useCallback(() => {
-    setEvaluation(null);
+    setChecked(false);
     life.emit("module:interact", { action: "retry" });
-  }, [life]);
+  }, [life, setChecked]);
 
   const reveal = useCallback(() => {
     setRevealed(true);
     life.emit("module:interact", { action: "reveal" });
     announce(t("seq.correctOrder"));
-  }, [life, announce, t]);
+  }, [setRevealed, life, announce, t]);
 
   const finish = useCallback(() => {
     if (!evaluation) return;
@@ -226,7 +248,7 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
       details: { order, attempts, revealed },
     });
     announce(t("a11y.moduleComplete"));
-  }, [evaluation, attempts, revealed, life, total, order, announce, t]);
+  }, [evaluation, attempts, revealed, setFinished, life, total, order, announce, t]);
 
   const rowState = (index: number): RowState => {
     if (!evaluation) return "idle";
@@ -357,7 +379,9 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
                 <GripVertical />
               </span>
               <span className="nb-seq__text">
-                <RichText text={activeItem.text} />
+                <NoLinks>
+                  <RichText text={activeItem.text} />
+                </NoLinks>
               </span>
             </div>
           ) : null}
@@ -445,7 +469,7 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
             </Button>
           ) : (
             locked && (
-              <Button variant="primary" onClick={finish} autoFocus>
+              <Button variant="primary" onClick={finish} autoFocus={life.autoFocus}>
                 {t("common.finish")}
               </Button>
             )
@@ -520,7 +544,9 @@ function SortableRow({
         <GripVertical aria-hidden />
       </button>
       <span className="nb-seq__text">
-        <RichText text={item.text} />
+        <NoLinks>
+          <RichText text={item.text} />
+        </NoLinks>
       </span>
       <span className="nb-seq__mark" aria-hidden>
         {state === "correct" ? (

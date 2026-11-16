@@ -15,6 +15,7 @@ const nav = [
   { to: "/modules", label: "Modules" },
   { to: "/examples", label: "Examples" },
   { to: "/playground", label: "Playground" },
+  { to: "/editor", label: "Editor" },
   { to: "/docs", label: "Docs" },
 ];
 

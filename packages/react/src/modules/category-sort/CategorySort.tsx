@@ -27,12 +27,15 @@ import clsx from "clsx";
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
 import { AnimatedFeedback } from "../../primitives/Feedback";
 import { Hint } from "../../primitives/Hint";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./category-sort.css";
@@ -64,14 +67,7 @@ function sortScore(attempts: number, allCorrect: boolean, firstFraction: number)
   return firstFraction;
 }
 
-export function CategorySort({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: CategorySortProps) {
+export function CategorySort({ config: rawConfig, ...rest }: CategorySortProps) {
   const parsed = useMemo(() => categorySortSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -81,16 +77,7 @@ export function CategorySort({
       />
     );
   }
-  return (
-    <CategorySortInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <CategorySortInner config={parsed.data} {...rest} />;
 }
 
 function CategorySortInner({
@@ -98,6 +85,10 @@ function CategorySortInner({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: CategorySortProps) {
@@ -107,10 +98,15 @@ function CategorySortInner({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   return (
     <CategorySortGame
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -142,14 +138,47 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
     [items, behavior.shuffle, seed],
   );
 
-  const [assignments, setAssignments] = useState<Assignments>({});
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const itemIds = items.map((i) => i.id);
+  const [assignments, setAssignments] = usePersistedState<Assignments>(
+    life,
+    "assignments",
+    {},
+    G.recordOf(G.oneOf(categories.map((c) => c.id)), G.oneOf(itemIds), total),
+  );
   const [selected, setSelected] = useState<string | null>(null);
-  const [evaluation, setEvaluation] = useState<CategorySortEvaluation | null>(null);
-  const [lockedIds, setLockedIds] = useState<string[]>([]);
-  const [attempts, setAttempts] = useState(0);
-  const [firstFraction, setFirstFraction] = useState<number | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [finished, setFinished] = useState(false);
+  // The assignments as they were when the learner pressed Check (null = not checked).
+  const assignmentsGuard = G.recordOf(
+    G.oneOf(categories.map((c) => c.id)),
+    G.oneOf(itemIds),
+    total,
+  );
+  const [checkedWith, setCheckedWith] = usePersistedState<Assignments | null>(
+    life,
+    "checkedWith",
+    null,
+    G.nullable(assignmentsGuard),
+  );
+  const [lockedIds, setLockedIds] = usePersistedState<string[]>(
+    life,
+    "lockedIds",
+    [],
+    G.arrayOf(G.oneOf(itemIds), total),
+  );
+  const [attempts, setAttempts] = usePersistedState(life, "attempts", 0, G.int(0, 100_000));
+  const [firstFraction, setFirstFraction] = usePersistedState<number | null>(
+    life,
+    "firstFraction",
+    null,
+    G.nullable(G.range(0, 1)),
+  );
+  const [revealed, setRevealed] = usePersistedState(life, "revealed", false, G.bool);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  // The evaluation is derived from the checked assignments, so restoring them restores it too.
+  const evaluation = useMemo<CategorySortEvaluation | null>(
+    () => (checkedWith ? evaluateCategorySort(items, checkedWith) : null),
+    [checkedWith, items],
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const checked = evaluation !== null;
@@ -176,7 +205,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
       if (!item || !isMovable(itemId)) return;
       setAssignments((prev) => ({ ...prev, [itemId]: categoryId }));
       setSelected(null);
-      life.emit("module:interact", { itemId, categoryId: categoryId ?? null });
+      life.emit("module:interact", { action: "place", itemId, categoryId: categoryId ?? null });
       const category = categoryId ? categoryById.get(categoryId) : undefined;
       announce(
         category
@@ -184,7 +213,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
           : `${item.text}: ${t("sort.unsorted")}`,
       );
     },
-    [itemById, isMovable, life, categoryById, announce, t],
+    [itemById, isMovable, setAssignments, life, categoryById, announce, t, setSelected],
   );
 
   const toggleSelect = useCallback(
@@ -192,14 +221,17 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
       if (!isMovable(itemId)) return;
       setSelected((prev) => (prev === itemId ? null : itemId));
     },
-    [isMovable],
+    [isMovable, setSelected],
   );
 
-  const onDragStart = useCallback((e: DragStartEvent) => {
-    const id = String(e.active.id);
-    setActiveId(id);
-    setSelected(id);
-  }, []);
+  const onDragStart = useCallback(
+    (e: DragStartEvent) => {
+      const id = String(e.active.id);
+      setActiveId(id);
+      setSelected(id);
+    },
+    [setSelected],
+  );
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {
       setActiveId(null);
@@ -211,12 +243,12 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
       const target = String(e.over.id);
       place(itemId, target === POOL_ID ? undefined : target);
     },
-    [place],
+    [place, setSelected],
   );
   const onDragCancel = useCallback(() => {
     setActiveId(null);
     setSelected(null);
-  }, []);
+  }, [setSelected]);
 
   const check = useCallback(() => {
     if (checked || itemsLeft > 0) return;
@@ -224,7 +256,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
     const n = attempts + 1;
     setAttempts(n);
     life.attempt();
-    setEvaluation(ev);
+    setCheckedWith(assignments);
     setSelected(null);
     if (firstFraction === null) setFirstFraction(ev.score);
     const willReveal =
@@ -236,6 +268,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
     }
     life.emit("module:answer", {
       assignments,
+      response: assignments,
       correct: ev.correct,
       correctCount: ev.correctCount,
       attempts: n,
@@ -251,12 +284,19 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
     items,
     assignments,
     attempts,
+    setAttempts,
     life,
+    setCheckedWith,
     firstFraction,
-    behavior,
+    setFirstFraction,
+    behavior.allowRetry,
+    behavior.maxAttempts,
     announce,
     t,
     total,
+    setRevealed,
+    setAssignments,
+    setSelected,
   ]);
 
   const retry = useCallback(() => {
@@ -266,16 +306,16 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
     setAssignments((prev) =>
       Object.fromEntries(items.map((i) => [i.id, evaluation.items[i.id] ? prev[i.id] : undefined])),
     );
-    setEvaluation(null);
+    setCheckedWith(null);
     life.emit("module:interact", { action: "retry" });
-  }, [evaluation, items, life]);
+  }, [evaluation, items, life, setAssignments, setCheckedWith, setLockedIds]);
 
   const reveal = useCallback(() => {
     setRevealed(true);
     setAssignments(Object.fromEntries(items.map((i) => [i.id, i.categoryId])));
     life.emit("module:interact", { action: "reveal" });
     announce(t("common.showAnswer"));
-  }, [items, life, announce, t]);
+  }, [setRevealed, setAssignments, items, life, announce, t]);
 
   const finish = useCallback(() => {
     if (!evaluation) return;
@@ -288,7 +328,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
       details: { attempts, revealed, firstFraction },
     });
     announce(t("a11y.moduleComplete"));
-  }, [evaluation, attempts, firstFraction, life, total, revealed, announce, t]);
+  }, [evaluation, attempts, firstFraction, setFinished, life, total, revealed, announce, t]);
 
   const chipState = (itemId: string): ChipState => {
     if (revealed && evaluation && !evaluation.items[itemId]) return "revealed";
@@ -473,7 +513,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
             </Button>
           ) : (
             locked && (
-              <Button variant="primary" onClick={finish} autoFocus>
+              <Button variant="primary" onClick={finish} autoFocus={life.autoFocus}>
                 {t("common.finish")}
               </Button>
             )
@@ -718,7 +758,9 @@ function Chip({ item, state, draggable, onSelect, reduced }: ChipProps) {
         {...listeners}
       >
         <span className="nb-sort__chip-text">
-          <RichText text={item.text} />
+          <NoLinks>
+            <RichText text={item.text} />
+          </NoLinks>
         </span>
         {marked && (
           <span className="nb-sort__chip-mark" aria-hidden>

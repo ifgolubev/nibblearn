@@ -26,6 +26,10 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -55,14 +59,7 @@ const BAND_ICON: Record<EstimateBand, ReactNode> = {
   off: <CircleX aria-hidden strokeWidth={2.5} />,
 };
 
-export function Estimate({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: EstimateProps) {
+export function Estimate({ config: rawConfig, ...rest }: EstimateProps) {
   const parsed = useMemo(() => estimateSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -72,29 +69,25 @@ export function Estimate({
       />
     );
   }
-  return (
-    <EstimateInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <EstimateInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts EstimateRun with fresh state (keyed by runId). */
 function EstimateInner(props: EstimateProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "estimate",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <EstimateRun key={life.runId} {...props} life={life} />;
+  return <EstimateRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 /* ----------------------------------------------------------------------------
@@ -230,9 +223,13 @@ interface QuestionViewProps {
   isLast: boolean;
   currency: string;
   focusOnMount: boolean;
+  /** The module may move focus by itself (see `ModuleLifecycle.autoFocus`). */
+  canFocus: boolean;
   onLock: (guess: number, accuracy: EstimateAccuracy) => void;
   onNext: () => void;
   onHint: () => void;
+  /** A guess that was already locked in (restored session): show the revealed answer. */
+  lockedGuess?: number;
 }
 
 function QuestionView({
@@ -242,17 +239,21 @@ function QuestionView({
   isLast,
   currency,
   focusOnMount,
+  canFocus,
   onLock,
   onNext,
   onHint,
+  lockedGuess,
 }: QuestionViewProps) {
   const { t, locale } = useNibblearn();
   const reduced = useReducedMotion();
   const symbol = useCurrencySymbol(currency);
   const initial = useMemo(() => estimateStart(question), [question]);
-  const [guess, setGuess] = useState(initial);
-  const [inputText, setInputText] = useState(() => toInputString(question, initial));
-  const [result, setResult] = useState<EstimateAccuracy | null>(null);
+  const [guess, setGuess] = useState(lockedGuess ?? initial);
+  const [inputText, setInputText] = useState(() => toInputString(question, lockedGuess ?? initial));
+  const [result, setResult] = useState<EstimateAccuracy | null>(() =>
+    lockedGuess === undefined ? null : estimateAccuracy(question, lockedGuess),
+  );
   const sliderRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -502,7 +503,7 @@ function QuestionView({
               variant="primary"
               onClick={onNext}
               trailing={<ArrowRight aria-hidden />}
-              autoFocus
+              autoFocus={canFocus}
             >
               {isLast ? t("common.finish") : t("common.next")}
             </Button>
@@ -529,9 +530,35 @@ function EstimateRun({
   const { questions, currency } = config.content;
   const { behavior } = config;
 
-  const [index, setIndex] = useState(0);
-  const [records, setRecords] = useState<EstimateRecord[]>([]);
-  const [finished, setFinished] = useState(false);
+  // Progress is saved in the state snapshot (initialState / onStateChange): the locked guesses.
+  // Records are derived from them, so restored scores always match the content.
+  const [index, setIndex] = usePersistedState(life, "index", 0, G.int(0, questions.length - 1));
+  const [guesses, setGuesses] = usePersistedState<number[]>(life, "guesses", [], (raw) => {
+    const list = G.arrayOf(G.num, questions.length)(raw);
+    return list?.every((g, i) => g >= questions[i]!.min && g <= questions[i]!.max)
+      ? list
+      : undefined;
+  });
+  const records = useMemo<EstimateRecord[]>(
+    () =>
+      guesses.map((guess, i) => {
+        const q = questions[i]!;
+        const acc = estimateAccuracy(q, guess);
+        return {
+          ...(q.id ? { id: q.id } : {}),
+          guess,
+          answer: q.answer,
+          band: acc.band,
+          score: Number(acc.score.toFixed(4)),
+        };
+      }),
+    [guesses, questions],
+  );
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "questions"], questions.length, (i) => {
+    setIndex(i);
+    setFinished(false);
+  });
   const question = questions[index]!;
   const answered = records.length > index;
 
@@ -545,12 +572,17 @@ function EstimateRun({
         band: acc.band,
         score: Number(acc.score.toFixed(4)),
       };
-      setRecords((prev) => [...prev.slice(0, index), record]);
-      life.emit("module:answer", { questionIndex: index, ...record });
+      setGuesses((prev) => [...prev.slice(0, index), guess]);
+      life.emit("module:answer", {
+        questionIndex: index,
+        itemIndex: index,
+        ...record,
+        response: guess,
+      });
       const value = formatEstimate(question, question.answer, { currency, locale });
       announce(`${t(`estimate.${acc.band}`)} ${t("estimate.answerIs", { value })}`);
     },
-    [life, question, index, currency, locale, announce, t],
+    [life, question, index, currency, locale, announce, t, setGuesses],
   );
 
   const onNext = useCallback(() => {
@@ -565,7 +597,7 @@ function EstimateRun({
       return;
     }
     setIndex(index + 1);
-  }, [answered, index, questions.length, records, life, announce, t]);
+  }, [answered, index, questions.length, records, life, announce, t, setFinished, setIndex]);
 
   const onHint = useCallback(
     () => life.emit("module:hint", { questionIndex: index }),
@@ -675,10 +707,12 @@ function EstimateRun({
             index={index}
             isLast={index + 1 >= questions.length}
             currency={currency}
-            focusOnMount={index > 0}
+            focusOnMount={index > 0 && life.autoFocus}
+            canFocus={life.autoFocus}
             onLock={onLock}
             onNext={onNext}
             onHint={onHint}
+            lockedGuess={guesses[index]}
           />
         </motion.div>
       </AnimatePresence>

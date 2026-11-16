@@ -1,0 +1,40 @@
+.nb-callout {
+  --_tone: var(--nb-accent);
+  --_bg: var(--nb-accent-soft);
+  display: flex;
+  gap: var(--nb-space-3);
+  padding: var(--nb-space-4);
+  border: 1px solid color-mix(in srgb, var(--_tone) 35%, transparent);
+  border-inline-start: 4px solid var(--_tone);
+  border-radius: var(--nb-radius-md);
+  background: var(--_bg);
+}
+.nb-callout[data-variant="tip"] {
+  --_tone: var(--nb-highlight-fg, var(--nb-accent));
+  --_bg: var(--nb-highlight-soft);
+}
+.nb-callout[data-variant="warning"] {
+  --_tone: var(--nb-warning, #b45309);
+  --_bg: var(--nb-warning-soft, var(--nb-surface-2));
+}
+.nb-callout[data-variant="success"] {
+  --_tone: var(--nb-success);
+  --_bg: var(--nb-success-soft);
+}
+.nb-callout[data-variant="note"] {
+  --_tone: var(--nb-fg-muted);
+  --_bg: var(--nb-surface-2);
+}
+.nb-callout__icon {
+  flex: none;
+  margin-top: 0.15em;
+  color: var(--_tone);
+}
+.nb-callout__body {
+  min-width: 0;
+}
+.nb-callout__title {
+  margin-bottom: var(--nb-space-1);
+  font-size: var(--nb-text-md);
+  font-weight: var(--nb-weight-semibold);
+}

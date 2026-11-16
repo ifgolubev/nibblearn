@@ -15,3 +15,6 @@ playwright/.cache
 storybook-static
 *.tsbuildinfo
 .vite
+
+# Declaration-bundling shims (scripts/dts-shim.mjs)
+.dts-shim/

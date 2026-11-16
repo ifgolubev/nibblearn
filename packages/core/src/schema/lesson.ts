@@ -23,6 +23,11 @@ import {
   trueFalseSchema,
   whatIfSimulatorSchema,
   wordBuilderSchema,
+  calloutSchema,
+  accordionSchema,
+  tabsSchema,
+  carouselSchema,
+  columnsSchema,
 } from "./modules";
 
 /** Union of all built-in module configs (output / parsed form). */
@@ -49,6 +54,11 @@ export const builtInModuleSchema = z.discriminatedUnion("type", [
   imageCompareSchema,
   wordBuilderSchema,
   priorityMatrixSchema,
+  calloutSchema,
+  accordionSchema,
+  tabsSchema,
+  carouselSchema,
+  columnsSchema,
 ]);
 export type BuiltInModuleConfig = z.infer<typeof builtInModuleSchema>;
 export type BuiltInModuleInput = z.input<typeof builtInModuleSchema>;

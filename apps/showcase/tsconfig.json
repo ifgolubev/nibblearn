@@ -6,6 +6,9 @@
     "types": ["vite/client"],
     "paths": {
       "@nibblearn/core": ["../../packages/core/src/index.ts"],
+      "@nibblearn/core/examples": ["../../packages/core/src/examples/index.ts"],
+      "@nibblearn/editor": ["../../packages/editor/src/index.ts"],
+      "@nibblearn/editor/styles.css": ["../../packages/editor/src/styles.css"],
       "@nibblearn/react": ["../../packages/react/src/index.ts"],
       "@nibblearn/react/styles.css": ["../../packages/react/src/styles/index.css"],
       "@nibblearn/examples": ["../../examples/src/index.ts"],

@@ -24,6 +24,12 @@ import { WordBuilder } from "./modules/word-builder/WordBuilder";
 import { PriorityMatrix } from "./modules/priority-matrix/PriorityMatrix";
 import { InboxTriage } from "./modules/inbox-triage/InboxTriage";
 
+import { Callout } from "./modules/callout/Callout";
+import { Accordion } from "./modules/accordion/Accordion";
+import { Tabs } from "./modules/tabs/Tabs";
+import { Carousel } from "./modules/carousel/Carousel";
+import { Columns } from "./modules/columns/Columns";
+
 /** Built-in module components, keyed by type. */
 export const builtInComponents: Record<string, ModuleComponent<never>> = {
   "story-cards": StoryCards,
@@ -48,6 +54,11 @@ export const builtInComponents: Record<string, ModuleComponent<never>> = {
   "word-builder": WordBuilder,
   "priority-matrix": PriorityMatrix,
   "inbox-triage": InboxTriage,
+  callout: Callout,
+  accordion: Accordion,
+  tabs: Tabs,
+  carousel: Carousel,
+  columns: Columns,
 };
 
 /** Create a registry pre-populated with all built-in modules. */

@@ -1,6 +1,6 @@
 {
   "name": "@nibblearn/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Engine, schemas, validation and types for Nibblearn interactive learning content. Framework-agnostic.",
   "license": "MIT",
   "type": "module",
@@ -19,6 +19,17 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./examples": {
+      "import": {
+        "types": "./dist/examples.d.ts",
+        "default": "./dist/examples.js"
+      },
+      "require": {
+        "types": "./dist/examples.d.cts",
+        "default": "./dist/examples.cjs"
+      }
+    },
+    "./schemas/*.json": "./dist/schemas/*.json",
     "./package.json": "./package.json"
   },
   "files": [
@@ -27,16 +38,18 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build && dts-bundle-generator -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/index.ts && node ../../scripts/finish-dts.mjs dist",
+    "build": "vite build && dts-bundle-generator -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/index.ts && dts-bundle-generator -o dist/examples.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/examples/index.ts && node ../../scripts/finish-dts.mjs dist && node ../../scripts/build-json-schemas.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "check:package": "publint && attw --pack . --profile node16"
+    "check:package": "publint && attw --pack . --profile node16",
+    "fields:docs": "node ../../scripts/extract-field-docs.mjs && prettier --write src/schema/field-docs.generated.ts"
   },
   "dependencies": {
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
+    "ajv": "^8.20.0",
     "publint": "0.3.25"
   },
   "repository": {
@@ -60,8 +73,7 @@
     "zod"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "engines": {
     "node": ">=20"

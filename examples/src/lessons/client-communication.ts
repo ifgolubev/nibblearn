@@ -1,7 +1,7 @@
 import type { LessonInput } from "@nibblearn/core";
-import { branchingScenarioDemo } from "../modules/branching-scenario";
-import { conversationDemo } from "../modules/conversation";
-import { inboxTriageDemo } from "../modules/inbox-triage";
+import { branchingScenarioDemo } from "../modules";
+import { conversationDemo } from "../modules";
+import { inboxTriageDemo } from "../modules";
 
 /** Example C — Client Communication. */
 export const clientCommunicationLesson = {

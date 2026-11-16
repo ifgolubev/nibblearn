@@ -1,8 +1,8 @@
 import type { LessonInput } from "@nibblearn/core";
-import { sequenceBuilderDemo } from "../modules/sequence-builder";
-import { categorySortDemo } from "../modules/category-sort";
-import { hotspotExplorerDemo } from "../modules/hotspot-explorer";
-import { spotTheMistakeDemo } from "../modules/spot-the-mistake";
+import { sequenceBuilderDemo } from "../modules";
+import { categorySortDemo } from "../modules";
+import { hotspotExplorerDemo } from "../modules";
+import { spotTheMistakeDemo } from "../modules";
 
 /** Example B — Launching a Marketing Campaign. */
 export const launchingACampaignLesson = {

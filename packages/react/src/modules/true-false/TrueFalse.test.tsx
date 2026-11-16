@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TrueFalse } from "./TrueFalse";
 import { trueFalseSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = trueFalseSchema.parse({
   id: "tf",
@@ -136,5 +137,44 @@ describe("TrueFalse", () => {
     await waitFor(() => expect(screen.queryByText("Correct")).not.toBeInTheDocument());
     expect(screen.getByRole("button", { name: /Mark as true/ })).toBeEnabled();
     expect(screen.getByText("Statement 1 of 3")).toBeInTheDocument();
+  });
+
+  it("restores mid-progress, including a shown explanation", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<TrueFalse config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: /Mark as true/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("Statement 2 of 3")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Mark as true/ }));
+    expect(await screen.findByText("Not quite")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<TrueFalse config={config} initialState={saved} />);
+    expect(screen.getByText("Statement 2 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Not quite")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<TrueFalse config={config} onStateChange={onStateChange} />);
+    for (const label of [/Mark as true/, /Mark as false/]) {
+      await user.click(screen.getByRole("button", { name: label }));
+      await user.click(await screen.findByRole("button", { name: "Continue" }));
+    }
+    await user.click(screen.getByRole("button", { name: /Mark as true/ }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    expect(saved.result?.correct).toBe(3);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<TrueFalse config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByText(/Statement \d of 3/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

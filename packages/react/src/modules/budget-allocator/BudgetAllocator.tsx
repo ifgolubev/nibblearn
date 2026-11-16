@@ -30,6 +30,9 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -50,14 +53,7 @@ const TONES = ["accent", "info", "success", "warning", "pink", "violet", "lime",
 /** Default colour per channel position. */
 const PALETTE = ["accent", "violet", "pink", "warning", "success", "sky", "info", "lime"];
 
-export function BudgetAllocator({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: BudgetAllocatorProps) {
+export function BudgetAllocator({ config: rawConfig, ...rest }: BudgetAllocatorProps) {
   const parsed = useMemo(() => budgetAllocatorSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -67,29 +63,25 @@ export function BudgetAllocator({
       />
     );
   }
-  return (
-    <BudgetAllocatorInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <BudgetAllocatorInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts BudgetAllocatorRun with fresh state (keyed by runId). */
 function BudgetAllocatorInner(props: BudgetAllocatorProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "budget-allocator",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <BudgetAllocatorRun key={life.runId} {...props} life={life} />;
+  return <BudgetAllocatorRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 /* ----------------------------------------------------------------------------
@@ -475,9 +467,21 @@ function BudgetAllocatorRun({
     () => allocationBounds(channels, step),
     [channels, step],
   );
-  const [shares, setShares] = useState<AllocationShares>(start);
-  const [locked, setLocked] = useState<string[]>([]);
-  const [submitted, setSubmitted] = useState(false);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const channelIds = channels.map((c) => c.id);
+  const [shares, setShares] = usePersistedState<AllocationShares>(life, "shares", start, (raw) => {
+    const r = G.recordOf(G.range(0, 100), G.oneOf(channelIds), channelIds.length)(raw);
+    if (!r || Object.keys(r).length !== channelIds.length) return undefined;
+    const sum = Object.values(r).reduce((a, b) => a + b, 0);
+    return Math.abs(sum - 100) < 0.01 ? r : undefined;
+  });
+  const [locked, setLocked] = usePersistedState<string[]>(
+    life,
+    "locked",
+    [],
+    G.arrayOf(G.oneOf(channelIds), channelIds.length),
+  );
+  const [submitted, setSubmitted] = usePersistedState(life, "submitted", false, G.bool);
 
   const evaluation = useMemo(() => evaluateAllocation(config, shares), [config, shares]);
   const optimal = useMemo(() => optimalAllocation(config), [config]);
@@ -497,8 +501,11 @@ function BudgetAllocatorRun({
     },
     [],
   );
+  // Only when the learner submits now: a restored or previewed result must not take focus.
+  const canFocus = life.autoFocus;
   useEffect(() => {
-    if (submitted) resultsRef.current?.focus();
+    if (submitted && canFocus) resultsRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted]);
 
   const scheduleInteract = useCallback(
@@ -516,13 +523,13 @@ function BudgetAllocatorRun({
     (next: AllocationShares, extra?: Record<string, unknown>) => {
       if (sameShares(next, shares)) return;
       setShares(next);
-      scheduleInteract({ shares: { ...next }, locked: [...locked], ...extra });
+      scheduleInteract({ action: "change", shares: { ...next }, locked: [...locked], ...extra });
       if (goal) {
         const nowMet = allocationGoalMet(config, evaluateAllocation(config, next));
         if (nowMet !== goalMet) announce(nowMet ? t("budget.goalMet") : t("budget.goalOpen"));
       }
     },
-    [shares, scheduleInteract, locked, goal, config, goalMet, announce, t],
+    [shares, setShares, scheduleInteract, locked, goal, config, goalMet, announce, t],
   );
 
   const change = useCallback(
@@ -539,15 +546,15 @@ function BudgetAllocatorRun({
       if (submitted) return;
       const next = locked.includes(id) ? locked.filter((x) => x !== id) : [...locked, id];
       setLocked(next);
-      scheduleInteract({ shares: { ...shares }, locked: next });
+      scheduleInteract({ action: "lock", shares: { ...shares }, locked: next });
     },
-    [submitted, locked, scheduleInteract, shares],
+    [submitted, locked, setLocked, scheduleInteract, shares],
   );
 
   const resetSplit = useCallback(() => {
     setLocked([]);
     apply(start, { reset: true });
-  }, [apply, start]);
+  }, [apply, setLocked, start]);
 
   const lockIn = useCallback(() => {
     if (submitted) return;
@@ -565,7 +572,7 @@ function BudgetAllocatorRun({
       optimalKpi: finiteOrNull(optimalEval.totalKpi),
       goalMet: goal ? goalMet : null,
     };
-    life.emit("module:answer", details);
+    life.emit("module:answer", { ...details, response: details.shares, score });
     life.complete({ score, details });
     const pct = Math.round(allocationScore(evaluation.totalKpi, optimalEval.totalKpi) * 100);
     announce(
@@ -580,10 +587,12 @@ function BudgetAllocatorRun({
   }, [
     submitted,
     life,
+    setSubmitted,
     shares,
-    evaluation,
+    evaluation.totalKpi,
+    evaluation.costPerKpi,
     optimal,
-    optimalEval,
+    optimalEval.totalKpi,
     goal,
     goalMet,
     score,

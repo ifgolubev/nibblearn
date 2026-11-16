@@ -28,7 +28,7 @@ const lesson = defineLesson({
 export const App = () => <LessonPlayer lesson={lesson} />;
 ```
 
-- 22 modules: `StoryCards`, `Flashcards`, `ChoiceChallenge`, `TrueFalse`, `MatchPairs`, `SequenceBuilder`, `CategorySort`, `FillBlanks`, `WordBuilder`, `Estimate`, `LabelDiagram`, `SpotTheMistake`, `HotspotExplorer`, `ScreenshotWalkthrough`, `ProcessExplorer`, `ImageCompare`, `BranchingScenario`, `Conversation`, `PriorityMatrix`, `InboxTriage`, `WhatIfSimulator`, `BudgetAllocator`
+- 27 modules: `StoryCards`, `Flashcards`, `ChoiceChallenge`, `TrueFalse`, `MatchPairs`, `SequenceBuilder`, `CategorySort`, `FillBlanks`, `WordBuilder`, `Estimate`, `LabelDiagram`, `SpotTheMistake`, `HotspotExplorer`, `ScreenshotWalkthrough`, `ProcessExplorer`, `ImageCompare`, `BranchingScenario`, `Conversation`, `PriorityMatrix`, `InboxTriage`, `WhatIfSimulator`, `BudgetAllocator`, `Callout`, `Accordion`, `Tabs`, `Carousel`, `Columns`
 - `LessonPlayer`, `NibblearnProvider`, `ModuleRenderer`, `ModuleRegistry` for custom modules
 - Light/dark themes via CSS variables; English UI strings built in, translatable via `messages`
 - React 18 and 19, ESM + CJS, SSR-safe, TypeScript declarations

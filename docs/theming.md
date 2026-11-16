@@ -6,7 +6,7 @@ Nibblearn styles are scoped to `.nb-root` and driven entirely by `--nb-*` CSS cu
 
 Three ways to pick the mode, in order of precedence:
 
-1. **`theme` prop** on `NibblearnProvider` or `LessonPlayer` (`"light" | "dark" | "system"`, default `"system"`). The provider writes `data-nb-theme` on its `.nb-root` element; each module's `ModuleShell` mirrors it.
+1. **`theme` prop** on `NibblearnProvider` or `LessonPlayer` (`"light" | "dark" | "system"`). The provider (and a module rendered without one) defaults to `"light"`, so a product without a dark theme never turns dark because of the learner's OS setting. `LessonPlayer` defaults to the lesson's `theme.mode` (`"system"` unless the lesson says otherwise). When a provider sets `theme`, every module and player root (`.nb-root`) gets `data-nb-theme` with that value. Without it the roots carry no attribute: they are light, and the ancestor convention below can still switch them to dark.
 2. **`data-nb-theme` attribute** on any `.nb-root` you render yourself.
 3. **Ancestor convention**: when any ancestor has the class `.dark` or the attribute `[data-theme="dark"]` / `[data-mode="dark"]`, every `.nb-root` inside switches to dark unless it explicitly sets `data-nb-theme="light"`. This matches Tailwind's `dark` class strategy and most site toggles with no extra wiring.
 
@@ -60,11 +60,25 @@ For the three most common tweaks you do not need CSS:
 <NibblearnProvider accent="#0ea5e9" radius={8} fontFamily='"IBM Plex Sans", sans-serif'>
 ```
 
-- `accent` sets `--nb-accent` inline on the root.
+- `accent` sets `--nb-accent`.
 - `radius` sets `--nb-radius-sm` (radius − 4), `--nb-radius-md` (radius), `--nb-radius-lg` (radius + 4) and `--nb-radius-xl` (radius + 12).
 - `fontFamily` sets `--nb-font`.
 
+The provider applies these variables inline on every module and player root inside it, so they reach modules however deeply they are nested. (A variable set on an ordinary ancestor element does not: each `.nb-root` declares the default tokens itself. Use the props, or a CSS rule on `.nb-root` as shown above.)
+
 A lesson can carry the same values in `theme.accent`, `theme.radius` and `theme.fontFamily`; `LessonPlayer` passes them to its internal provider.
+
+### The provider wrapper
+
+`NibblearnProvider` renders one `<div class="nb-provider nb-theme">` that carries the theme attributes and variables. It does **not** apply Nibblearn's base styles or reset to your content: lists, headings, paragraphs and buttons of the host page keep their own styles even if you wrap the whole app. The reset only applies inside module and player roots.
+
+To render no element at all (for example when the wrapper would break a flex or grid layout or a `height: 100%` chain), pass `wrapper={false}`:
+
+```tsx
+<NibblearnProvider wrapper={false} theme="light" accent="#0ea5e9">
+  <App />
+</NibblearnProvider>
+```
 
 ### Per module
 
@@ -156,15 +170,21 @@ Both the static (`"Bricolage Grotesque"`) and variable (`"Bricolage Grotesque Va
 
 ### Accent
 
-| Token                 | Light               | Dark                  |
-| --------------------- | ------------------- | --------------------- |
-| `--nb-accent`         | #3b5bdb             | #91a7ff               |
-| `--nb-accent-hover`   | #364fc7             | #a5b4fc               |
-| `--nb-accent-active`  | #2f44ad             | #7b93f5               |
-| `--nb-accent-fg`      | #ffffff             | #0c0c0f               |
-| `--nb-accent-soft`    | #eef1fd             | rgba(145,167,255,.14) |
-| `--nb-accent-soft-fg` | #2f44ad             | #c5d0ff               |
-| `--nb-accent-ring`    | rgba(59,91,219,.28) | rgba(145,167,255,.45) |
+Only `--nb-accent` needs to be set: the other shades are derived from it with `color-mix()`, so a brand colour automatically gets matching hover, pressed, soft and focus-ring shades.
+
+| Token                 | Light                           | Dark                             |
+| --------------------- | ------------------------------- | -------------------------------- |
+| `--nb-accent`         | #3b5bdb                         | #91a7ff                          |
+| `--nb-accent-hover`   | accent mixed with 8% black      | accent mixed with 18% white      |
+| `--nb-accent-active`  | accent mixed with 16% black     | accent mixed with 8% black (HSL) |
+| `--nb-accent-fg`      | #ffffff                         | #0c0c0f                          |
+| `--nb-accent-soft`    | 8% accent on the surface colour | accent at 14% opacity            |
+| `--nb-accent-soft-fg` | accent mixed with 16% black     | accent mixed with 48% white      |
+| `--nb-accent-ring`    | accent at 28% opacity           | accent at 45% opacity            |
+
+`--nb-accent-fg` (text on the accent) cannot be derived in CSS. When you pass `accent` to `NibblearnProvider`, or a module sets `appearance.accent`, Nibblearn measures the colour and sets `--nb-accent-fg` to white or near-black, whichever has more contrast. This works for `#hex` and `rgb()` values; for named colours, `hsl()` or `oklch()` set `--nb-accent-fg` yourself. The same helper is exported as `readableTextColor()` from `@nibblearn/core`, together with `parseCssColor()` and `contrastRatio()`.
+
+You can still override any derived token directly.
 
 ### Highlights and chart colours
 
@@ -243,7 +263,7 @@ Focus rings use `outline: 2px solid var(--nb-focus)` with a 2px offset on `:focu
 }
 ```
 
-If your toggle uses `theme="system"` (the default), add a matching block under `@media (prefers-color-scheme: dark) { .nb-root[data-nb-theme="system"] { … } }` so the system path picks up the dark brand too.
+If your toggle uses `theme="system"`, add a matching block under `@media (prefers-color-scheme: dark) { .nb-root[data-nb-theme="system"] { … } }` so the system path picks up the dark brand too.
 
 ## Reduced motion
 

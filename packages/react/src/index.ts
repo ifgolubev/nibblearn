@@ -8,6 +8,7 @@ export * from "./primitives";
 export * from "./modules/types";
 export { ModuleRegistry, type ModuleDefinition, type AnyModuleDefinition } from "./registry";
 export { ModuleRenderer, type ModuleRendererProps } from "./ModuleRenderer";
+export { ModuleIcon, moduleIcons, type ModuleIconProps } from "./primitives/ModuleIcon";
 export { StoryCards, type StoryCardsProps } from "./modules/story-cards/StoryCards";
 export { Flashcards, type FlashcardsProps } from "./modules/flashcards/Flashcards";
 export {
@@ -58,3 +59,8 @@ export { WordBuilder, type WordBuilderProps } from "./modules/word-builder/WordB
 export { PriorityMatrix, type PriorityMatrixProps } from "./modules/priority-matrix/PriorityMatrix";
 export { InboxTriage, type InboxTriageProps } from "./modules/inbox-triage/InboxTriage";
 export { LessonPlayer, type LessonPlayerProps, type LessonCompletion } from "./player/LessonPlayer";
+export { Callout, type CalloutProps } from "./modules/callout/Callout";
+export { Accordion, type AccordionProps } from "./modules/accordion/Accordion";
+export { Tabs, type TabsProps } from "./modules/tabs/Tabs";
+export { Carousel, type CarouselProps } from "./modules/carousel/Carousel";
+export { Columns, type ColumnsProps } from "./modules/columns/Columns";

@@ -1,22 +1,3 @@
-export { storyCardsDemo } from "./story-cards";
-export { flashcardsDemo } from "./flashcards";
-export { choiceChallengeDemo } from "./choice-challenge";
-export { trueFalseDemo } from "./true-false";
-export { matchPairsDemo } from "./match-pairs";
-export { sequenceBuilderDemo } from "./sequence-builder";
-export { categorySortDemo } from "./category-sort";
-export { fillBlanksDemo } from "./fill-blanks";
-export { hotspotExplorerDemo } from "./hotspot-explorer";
-export { screenshotWalkthroughDemo } from "./screenshot-walkthrough";
-export { branchingScenarioDemo } from "./branching-scenario";
-export { conversationDemo } from "./conversation";
-export { processExplorerDemo } from "./process-explorer";
-export { spotTheMistakeDemo } from "./spot-the-mistake";
-export { whatIfSimulatorDemo } from "./what-if-simulator";
-export { budgetAllocatorDemo } from "./budget-allocator";
-export { estimateDemo } from "./estimate";
-export { labelDiagramDemo } from "./label-diagram";
-export { imageCompareDemo } from "./image-compare";
-export { inboxTriageDemo } from "./inbox-triage";
-export { wordBuilderDemo } from "./word-builder";
-export { priorityMatrixDemo } from "./priority-matrix";
+// The demo configs ship in @nibblearn/core ("@nibblearn/core/examples"). They are imported from
+// source here so the site, Storybook and tests work without building the packages first.
+export * from "../../../packages/core/src/examples/modules";

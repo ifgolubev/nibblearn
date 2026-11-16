@@ -12,9 +12,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 const out = join(root, "json");
 
-async function exportDir(kind) {
+async function exportDir(kind, dir = join(root, "src", kind)) {
   mkdirSync(join(out, kind), { recursive: true });
-  const dir = join(root, "src", kind);
   const files = readdirSync(dir).filter((f) => f.endsWith(".ts") && f !== "index.ts");
   const index = [];
   for (const file of files) {
@@ -29,7 +28,10 @@ async function exportDir(kind) {
   return index;
 }
 
-const modules = await exportDir("modules");
+const modules = await exportDir(
+  "modules",
+  join(root, "..", "packages", "core", "src", "examples", "modules"),
+);
 const lessons = await exportDir("lessons");
 writeFileSync(join(out, "index.json"), JSON.stringify({ modules, lessons }, null, 2) + "\n");
 console.log(`Exported ${modules.length} modules and ${lessons.length} lessons to examples/json/`);

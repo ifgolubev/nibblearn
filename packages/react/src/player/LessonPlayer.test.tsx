@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryStorage } from "@nibblearn/core";
+import { NibblearnProvider } from "../context/NibblearnProvider";
 import { LessonPlayer } from "./LessonPlayer";
 
 const lesson = {
@@ -133,5 +134,83 @@ describe("LessonPlayer", () => {
       await screen.findByText("Activity 1 of 1", { selector: ".nb-player__counter" }),
     ).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Check" })).toBeDisabled();
+  });
+
+  it("saves module sessions with the progress and restores them on resume", async () => {
+    const user = userEvent.setup();
+    const storage = createMemoryStorage();
+    const first = render(<LessonPlayer lesson={lesson} storage={storage} />);
+    await user.click(await screen.findByRole("button", { name: "Start lesson" }));
+    await user.click(await screen.findByRole("radio", { name: "3" }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText("Not quite")).toBeInTheDocument();
+    // Snapshots are written at most every 500 ms.
+    await waitFor(() => expect(storage.dump()["test-lesson"]?.moduleStates?.q1).toBeDefined(), {
+      timeout: 2000,
+    });
+    expect(storage.dump()["test-lesson"]!.moduleStates!.q1!.data.selected).toHaveLength(1);
+    first.unmount();
+
+    render(<LessonPlayer lesson={lesson} storage={storage} autoStart />);
+    expect(await screen.findByText("Not quite")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "3" })).toHaveAttribute("data-state", "incorrect");
+  });
+
+  it("writes a pending module snapshot when unmounted before the 500 ms save", async () => {
+    const user = userEvent.setup();
+    const storage = createMemoryStorage();
+    const view = render(<LessonPlayer lesson={lesson} storage={storage} autoStart />);
+    await user.click(await screen.findByRole("radio", { name: "3" }));
+    view.unmount(); // well within 500 ms of the change
+    expect(storage.dump()["test-lesson"]?.moduleStates?.q1?.data.selected).toHaveLength(1);
+  });
+
+  it("keeps module sessions of a completed lesson for review", async () => {
+    const user = userEvent.setup();
+    const storage = createMemoryStorage();
+    const first = render(<LessonPlayer lesson={lesson} storage={storage} autoStart />);
+    await answer(user, "2");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Next" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("Activity 2 of 2", { selector: ".nb-player__counter" });
+    await answer(user, "4");
+    await user.click(await screen.findByRole("button", { name: "Finish lesson" }));
+    await waitFor(() => expect(storage.dump()["test-lesson"]?.completedAt).toBeTruthy());
+    await waitFor(() => expect(storage.dump()["test-lesson"]?.moduleStates?.q1).toBeDefined());
+    first.unmount();
+
+    render(<LessonPlayer lesson={lesson} storage={storage} />);
+    await user.click(await screen.findByRole("button", { name: /First/ }));
+    await screen.findByText("Activity 1 of 2", { selector: ".nb-player__counter" });
+    // Review restores the finished module instead of a blank question, and the save on
+    // navigation keeps the sessions.
+    expect(document.querySelector(".nb-module--choice-challenge .nb-complete")).not.toBeNull();
+    expect(screen.queryByRole("radio", { name: "2" })).toBeNull();
+    expect(storage.dump()["test-lesson"]?.moduleStates?.q1).toBeDefined();
+  });
+
+  it("uses the outer provider's image resolver, messages and accent", async () => {
+    const resolveAsset = vi.fn(() => "https://signed.example/intro.png");
+    render(
+      <NibblearnProvider
+        resolveAsset={resolveAsset}
+        accent="#c2410c"
+        messages={{ "lesson.start": "Los geht's" }}
+      >
+        <LessonPlayer
+          lesson={{
+            ...lesson,
+            intro: { ...lesson.intro, image: { src: "asset:intro.png", alt: "Intro" } },
+          }}
+          storage={false}
+        />
+      </NibblearnProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Los geht's" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(resolveAsset).toHaveBeenCalledWith("asset:intro.png", { reason: "initial" }),
+    );
+    const root = document.querySelector<HTMLElement>(".nb-player")!;
+    expect(root.style.getPropertyValue("--nb-accent")).toBe("#c2410c");
   });
 });

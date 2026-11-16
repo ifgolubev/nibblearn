@@ -6,6 +6,8 @@
     "types": ["vite/client", "node"],
     "paths": {
       "@nibblearn/core": ["../../packages/core/src/index.ts"],
+      "@nibblearn/core/examples": ["../../packages/core/src/examples/index.ts"],
+      "@nibblearn/editor": ["../../packages/editor/src/index.ts"],
       "@nibblearn/react": ["../../packages/react/src/index.ts"],
       "@nibblearn/examples": ["../../examples/src/index.ts"]
     }

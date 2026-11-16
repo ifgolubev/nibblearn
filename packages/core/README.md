@@ -11,4 +11,8 @@ const result = validateLesson(json);
 if (!result.success) console.error(formatIssues(result.issues));
 ```
 
-Includes Zod schemas for all 22 module types and the lesson schema, `defineLesson` / `validateLesson` / `validateModule`, a safe formula parser for the What-If simulator, scenario and conversation engines, scoring helpers, SSR-safe localStorage progress storage, and the English message catalogue (extend or translate it via `messages`). MIT licensed.
+Includes Zod schemas for all 27 module types and the lesson schema, `defineLesson` / `validateLesson` / `validateModule`, a safe formula parser for the What-If simulator, scenario and conversation engines, scoring helpers, SSR-safe localStorage progress storage, and the English message catalogue (extend or translate it via `messages`).
+
+Also: `migrateModule()` for stored blocks, JSON Schemas for non-JS backends (`getModuleJsonSchema()` and the files in `@nibblearn/core/schemas/*.json`), `moduleToText()` / `lessonToText()` for search and AI, typed event payloads, xAPI / cmi5 statements (`eventToXapiStatements`), and starter content in `@nibblearn/core/examples` (`createExample`, `createEmpty`).
+
+MIT licensed.

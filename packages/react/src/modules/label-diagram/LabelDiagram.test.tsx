@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { labelDiagramSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { LabelDiagram } from "./LabelDiagram";
 
 const config = labelDiagramSchema.parse({
@@ -168,5 +169,37 @@ describe("LabelDiagram", () => {
     rerender(<LabelDiagram config={config} resetKey={2} />);
     await waitFor(() => expect(zone(1)).toHaveTextContent("Drop a label"));
     expect(chip("Logo")).toBeInTheDocument();
+  });
+
+  it("restores placements and a checked attempt", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<LabelDiagram config={config} onStateChange={onStateChange} />);
+    await placeAll(user, { "Tracking pixel": 1, "Call to action": 2, Disclaimer: 3 });
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText("Not quite")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<LabelDiagram config={config} initialState={saved} />);
+    expect(zone(1)).toHaveAttribute("data-state", "incorrect");
+    expect(zone(2)).toHaveAttribute("data-state", "correct");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<LabelDiagram config={config} onStateChange={onStateChange} />);
+    await placeAll(user, { Logo: 1, "Call to action": 2, Disclaimer: 3 });
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<LabelDiagram config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByRole("button", { name: "Check" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

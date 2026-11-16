@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CategorySort } from "./CategorySort";
 import { categorySortSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = categorySortSchema.parse({
   id: "c",
@@ -199,5 +200,45 @@ describe("CategorySort", () => {
       expect(within(pool()).getByRole("button", { name: "Write the brief" })).toBeInTheDocument(),
     );
     expect(screen.getByRole("button", { name: "Check" })).toBeDisabled();
+  });
+
+  it("restores placements and a checked attempt", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<CategorySort config={config} onStateChange={onStateChange} />);
+    await placeAll(user, {
+      "Write the brief": "Strategy",
+      "Build the dashboard": "Strategy",
+      "Define positioning": "Strategy",
+    });
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<CategorySort config={config} initialState={saved} />);
+    expect(chip("Write the brief")).toHaveAttribute("data-state", "correct");
+    expect(chip("Build the dashboard")).toHaveAttribute("data-state", "incorrect");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<CategorySort config={config} onStateChange={onStateChange} />);
+    await placeAll(user, {
+      "Write the brief": "Strategy",
+      "Build the dashboard": "Analytics",
+      "Define positioning": "Strategy",
+    });
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<CategorySort config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Check" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

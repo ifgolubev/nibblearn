@@ -11,6 +11,10 @@ import { flashcardsSchema, shuffle, type Flashcard, type FlashcardsConfig } from
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -18,7 +22,7 @@ import { Badge } from "../../primitives/Badge";
 import { ProgressBar } from "../../primitives/ProgressBar";
 import { Hint } from "../../primitives/Hint";
 import { SafeImage } from "../../primitives/SafeImage";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./flashcards.css";
@@ -27,14 +31,7 @@ export type FlashcardsProps = ModuleProps<FlashcardsConfig>;
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
-export function Flashcards({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: FlashcardsProps) {
+export function Flashcards({ config: rawConfig, ...rest }: FlashcardsProps) {
   const parsed = useMemo(() => flashcardsSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -44,31 +41,27 @@ export function Flashcards({
       />
     );
   }
-  return (
-    <FlashcardsInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <FlashcardsInner config={parsed.data} {...rest} />;
 }
 
 type Rating = "again" | "got";
 
 /** Owns the lifecycle; every reset remounts FlashcardsRun with fresh state (keyed by runId). */
 function FlashcardsInner(props: FlashcardsProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "flashcards",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <FlashcardsRun key={life.runId} {...props} life={life} />;
+  return <FlashcardsRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 function FlashcardsRun({
@@ -89,18 +82,39 @@ function FlashcardsRun({
     return behavior.shuffle ? shuffle(ids, life.runId * 97 + 13) : ids;
   }, [cards, behavior.shuffle, life.runId]);
 
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const cardList = G.arrayOf(G.int(0, total - 1), total);
   /** Indices of cards in the current round, in order. */
-  const [queue, setQueue] = useState<number[]>(initialQueue);
-  const [pos, setPos] = useState(0);
-  const [round, setRound] = useState(1);
-  const [flipped, setFlipped] = useState(behavior.autoFlip);
-  const [mastered, setMastered] = useState<number[]>([]);
-  const [firstPassMastered, setFirstPassMastered] = useState(0);
-  const [again, setAgain] = useState<number[]>([]);
-  const [interstitial, setInterstitial] = useState(false);
+  const [queue, setQueue] = usePersistedState<number[]>(life, "queue", initialQueue, (raw) => {
+    const q = cardList(raw);
+    return q && q.length > 0 ? q : undefined;
+  });
+  // pos may equal queue.length between rounds.
+  const [pos, setPos] = usePersistedState(life, "pos", 0, G.int(0, queue.length));
+  const [round, setRound] = usePersistedState(life, "round", 1, G.int(1, 10_000));
+  const [flipped, setFlipped] = usePersistedState(life, "flipped", behavior.autoFlip, G.bool);
+  const [mastered, setMastered] = usePersistedState<number[]>(life, "mastered", [], cardList);
+  const [firstPassMastered, setFirstPassMastered] = usePersistedState(
+    life,
+    "firstPass",
+    0,
+    G.int(0, total),
+  );
+  const [again, setAgain] = usePersistedState<number[]>(life, "again", [], cardList);
+  const [interstitial, setInterstitial] = usePersistedState(life, "interstitial", false, G.bool);
   const [lastRating, setLastRating] = useState<Rating | null>(null);
-  const [finished, setFinished] = useState(false);
-  const [shuffleSeed, setShuffleSeed] = useState(0);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "cards"], total, (i) => {
+    const at = queue.indexOf(i);
+    if (at >= 0) setPos(at);
+    else {
+      setQueue([i, ...queue.filter((c) => c !== i)]);
+      setPos(0);
+    }
+    setInterstitial(false);
+    setFinished(false);
+  });
+  const [shuffleSeed, setShuffleSeed] = usePersistedState(life, "shuffleSeed", 0, G.int(0, 1e6));
   const deckRef = useRef<HTMLDivElement>(null);
 
   /** Focus the newest card so keyboard shortcuts keep working after a rating button is disabled. */
@@ -127,7 +141,7 @@ function FlashcardsRun({
       });
       announce(t("a11y.moduleComplete"));
     },
-    [life, total, announce, t],
+    [setFinished, life, total, announce, t],
   );
 
   const rate = useCallback(
@@ -141,7 +155,14 @@ function FlashcardsRun({
       setAgain(nextAgain);
       setFirstPassMastered(nextFpm);
       setLastRating(rating);
-      life.emit("module:answer", { cardIndex, rating, round, correct: rating === "got" });
+      life.emit("module:answer", {
+        cardIndex,
+        itemIndex: cardIndex,
+        rating,
+        response: rating,
+        round,
+        correct: rating === "got",
+      });
       announce(rating === "got" ? t("flash.gotIt") : t("flash.practiceAgain"));
 
       if (pos + 1 < queue.length) {
@@ -167,13 +188,20 @@ function FlashcardsRun({
       again,
       round,
       firstPassMastered,
-      pos,
-      queue.length,
-      behavior,
+      setMastered,
+      setAgain,
+      setFirstPassMastered,
       announce,
       t,
+      pos,
+      queue.length,
+      behavior.requireMastery,
+      behavior.autoFlip,
       finish,
+      setPos,
+      setFlipped,
       focusCard,
+      setInterstitial,
     ],
   );
 
@@ -187,13 +215,25 @@ function FlashcardsRun({
     setInterstitial(false);
     focusCard();
     life.emit("module:interact", { action: "reviewRound", round: round + 1, count: again.length });
-  }, [again, behavior.autoFlip, life, round, focusCard]);
+  }, [
+    setQueue,
+    again,
+    setAgain,
+    setPos,
+    setRound,
+    setFlipped,
+    behavior.autoFlip,
+    setInterstitial,
+    focusCard,
+    life,
+    round,
+  ]);
 
   const flip = useCallback(() => {
     if (!card) return;
     life.emit("module:interact", { action: "flip", cardIndex, side: flipped ? "front" : "back" });
     setFlipped(!flipped);
-  }, [card, cardIndex, flipped, life]);
+  }, [card, cardIndex, flipped, life, setFlipped]);
 
   const reshuffle = useCallback(() => {
     // Shuffle only the cards not yet rated in this round.
@@ -202,7 +242,7 @@ function FlashcardsRun({
     setQueue((q) => [...q.slice(0, pos), ...shuffle(q.slice(pos), life.runId * 31 + seed * 7 + 3)]);
     setFlipped(behavior.autoFlip);
     life.emit("module:interact", { action: "shuffle" });
-  }, [shuffleSeed, pos, life, behavior.autoFlip]);
+  }, [shuffleSeed, setShuffleSeed, setQueue, setFlipped, behavior.autoFlip, life, pos]);
 
   const restart = useCallback(() => {
     life.reset();
@@ -326,7 +366,7 @@ function FlashcardsRun({
                 <Button
                   variant="primary"
                   onClick={startReviewRound}
-                  autoFocus
+                  autoFocus={life.autoFocus}
                   trailing={<ArrowRight aria-hidden />}
                 >
                   {t("common.continue")}
@@ -369,26 +409,28 @@ function FlashcardsRun({
                       animate={reduced ? undefined : { rotateY: flipped ? 180 : 0 }}
                       transition={{ duration: 0.42, ease: EASE }}
                     >
-                      <FlashFace
-                        side="front"
-                        id={flipped ? undefined : faceId}
-                        hidden={flipped}
-                        text={card.front}
-                        image={card.frontImage}
-                        tag={card.tag}
-                        caption={t("flash.showAnswer")}
-                        reduced={reduced}
-                      />
-                      <FlashFace
-                        side="back"
-                        id={flipped ? faceId : undefined}
-                        hidden={!flipped}
-                        text={card.back}
-                        image={card.backImage}
-                        tag={card.tag}
-                        caption={t("flash.showQuestion")}
-                        reduced={reduced}
-                      />
+                      <NoLinks>
+                        <FlashFace
+                          side="front"
+                          id={flipped ? undefined : faceId}
+                          hidden={flipped}
+                          text={card.front}
+                          image={card.frontImage}
+                          tag={card.tag}
+                          caption={t("flash.showAnswer")}
+                          reduced={reduced}
+                        />
+                        <FlashFace
+                          side="back"
+                          id={flipped ? faceId : undefined}
+                          hidden={!flipped}
+                          text={card.back}
+                          image={card.backImage}
+                          tag={card.tag}
+                          caption={t("flash.showQuestion")}
+                          reduced={reduced}
+                        />
+                      </NoLinks>
                     </motion.div>
                     <motion.span
                       className="nb-flash__tint"

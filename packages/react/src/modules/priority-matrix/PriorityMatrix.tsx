@@ -31,12 +31,15 @@ import clsx from "clsx";
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
 import { AnimatedFeedback } from "../../primitives/Feedback";
 import { Explanation } from "../../primitives/Explanation";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./priority-matrix.css";
@@ -80,14 +83,7 @@ function quadrantStyle(q: MatrixQuadrant): CSSProperties {
   } as CSSProperties;
 }
 
-export function PriorityMatrix({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: PriorityMatrixProps) {
+export function PriorityMatrix({ config: rawConfig, ...rest }: PriorityMatrixProps) {
   const parsed = useMemo(() => priorityMatrixSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -97,29 +93,25 @@ export function PriorityMatrix({
       />
     );
   }
-  return (
-    <PriorityMatrixInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <PriorityMatrixInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts PriorityMatrixRun with fresh state (keyed by runId). */
 function PriorityMatrixInner(props: PriorityMatrixProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "priority-matrix",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <PriorityMatrixRun key={life.runId} {...props} life={life} />;
+  return <PriorityMatrixRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 /* ----------------------------------------------------------------------------
@@ -181,7 +173,9 @@ function Chip({ item, state, draggable, reduced, compact, onSelect }: ChipProps)
         {...listeners}
       >
         <span className="nb-matrix__chip-text">
-          <RichText text={item.text} />
+          <NoLinks>
+            <RichText text={item.text} />
+          </NoLinks>
         </span>
         {marked && (
           <span className="nb-matrix__chip-mark" aria-hidden>
@@ -430,14 +424,46 @@ function PriorityMatrixRun({
     [items, behavior.shuffle, seed],
   );
 
-  const [assignments, setAssignments] = useState<Assignments>({});
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const itemIds = items.map((i) => i.id);
+  const assignmentsGuard = G.recordOf(
+    G.oneOf(quadrants.map((q) => q.id)),
+    G.oneOf(itemIds),
+    itemIds.length,
+  );
+  const [assignments, setAssignments] = usePersistedState<Assignments>(
+    life,
+    "assignments",
+    {},
+    assignmentsGuard,
+  );
   const [selected, setSelected] = useState<string | null>(null);
-  const [evaluation, setEvaluation] = useState<PriorityMatrixEvaluation | null>(null);
-  const [lockedIds, setLockedIds] = useState<string[]>([]);
-  const [attempts, setAttempts] = useState(0);
-  const [firstFraction, setFirstFraction] = useState<number | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [finished, setFinished] = useState(false);
+  // The assignments as they were when the learner pressed Check (null = not checked).
+  const [checkedWith, setCheckedWith] = usePersistedState<Assignments | null>(
+    life,
+    "checkedWith",
+    null,
+    G.nullable(assignmentsGuard),
+  );
+  const evaluation = useMemo<PriorityMatrixEvaluation | null>(
+    () => (checkedWith ? evaluatePriorityMatrix(items, checkedWith) : null),
+    [checkedWith, items],
+  );
+  const [lockedIds, setLockedIds] = usePersistedState<string[]>(
+    life,
+    "lockedIds",
+    [],
+    G.arrayOf(G.oneOf(itemIds), itemIds.length),
+  );
+  const [attempts, setAttempts] = usePersistedState(life, "attempts", 0, G.int(0, 100_000));
+  const [firstFraction, setFirstFraction] = usePersistedState<number | null>(
+    life,
+    "firstFraction",
+    null,
+    G.nullable(G.range(0, 1)),
+  );
+  const [revealed, setRevealed] = usePersistedState(life, "revealed", false, G.bool);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const checked = evaluation !== null;
@@ -464,7 +490,7 @@ function PriorityMatrixRun({
       if (!item || !isMovable(itemId)) return;
       setAssignments((prev) => ({ ...prev, [itemId]: quadrantId }));
       setSelected(null);
-      life.emit("module:interact", { itemId, quadrantId: quadrantId ?? null });
+      life.emit("module:interact", { action: "place", itemId, quadrantId: quadrantId ?? null });
       const q = quadrantId ? quadrantById.get(quadrantId) : undefined;
       announce(
         q
@@ -472,7 +498,7 @@ function PriorityMatrixRun({
           : t("matrix.returned", { item: item.text }),
       );
     },
-    [itemById, isMovable, life, quadrantById, announce, t],
+    [itemById, isMovable, life, quadrantById, announce, t, setAssignments, setSelected],
   );
 
   const toggleSelect = useCallback(
@@ -480,14 +506,17 @@ function PriorityMatrixRun({
       if (!isMovable(itemId)) return;
       setSelected((prev) => (prev === itemId ? null : itemId));
     },
-    [isMovable],
+    [isMovable, setSelected],
   );
 
-  const onDragStart = useCallback((e: DragStartEvent) => {
-    const id = String(e.active.id);
-    setActiveId(id);
-    setSelected(id);
-  }, []);
+  const onDragStart = useCallback(
+    (e: DragStartEvent) => {
+      const id = String(e.active.id);
+      setActiveId(id);
+      setSelected(id);
+    },
+    [setSelected],
+  );
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {
       setActiveId(null);
@@ -499,12 +528,12 @@ function PriorityMatrixRun({
       const target = String(e.over.id);
       place(itemId, target === TRAY_ID ? undefined : target);
     },
-    [place],
+    [place, setSelected],
   );
   const onDragCancel = useCallback(() => {
     setActiveId(null);
     setSelected(null);
-  }, []);
+  }, [setSelected]);
 
   const check = useCallback(() => {
     if (checked || itemsLeft > 0) return;
@@ -512,7 +541,7 @@ function PriorityMatrixRun({
     const n = attempts + 1;
     setAttempts(n);
     life.attempt();
-    setEvaluation(ev);
+    setCheckedWith(assignments);
     setSelected(null);
     if (firstFraction === null) setFirstFraction(ev.score);
     const willReveal =
@@ -524,6 +553,7 @@ function PriorityMatrixRun({
     }
     life.emit("module:answer", {
       assignments,
+      response: assignments,
       correct: ev.correct,
       correctCount: ev.correctCount,
       attempts: n,
@@ -545,6 +575,12 @@ function PriorityMatrixRun({
     announce,
     t,
     total,
+    setAttempts,
+    setCheckedWith,
+    setSelected,
+    setFirstFraction,
+    setRevealed,
+    setAssignments,
   ]);
 
   const retry = useCallback(() => {
@@ -553,16 +589,16 @@ function PriorityMatrixRun({
     setAssignments((prev) =>
       Object.fromEntries(items.map((i) => [i.id, evaluation.items[i.id] ? prev[i.id] : undefined])),
     );
-    setEvaluation(null);
+    setCheckedWith(null);
     life.emit("module:interact", { action: "retry" });
-  }, [evaluation, items, life]);
+  }, [evaluation, items, life, setLockedIds, setAssignments, setCheckedWith]);
 
   const reveal = useCallback(() => {
     setRevealed(true);
     setAssignments(Object.fromEntries(items.map((i) => [i.id, i.quadrantId])));
     life.emit("module:interact", { action: "reveal" });
     announce(t("matrix.expert"));
-  }, [items, life, announce, t]);
+  }, [items, life, announce, t, setRevealed, setAssignments]);
 
   const score = evaluation
     ? priorityMatrixScore({
@@ -583,7 +619,19 @@ function PriorityMatrixRun({
       details: { attempts, revealed, firstFraction, assignments },
     });
     announce(t("a11y.moduleComplete"));
-  }, [evaluation, score, life, total, attempts, revealed, firstFraction, assignments, announce, t]);
+  }, [
+    evaluation,
+    score,
+    life,
+    total,
+    attempts,
+    revealed,
+    firstFraction,
+    assignments,
+    announce,
+    t,
+    setFinished,
+  ]);
 
   const chipState = (itemId: string): ChipState => {
     if (revealed && evaluation && !evaluation.items[itemId]) return "revealed";
@@ -817,7 +865,7 @@ function PriorityMatrixRun({
             </Button>
           ) : (
             locked && (
-              <Button variant="primary" onClick={finish} autoFocus>
+              <Button variant="primary" onClick={finish} autoFocus={life.autoFocus}>
                 {t("common.finish")}
               </Button>
             )

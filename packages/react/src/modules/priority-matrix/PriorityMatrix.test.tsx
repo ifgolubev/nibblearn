@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { priorityMatrixSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { PriorityMatrix } from "./PriorityMatrix";
 
 const config = priorityMatrixSchema.parse({
@@ -159,5 +160,36 @@ describe("PriorityMatrix", () => {
       />,
     );
     expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("restores placements and a checked attempt", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<PriorityMatrix config={config} onStateChange={onStateChange} />);
+    await placeAll(user, { ...correct, "Fix tracking": "Schedule", "Plan Q3": "Do now" });
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<PriorityMatrix config={config} initialState={saved} />);
+    expect(chip("Fix tracking")).toHaveAttribute("data-state", "incorrect");
+    expect(chip("Weekly export")).toHaveAttribute("data-state", "correct");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<PriorityMatrix config={config} onStateChange={onStateChange} />);
+    await placeAll(user, correct);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<PriorityMatrix config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByRole("button", { name: "Check" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

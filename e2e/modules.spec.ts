@@ -153,7 +153,7 @@ test.describe("Module interactions", () => {
     const list = demo.getByRole("list", { name: "Launching a paid media campaign" });
     await expect(list.getByRole("listitem")).toHaveCount(7);
 
-    // Correct order, taken from examples/src/modules/sequence-builder.ts.
+    // Correct order, taken from packages/core/src/examples/modules/sequence-builder.ts.
     const target = [
       "Receive and clarify the client brief",
       "Research the audience and the competition",

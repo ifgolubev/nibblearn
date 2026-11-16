@@ -21,7 +21,7 @@ function Probe() {
 describe("NibblearnProvider", () => {
   it("works without a provider (English defaults)", () => {
     render(<Probe />);
-    expect(screen.getByTestId("probe")).toHaveTextContent("en|system|Next|custom.key|unknown.key");
+    expect(screen.getByTestId("probe")).toHaveTextContent("en|light|Next|custom.key|unknown.key");
   });
 
   it("applies theme, accent, radius and font as CSS variables on the root", () => {
@@ -36,7 +36,9 @@ describe("NibblearnProvider", () => {
         <Probe />
       </NibblearnProvider>,
     );
-    const root = container.querySelector<HTMLElement>(".nb-root")!;
+    const root = container.querySelector<HTMLElement>(".nb-provider")!;
+    expect(root).toHaveClass("nb-theme");
+    expect(root).not.toHaveClass("nb-root");
     expect(root).toHaveAttribute("data-nb-theme", "dark");
     expect(root).toHaveAttribute("data-nb-motion", "reduced");
     expect(root.style.getPropertyValue("--nb-accent")).toBe("#0ea5e9");
@@ -55,7 +57,7 @@ describe("NibblearnProvider", () => {
       </NibblearnProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent(
-      "de-AT|system|Weiter|Eigener Text|unknown.key",
+      "de-AT|light|Weiter|Eigener Text|unknown.key",
     );
   });
 
@@ -78,5 +80,58 @@ describe("NibblearnProvider", () => {
       expect(Number.isNaN(Date.parse(e.timestamp))).toBe(false);
       expect(() => JSON.stringify(e)).not.toThrow();
     }
+  });
+
+  it("passes theme tokens to every module root, and a module accent wins", () => {
+    const { container } = render(
+      <NibblearnProvider theme="dark" accent="#ff0000" radius={6}>
+        <TrueFalse config={config} />
+        <TrueFalse
+          config={{ ...config, id: "tf2", appearance: { ...config.appearance, accent: "#00aa00" } }}
+        />
+      </NibblearnProvider>,
+    );
+    const [first, second] = container.querySelectorAll<HTMLElement>(".nb-module");
+    expect(first).toHaveAttribute("data-nb-theme", "dark");
+    expect(first!.style.getPropertyValue("--nb-accent")).toBe("#ff0000");
+    expect(first!.style.getPropertyValue("--nb-radius-md")).toBe("6px");
+    expect(second!.style.getPropertyValue("--nb-accent")).toBe("#00aa00");
+  });
+
+  it("renders no element with wrapper={false}", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { container } = render(
+      <NibblearnProvider wrapper={false} theme="dark" accent="#ff0000" className="ignored">
+        <span data-testid="child">x</span>
+        <TrueFalse config={config} />
+      </NibblearnProvider>,
+    );
+    expect(container.firstElementChild).toBe(screen.getByTestId("child"));
+    expect(container.querySelector(".nb-provider")).toBeNull();
+    const module = container.querySelector<HTMLElement>(".nb-module")!;
+    expect(module).toHaveAttribute("data-nb-theme", "dark");
+    expect(module.style.getPropertyValue("--nb-accent")).toBe("#ff0000");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("wrapper={false}"));
+    warn.mockRestore();
+  });
+
+  it("picks a readable text colour for the accent", () => {
+    const { container } = render(
+      <NibblearnProvider accent="#facc15">
+        <TrueFalse config={config} />
+        <TrueFalse
+          config={{ ...config, id: "b", appearance: { ...config.appearance, accent: "#1e3a8a" } }}
+        />
+        <TrueFalse
+          config={{ ...config, id: "c", appearance: { ...config.appearance, accent: "teal" } }}
+        />
+      </NibblearnProvider>,
+    );
+    const [yellow, navy, named] = container.querySelectorAll<HTMLElement>(".nb-module");
+    expect(yellow!.style.getPropertyValue("--nb-accent-fg")).toBe("#0c0c0f");
+    expect(navy!.style.getPropertyValue("--nb-accent-fg")).toBe("#ffffff");
+    // A named colour cannot be measured; the provider's value is kept.
+    expect(named!.style.getPropertyValue("--nb-accent")).toBe("teal");
+    expect(named!.style.getPropertyValue("--nb-accent-fg")).toBe("#0c0c0f");
   });
 });

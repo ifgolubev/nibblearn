@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StoryCards } from "./StoryCards";
 import { storyCardsSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = storyCardsSchema.parse({
   id: "story",
@@ -136,5 +137,43 @@ describe("StoryCards", () => {
     expect(await screen.findByText("Card 2 of 4")).toBeInTheDocument();
     rerender(<StoryCards config={config} resetKey={2} />);
     await waitFor(() => expect(screen.getByText("Card 1 of 4")).toBeInTheDocument());
+  });
+
+  it("restores the current card and answered checks", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<StoryCards config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("What is CPC?");
+    await user.click(screen.getByRole("radio", { name: /Clicks per campaign/ }));
+    expect(await screen.findByText("Not quite")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<StoryCards config={config} initialState={saved} />);
+    expect(screen.getByText("Card 3 of 4")).toBeInTheDocument();
+    expect(await screen.findByText("Not quite")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<StoryCards config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("What is CPC?");
+    await user.click(screen.getByRole("radio", { name: /Cost per click/ }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    expect(saved.result).not.toBeNull();
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<StoryCards config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByText(/Card \d of 4/)).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

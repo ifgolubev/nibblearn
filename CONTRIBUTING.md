@@ -34,7 +34,7 @@ Useful commands:
 
 ```
 packages/core     # schemas, validation, evaluation logic, storage, i18n (no React)
-packages/react    # components, 22 modules, LessonPlayer, styles.css
+packages/react    # components, 27 modules, LessonPlayer, styles.css
 apps/showcase     # website: gallery, module pages, playground, examples, docs
 apps/storybook    # isolated stories (theme / locale / reduced-motion toolbar, a11y addon)
 examples          # example module configs and complete lessons (+ JSON export)
@@ -56,7 +56,7 @@ e2e               # Playwright tests
 - Pure logic (if any) in `packages/core/src/logic/` with unit tests in `packages/core/test/`.
 - Component, CSS and tests in `packages/react/src/modules/<type>/`, registered in `packages/react/src/defaultRegistry.ts` and exported from `src/index.ts`.
 - UI strings in `packages/core/src/i18n/en.ts` (never hard-coded in components).
-- Demo content in `examples/src/modules/<type>.ts` and docs metadata in `apps/showcase/src/lib/moduleDocs.ts`.
+- Demo content in `packages/core/src/examples/modules/<type>.ts` (plus a minimal config in `packages/core/src/examples/empty.ts`) and docs metadata in `apps/showcase/src/lib/moduleDocs.ts`.
 
 ## Design principles
 

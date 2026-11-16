@@ -12,6 +12,7 @@ import clsx from "clsx";
 import {
   conversationSchema,
   createScriptedProvider,
+  hashConfig,
   responsesOf,
   summarizeConversation,
   typingDelay,
@@ -24,11 +25,13 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Badge } from "../../primitives/Badge";
 import { SafeImage } from "../../primitives/SafeImage";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./conversation.css";
@@ -52,6 +55,54 @@ interface ChatMessage {
 }
 
 const SYSTEM_DELAY = 400;
+
+interface ReplayedConversation {
+  provider: ConversationProvider;
+  turn: ConversationTurn;
+  messages: ChatMessage[];
+  chosen: ScriptedResponse[];
+}
+
+/**
+ * Rebuild a scripted conversation from the ids of the chosen responses, without playback.
+ * Stops at the first id that is not available, so only valid paths are restored.
+ */
+function replayScript(
+  config: ConversationConfig,
+  path: readonly string[],
+  showFeedback: boolean,
+): ReplayedConversation | null {
+  try {
+    const provider = createScriptedProvider(config);
+    let turn = provider.start() as ConversationTurn;
+    const messages: ChatMessage[] = [];
+    const chosen: ScriptedResponse[] = [];
+    const addNode = (t: ConversationTurn) =>
+      t.node.messages.forEach((m, i) =>
+        messages.push({ key: `${t.node.id}-${i}`, from: m.from, text: m.text }),
+      );
+    addNode(turn);
+    for (const id of path) {
+      if (turn.done) break;
+      const r = responsesOf(turn.node).find((x) => x.id === id);
+      if (!r) break;
+      chosen.push(r);
+      messages.push({
+        key: `you-${messages.length}`,
+        from: "you",
+        text: r.text,
+        note: showFeedback
+          ? { tone: r.tone, effectiveness: r.effectiveness, feedback: r.feedback }
+          : undefined,
+      });
+      turn = provider.respond(id) as ConversationTurn;
+      addNode(turn);
+    }
+    return { provider, turn, messages, chosen };
+  } catch {
+    return null;
+  }
+}
 const STAGGER = 180;
 
 function initials(name: string): string {
@@ -107,6 +158,10 @@ function ConversationInner({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
   provider,
@@ -117,11 +172,19 @@ function ConversationInner({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   // Keyed by runId so every reset remounts with a fresh transcript and a restarted provider.
+  // The transcript is played from the content, so any content change (not a new object with
+  // the same content) also starts the conversation over instead of appending to it.
+  const contentKey = useMemo(() => hashConfig(config), [config]);
   return (
     <ConversationRun
-      key={life.runId}
+      key={`${runKey(life, config)}:${contentKey}`}
       config={config}
       life={life}
       provider={provider}
@@ -146,12 +209,25 @@ function ConversationRun({ config, life, provider, hideHeader, className }: Conv
   const { contact } = config.content;
   const { behavior } = config;
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // A saved session (initialState) is replayed instantly for the built-in scripted provider.
+  // Custom providers (for example AI-backed ones) cannot be replayed and start over.
+  const [restored] = useState<ReplayedConversation | null>(() => {
+    if (provider) return null;
+    const path = G.arrayOf(G.str, behavior.maxSteps)(life.restore("path"));
+    return path ? replayScript(config, path, behavior.showFeedback) : null;
+  });
+  const [messages, setMessages] = useState<ChatMessage[]>(() => restored?.messages ?? []);
   const [typing, setTyping] = useState(false);
-  const [turn, setTurn] = useState<ConversationTurn | null>(null);
-  const [playing, setPlaying] = useState(true);
-  const [chosen, setChosen] = useState<ScriptedResponse[]>([]);
-  const [done, setDone] = useState(false);
+  const [turn, setTurn] = useState<ConversationTurn | null>(() => restored?.turn ?? null);
+  const [playing, setPlaying] = useState(!restored);
+  const [chosen, setChosen] = useState<ScriptedResponse[]>(() => restored?.chosen ?? []);
+  const [done, setDone] = useState(() => restored?.turn.done ?? false);
+  useEffect(() => {
+    life.persist(
+      "path",
+      chosen.map((r) => r.id),
+    );
+  }, [life, chosen]);
 
   const providerRef = useRef<ConversationProvider | null>(null);
   /** Returns false once this run is unmounted; pending playback then stops. */
@@ -159,7 +235,12 @@ function ConversationRun({ config, life, provider, hideHeader, className }: Conv
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   const logRef = useRef<HTMLDivElement>(null);
   const repliesRef = useRef<HTMLDivElement>(null);
-  const completedRef = useRef(false);
+  // Read inside async playback: whether the module may move focus (see `life.autoFocus`).
+  const canFocusRef = useRef(life.autoFocus);
+  useEffect(() => {
+    canFocusRef.current = life.autoFocus;
+  }, [life.autoFocus]);
+  const completedRef = useRef(life.completed);
 
   const wait = useCallback(
     (ms: number) =>
@@ -199,7 +280,7 @@ function ConversationRun({ config, life, provider, hideHeader, className }: Conv
       if (!alive()) return;
       setPlaying(false);
       if (next.done) setDone(true);
-      else
+      else if (canFocusRef.current)
         requestAnimationFrame(() =>
           repliesRef.current?.querySelector<HTMLButtonElement>("button")?.focus(),
         );
@@ -207,21 +288,31 @@ function ConversationRun({ config, life, provider, hideHeader, className }: Conv
     [behavior.typingIndicator, wait],
   );
 
-  // Start the conversation on mount; stop playback and clear timers on unmount.
+  // Start the conversation once per mount (the run is remounted when the content changes);
+  // stop playback and clear timers on unmount.
+  const startRef = useRef({ config, provider, playTurn, restored });
   useEffect(() => {
+    startRef.current = { config, provider, playTurn, restored };
+  });
+  useEffect(() => {
+    const { config, provider, playTurn, restored } = startRef.current;
     let alive = true;
     aliveRef.current = () => alive;
     const timers = timersRef.current;
-    providerRef.current = provider ?? createScriptedProvider(config);
-    Promise.resolve(providerRef.current.start()).then((first) => {
-      if (alive) void playTurn(first);
-    });
+    if (restored) {
+      providerRef.current = restored.provider;
+    } else {
+      providerRef.current = provider ?? createScriptedProvider(config);
+      Promise.resolve(providerRef.current.start()).then((first) => {
+        if (alive) void playTurn(first);
+      });
+    }
     return () => {
       alive = false;
       timers.forEach(clearTimeout);
       timers.clear();
     };
-  }, [config, provider, playTurn]);
+  }, []);
 
   // Keep the newest message in view.
   useEffect(() => {
@@ -259,6 +350,9 @@ function ConversationRun({ config, life, provider, hideHeader, className }: Conv
       if (!canReply || !providerRef.current) return;
       life.attempt();
       life.emit("module:answer", {
+        itemId: turn?.node.id,
+        response: r.id ?? r.text,
+        score: r.effectiveness,
         nodeId: turn?.node.id,
         responseId: r.id,
         tone: r.tone,
@@ -448,7 +542,9 @@ function ConversationRun({ config, life, provider, hideHeader, className }: Conv
                       {i + 1}
                     </span>
                     <span className="nb-conv__reply-text">
-                      <RichText text={r.text} />
+                      <NoLinks>
+                        <RichText text={r.text} />
+                      </NoLinks>
                     </span>
                     {r.tone && <Badge className="nb-conv__reply-tone">{r.tone}</Badge>}
                   </button>

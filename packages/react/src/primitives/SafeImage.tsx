@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { ImageOff } from "lucide-react";
 import type { Media } from "@nibblearn/core";
 import { useTranslator } from "../context/NibblearnProvider";
+import { useResolvedSrc } from "../hooks/useResolvedSrc";
 
 export interface SafeImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt"> {
   media: Media;
@@ -14,7 +15,10 @@ export interface SafeImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>
   style?: CSSProperties;
 }
 
-/** Image with graceful fallback when the asset is missing or blocked. */
+/**
+ * Image with graceful fallback when the asset is missing or blocked. The `src` goes through
+ * the provider's `resolveAsset` (see `useResolvedSrc`).
+ */
 export function SafeImage({
   media,
   className,
@@ -25,15 +29,25 @@ export function SafeImage({
   ...rest
 }: SafeImageProps) {
   const t = useTranslator();
+  const resolved = useResolvedSrc(media.src);
   const [failed, setFailed] = useState(false);
   const [prevSrc, setPrevSrc] = useState(media.src);
   if (prevSrc !== media.src) {
     setPrevSrc(media.src);
     setFailed(false);
   }
+  const ratio = media.width && media.height ? `${media.width} / ${media.height}` : undefined;
   return (
     <figure className={clsx("nb-image", !rounded && "nb-image--square", className)} style={style}>
-      {failed ? (
+      {resolved.status === "loading" ? (
+        <div
+          className="nb-image--loading"
+          role="img"
+          aria-busy="true"
+          aria-label={media.alt || t("common.loading")}
+          style={{ aspectRatio: ratio }}
+        />
+      ) : failed || resolved.status === "error" || !resolved.src ? (
         <div
           className="nb-image--fallback"
           role="img"
@@ -44,14 +58,16 @@ export function SafeImage({
         </div>
       ) : (
         <img
-          src={media.src}
+          src={resolved.src}
           alt={media.alt}
           width={media.width}
           height={media.height}
           loading="lazy"
           decoding="async"
           draggable={false}
-          onError={() => setFailed(true)}
+          onError={() => {
+            if (!resolved.retry()) setFailed(true);
+          }}
           onLoad={(e) =>
             onLoaded?.({
               width: e.currentTarget.naturalWidth,

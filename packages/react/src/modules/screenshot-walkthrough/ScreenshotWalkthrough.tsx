@@ -31,6 +31,10 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -57,14 +61,7 @@ const MISS_PENALTY = 0.1;
 /** Default stage aspect ratio while the image is loading and no size is configured. */
 const FALLBACK_RATIO = 16 / 10;
 
-export function ScreenshotWalkthrough({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: ScreenshotWalkthroughProps) {
+export function ScreenshotWalkthrough({ config: rawConfig, ...rest }: ScreenshotWalkthroughProps) {
   const parsed = useMemo(() => screenshotWalkthroughSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -74,16 +71,7 @@ export function ScreenshotWalkthrough({
       />
     );
   }
-  return (
-    <ScreenshotWalkthroughInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <ScreenshotWalkthroughInner config={parsed.data} {...rest} />;
 }
 
 /** Strip the inline markup subset so text can be used in `aria-label`s. */
@@ -103,15 +91,20 @@ function resolvePlacement(step: WalkthroughStep): Placement {
 
 /** Owns the lifecycle; every reset remounts ScreenshotWalkthroughRun with fresh state (keyed by runId). */
 function ScreenshotWalkthroughInner(props: ScreenshotWalkthroughProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "screenshot-walkthrough",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <ScreenshotWalkthroughRun key={life.runId} {...props} life={life} />;
+  return <ScreenshotWalkthroughRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 function ScreenshotWalkthroughRun({
@@ -127,15 +120,28 @@ function ScreenshotWalkthroughRun({
   const { behavior } = config;
   const total = steps.length;
 
-  const [index, setIndex] = useState(0);
-  const [done, setDone] = useState<boolean[]>(() => steps.map(() => false));
-  const [misses, setMisses] = useState(0);
-  const [stepMisses, setStepMisses] = useState(0);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const [index, setIndex] = usePersistedState(life, "index", 0, G.int(0, total - 1));
+  const [done, setDone] = usePersistedState<boolean[]>(
+    life,
+    "done",
+    () => steps.map(() => false),
+    (raw) => {
+      const list = G.arrayOf(G.bool, total)(raw);
+      return list && list.length === total ? list : undefined;
+    },
+  );
+  const [misses, setMisses] = usePersistedState(life, "misses", 0, G.int(0, 100_000));
+  const [stepMisses, setStepMisses] = usePersistedState(life, "stepMisses", 0, G.int(0, 100_000));
   const [hint, setHint] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackKind>(null);
   const [shaking, setShaking] = useState(false);
   const [value, setValue] = useState("");
-  const [finished, setFinished] = useState(false);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "steps"], total, (i) => {
+    setIndex(i);
+    setFinished(false);
+  });
   const [naturalSizes, setNaturalSizes] = useState<
     Record<string, { width: number; height: number }>
   >({});
@@ -177,7 +183,14 @@ function ScreenshotWalkthroughRun({
       setHint(false);
       setStepMisses(0);
       setValue("");
-      life.emit("module:answer", { stepId: steps[i]!.id, stepIndex: i, misses: stepMisses });
+      life.emit("module:answer", {
+        stepId: steps[i]!.id,
+        stepIndex: i,
+        itemId: steps[i]!.id,
+        itemIndex: i,
+        correct: stepMisses === 0,
+        misses: stepMisses,
+      });
       if (nextDone.every(Boolean)) {
         setFinished(true);
         life.complete({
@@ -194,7 +207,20 @@ function ScreenshotWalkthroughRun({
         );
       }
     },
-    [done, life, steps, stepMisses, misses, total, announce, t],
+    [
+      done,
+      life,
+      steps,
+      stepMisses,
+      misses,
+      total,
+      announce,
+      t,
+      setDone,
+      setStepMisses,
+      setFinished,
+      setIndex,
+    ],
   );
 
   const showHint = useCallback(
@@ -234,6 +260,8 @@ function ScreenshotWalkthroughRun({
       hint,
       showHint,
       reduced,
+      setStepMisses,
+      setMisses,
     ],
   );
 
@@ -292,7 +320,7 @@ function ScreenshotWalkthroughRun({
       setValue("");
       announce(`${t("common.step", { current: i + 1, total })}. ${plain(steps[i]!.instruction)}`);
     },
-    [total, announce, t, steps],
+    [total, announce, t, steps, setIndex, setStepMisses],
   );
 
   const canGoNext = index + 1 < total && (stepDone || step.action === "observe");

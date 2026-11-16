@@ -29,7 +29,8 @@
     "storybook": "pnpm --filter @nibblearn/storybook dev",
     "build:storybook": "pnpm --filter @nibblearn/storybook build",
     "test:coverage": "vitest run --coverage",
-    "check:docs": "node scripts/qa/docs-check.mjs"
+    "check:docs": "node scripts/qa/docs-check.mjs",
+    "check:generated": "pnpm --filter @nibblearn/core fields:docs && pnpm --filter @nibblearn/examples export:json && node scripts/qa/check-clean.mjs packages/core/src/schema/field-docs.generated.ts examples/json"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

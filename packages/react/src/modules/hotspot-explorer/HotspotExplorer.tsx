@@ -14,6 +14,10 @@ import { hotspotExplorerSchema, type Hotspot, type HotspotExplorerConfig } from 
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -29,14 +33,7 @@ export type HotspotExplorerProps = ModuleProps<HotspotExplorerConfig>;
 /** Container width (px) from which the info panel floats next to the marker. */
 const FLOAT_BREAKPOINT = 720;
 
-export function HotspotExplorer({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: HotspotExplorerProps) {
+export function HotspotExplorer({ config: rawConfig, ...rest }: HotspotExplorerProps) {
   const parsed = useMemo(() => hotspotExplorerSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -46,16 +43,7 @@ export function HotspotExplorer({
       />
     );
   }
-  return (
-    <HotspotLifecycle
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <HotspotLifecycle config={parsed.data} {...rest} />;
 }
 
 function HotspotLifecycle({
@@ -63,6 +51,10 @@ function HotspotLifecycle({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: HotspotExplorerProps) {
@@ -72,10 +64,15 @@ function HotspotLifecycle({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   return (
     <HotspotBody
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -133,9 +130,19 @@ function HotspotBody({ config, life, hideHeader, className }: BodyProps) {
   const { behavior } = config;
   const total = hotspots.length;
 
-  const [visited, setVisited] = useState<string[]>([]);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const hotspotIds = config.content.hotspots.map((h) => h.id);
+  const [visited, setVisited] = usePersistedState<string[]>(
+    life,
+    "visited",
+    [],
+    G.arrayOf(G.oneOf(hotspotIds), hotspotIds.length),
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [finished, setFinished] = useState(false);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "hotspots"], hotspotIds.length, (i) => {
+    setActiveId(hotspotIds[i] ?? null);
+  });
   const [naturalRatio, setNaturalRatio] = useState<number | null>(null);
   const [wide, setWide] = useState(false);
 
@@ -165,7 +172,7 @@ function HotspotBody({ config, life, hideHeader, className }: BodyProps) {
       life.complete({ details: { visited: ids } });
       announce(t("a11y.moduleComplete"));
     },
-    [life, announce, t],
+    [life, announce, t, setFinished],
   );
 
   const open = useCallback(
@@ -174,7 +181,7 @@ function HotspotBody({ config, life, hideHeader, className }: BodyProps) {
       if (!h) return;
       if (fromMarker) returnFocusTo.current = id;
       setActiveId(id);
-      life.emit("module:interact", { hotspotId: id });
+      life.emit("module:interact", { action: "open", hotspotId: id });
       announce(h.title ?? h.label);
       if (!visited.includes(id)) {
         const next = [...visited, id];
@@ -183,7 +190,7 @@ function HotspotBody({ config, life, hideHeader, className }: BodyProps) {
       }
       requestAnimationFrame(() => panelRef.current?.focus());
     },
-    [hotspots, life, announce, visited, behavior.requireAll, total, complete],
+    [hotspots, life, announce, visited, behavior.requireAll, total, complete, setVisited],
   );
 
   const close = useCallback(() => {

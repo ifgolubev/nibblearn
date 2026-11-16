@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Flashcards } from "./Flashcards";
 import { flashcardsSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = flashcardsSchema.parse({
   id: "deck",
@@ -138,5 +139,46 @@ describe("Flashcards", () => {
       "aria-pressed",
       "false",
     );
+  });
+
+  it("restores the deck position, mastery and the review round", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<Flashcards config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: /^Flip card/ }));
+    await user.click(screen.getByRole("button", { name: "Got it" }));
+    await user.click(await screen.findByRole("button", { name: /^Flip card/ }));
+    await user.click(screen.getByRole("button", { name: "Practice again" }));
+    expect(await screen.findByText("3 of 3")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<Flashcards config={config} initialState={saved} />);
+    expect(screen.getByText("3 of 3")).toBeInTheDocument();
+    expect(screen.getByText("1 mastered")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Flip card/ }));
+    await user.click(screen.getByRole("button", { name: "Got it" }));
+    expect(await screen.findByText("Review round")).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const onComplete = vi.fn();
+    const first = render(
+      <Flashcards config={config} onStateChange={onStateChange} onComplete={onComplete} />,
+    );
+    for (let i = 0; i < 3; i++) {
+      await user.click(await screen.findByRole("button", { name: /^Flip card/ }));
+      await user.click(screen.getByRole("button", { name: "Got it" }));
+    }
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const again = vi.fn();
+    render(<Flashcards config={config} initialState={saved} onComplete={again} />);
+    expect(await screen.findByText("All cards mastered")).toBeInTheDocument();
+    expect(again).not.toHaveBeenCalled();
   });
 });

@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { AlertTriangle } from "lucide-react";
 import type { Appearance, ValidationIssue } from "@nibblearn/core";
 import { useNibblearn } from "../context/NibblearnProvider";
+import { useRootProps } from "../hooks/useRootProps";
 import { RichText } from "./RichText";
 import { LiveRegion } from "./LiveRegion";
 
@@ -53,9 +54,7 @@ export function ModuleShell({
   style,
   onKeyDown,
 }: ModuleShellProps) {
-  const { theme, reducedMotion } = useNibblearn();
-  const rootStyle: Record<string, string> = { ...(style as Record<string, string>) };
-  if (appearance?.accent) rootStyle["--nb-accent"] = appearance.accent;
+  const rootProps = useRootProps({ accent: appearance?.accent, style });
   const showHeader = !appearance?.hideHeader && (title || instructions || aside || eyebrow);
   return (
     <section
@@ -68,10 +67,8 @@ export function ModuleShell({
       )}
       data-nb-module={type}
       data-nb-module-id={id}
-      data-nb-theme={theme}
-      data-nb-motion={reducedMotion ? "reduced" : undefined}
+      {...rootProps}
       aria-labelledby={title ? `${id}-title` : undefined}
-      style={rootStyle}
       onKeyDown={onKeyDown}
     >
       {showHeader && (
@@ -103,9 +100,10 @@ export function ModuleShell({
 
 /** Rendered when a module receives an invalid configuration. */
 export function InvalidModule({ issues, type }: { issues: ValidationIssue[]; type?: string }) {
-  const { t, theme } = useNibblearn();
+  const { t } = useNibblearn();
+  const rootProps = useRootProps();
   return (
-    <div className="nb-root nb-invalid" role="alert" data-nb-theme={theme}>
+    <div className="nb-root nb-invalid" role="alert" {...rootProps}>
       <div className="nb-invalid__title">
         <AlertTriangle aria-hidden size={18} />
         {t("common.invalidConfig")}

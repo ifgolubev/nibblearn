@@ -1,0 +1,46 @@
+import { createContext, useContext } from "react";
+import type { ValidationIssue } from "@nibblearn/react";
+import type { Path } from "./path";
+
+export interface PickedImage {
+  src: string;
+  alt?: string;
+}
+
+export interface FormContextValue {
+  /** Stable prefix for element ids. */
+  formId: string;
+  /** Module type, for `field.<type>.<path>` label overrides. */
+  type: string;
+  root: unknown;
+  update: (path: Path, value: unknown) => void;
+  /** Validation messages for exactly this path. */
+  issuesAt: (path: Path) => string[];
+  onFocusPath?: (path: (string | number)[]) => void;
+  onPickImage?: () => Promise<PickedImage | null>;
+  announce: (message: string) => void;
+}
+
+export const FormContext = createContext<FormContextValue | null>(null);
+
+export function useForm(): FormContextValue {
+  const ctx = useContext(FormContext);
+  if (!ctx) throw new Error("Form fields must be rendered inside ModuleForm");
+  return ctx;
+}
+
+/** DOM id for the control at `path`. */
+export const fieldId = (formId: string, path: Path) =>
+  `${formId}-${path.map(String).join("-") || "root"}`;
+
+/** Key used to match validation issues to fields. */
+export const pathKey = (path: ReadonlyArray<PropertyKey>) => path.map(String).join(".");
+
+export function issueMap(issues: ValidationIssue[] | undefined): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const issue of issues ?? []) {
+    const key = issue.segments ? pathKey(issue.segments) : issue.path.replace(/\[(\d+)\]/g, ".$1");
+    map.set(key, [...(map.get(key) ?? []), issue.message]);
+  }
+  return map;
+}

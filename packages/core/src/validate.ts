@@ -14,6 +14,8 @@ export interface ValidationIssue {
   /** JSON path, e.g. "modules[2].content.questions[0].options". */
   path: string;
   message: string;
+  /** The same path as keys and indices, for locating the field in a form. */
+  segments?: (string | number)[];
 }
 
 export type ValidationResult<T> =
@@ -50,7 +52,8 @@ export function issuesFromZod(
       const values = (issue as { values: unknown[] }).values;
       message = `expected one of ${values.map((v) => JSON.stringify(v)).join(", ")}`;
     }
-    return { path: formatPath([...prefix, ...issue.path]), message };
+    const segments = [...prefix, ...issue.path].map((s) => (typeof s === "number" ? s : String(s)));
+    return { path: formatPath(segments), message, segments };
   });
 }
 
@@ -88,12 +91,17 @@ export function validateLesson(
   const seen = new Set<string>();
   shell.data.modules.forEach((raw, i) => {
     if (seen.has(raw.id))
-      issues.push({ path: `modules[${i}].id`, message: `duplicate module id "${raw.id}"` });
+      issues.push({
+        path: `modules[${i}].id`,
+        segments: ["modules", i, "id"],
+        message: `duplicate module id "${raw.id}"`,
+      });
     seen.add(raw.id);
     const def = registry.get(raw.type);
     if (!def) {
       issues.push({
         path: `modules[${i}].type`,
+        segments: ["modules", i, "type"],
         message: `unknown module type "${raw.type}". Known types: ${registry.types().join(", ")}`,
       });
       return;
@@ -115,7 +123,10 @@ export function validateModule(
   const type =
     typeof input === "object" && input !== null ? (input as { type?: unknown }).type : undefined;
   if (typeof type !== "string")
-    return { success: false, issues: [{ path: "type", message: "module type is required" }] };
+    return {
+      success: false,
+      issues: [{ path: "type", segments: ["type"], message: "module type is required" }],
+    };
   const def = registry.get(type);
   if (!def)
     return {
@@ -123,6 +134,7 @@ export function validateModule(
       issues: [
         {
           path: "type",
+          segments: ["type"],
           message: `unknown module type "${type}". Known types: ${registry.types().join(", ")}`,
         },
       ],

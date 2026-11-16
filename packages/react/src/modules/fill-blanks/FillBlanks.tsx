@@ -23,6 +23,9 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -35,14 +38,7 @@ import "./fill-blanks.css";
 
 export type FillBlanksProps = ModuleProps<FillBlanksConfig>;
 
-export function FillBlanks({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: FillBlanksProps) {
+export function FillBlanks({ config: rawConfig, ...rest }: FillBlanksProps) {
   const parsed = useMemo(() => fillBlanksSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -52,16 +48,7 @@ export function FillBlanks({
       />
     );
   }
-  return (
-    <FillBlanksLifecycle
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <FillBlanksLifecycle config={parsed.data} {...rest} />;
 }
 
 function FillBlanksLifecycle({
@@ -69,6 +56,10 @@ function FillBlanksLifecycle({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: FillBlanksProps) {
@@ -78,11 +69,16 @@ function FillBlanksLifecycle({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   // Keying the body on runId resets every piece of local state on reset/retry.
   return (
     <FillBlanksBody
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -133,14 +129,42 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
   );
 
   // Word-bank: blankId -> chipId. Typed: blankId -> text.
-  const [placed, setPlaced] = useState<Record<string, string>>({});
-  const [typed, setTyped] = useState<Record<string, string>>({});
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const blankKey = G.oneOf(blankOrder);
+  const [placed, setPlaced] = usePersistedState<Record<string, string>>(
+    life,
+    "placed",
+    {},
+    G.recordOf(G.oneOf(bank.map((c) => c.id)), blankKey, blankOrder.length),
+  );
+  const [typed, setTyped] = usePersistedState<Record<string, string>>(
+    life,
+    "typed",
+    {},
+    G.recordOf(G.str, blankKey, blankOrder.length),
+  );
   const [selectedBlank, setSelectedBlank] = useState<string | null>(null);
   const [openHints, setOpenHints] = useState<string[]>([]);
-  const [evaluation, setEvaluation] = useState<FillBlanksEvaluation | null>(null);
-  const [attempts, setAttempts] = useState(0);
-  const [locked, setLocked] = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
+  // The answers as they were when the learner pressed Check (null = not checked).
+  const [checkedWith, setCheckedWith] = usePersistedState<Record<string, string> | null>(
+    life,
+    "checkedWith",
+    null,
+    G.nullable(G.recordOf(G.str, blankKey, blankOrder.length)),
+  );
+  const evaluation = useMemo<FillBlanksEvaluation | null>(
+    () =>
+      checkedWith
+        ? evaluateFillBlanks(content.blanks, checkedWith, {
+            caseSensitive: behavior.caseSensitive,
+            lenient: behavior.lenient,
+          })
+        : null,
+    [checkedWith, content.blanks, behavior.caseSensitive, behavior.lenient],
+  );
+  const [attempts, setAttempts] = usePersistedState(life, "attempts", 0, G.int(0, 100_000));
+  const [locked, setLocked] = usePersistedState(life, "locked", false, G.bool);
+  const [finalScore, setFinalScore] = usePersistedState(life, "finalScore", 0, G.range(0, 1));
 
   const slotRefs = useRef(new Map<string, HTMLButtonElement | HTMLInputElement>());
   const checkRef = useRef<HTMLButtonElement>(null);
@@ -181,10 +205,26 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
       const next = { ...placed, [target]: chipId };
       setPlaced(next);
       setSelectedBlank(null);
-      life.emit("module:interact", { blankId: target, word: chipById.get(chipId)?.text });
+      life.emit("module:interact", {
+        action: "place",
+        blankId: target,
+        word: chipById.get(chipId)?.text,
+      });
       focusSlot(nextEmpty(next, target));
     },
-    [checked, locked, usedChipIds, selectedBlank, placed, nextEmpty, life, chipById, focusSlot],
+    [
+      checked,
+      locked,
+      usedChipIds,
+      selectedBlank,
+      placed,
+      nextEmpty,
+      life,
+      chipById,
+      focusSlot,
+      setPlaced,
+      setSelectedBlank,
+    ],
   );
 
   const onSlotClick = useCallback(
@@ -196,13 +236,13 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
         delete next[id];
         setPlaced(next);
         setSelectedBlank(id);
-        if (checked) setEvaluation(null);
-        life.emit("module:interact", { blankId: id, removed: true });
+        if (checked) setCheckedWith(null);
+        life.emit("module:interact", { action: "remove", blankId: id, removed: true });
         return;
       }
       setSelectedBlank((prev) => (prev === id ? null : id));
     },
-    [locked, placed, checked, evaluation, life],
+    [locked, placed, checked, evaluation, life, setPlaced, setSelectedBlank, setCheckedWith],
   );
 
   const toggleHint = useCallback(
@@ -213,7 +253,7 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
         return [...prev, id];
       });
     },
-    [life],
+    [life, setOpenHints],
   );
 
   const check = useCallback(() => {
@@ -225,12 +265,13 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
     const n = attempts + 1;
     setAttempts(n);
     life.attempt();
-    setEvaluation(ev);
+    setCheckedWith(Object.fromEntries(blankOrder.map((id) => [id, answers[id] ?? ""])));
     setSelectedBlank(null);
     const exhausted = behavior.maxAttempts > 0 && n >= behavior.maxAttempts;
     const done = ev.correct || !behavior.allowRetry || exhausted;
     life.emit("module:answer", {
       answers,
+      response: answers,
       correct: ev.correct,
       correctCount: ev.correctCount,
       attempts: n,
@@ -252,7 +293,24 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
       });
       announce(t("a11y.moduleComplete"));
     }
-  }, [allFilled, checked, locked, content.blanks, answers, behavior, attempts, life, announce, t]);
+  }, [
+    allFilled,
+    checked,
+    locked,
+    content.blanks,
+    answers,
+    behavior,
+    attempts,
+    life,
+    announce,
+    t,
+    setAttempts,
+    blankOrder,
+    setCheckedWith,
+    setSelectedBlank,
+    setLocked,
+    setFinalScore,
+  ]);
 
   const retry = useCallback(() => {
     if (!evaluation) return;
@@ -266,10 +324,21 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
       for (const id of wrong) next[id] = "";
       setTyped(next);
     }
-    setEvaluation(null);
+    setCheckedWith(null);
     setSelectedBlank(null);
     focusSlot(wrong[0] ?? null);
-  }, [evaluation, blankOrder, isBank, placed, typed, focusSlot]);
+  }, [
+    evaluation,
+    blankOrder,
+    isBank,
+    placed,
+    typed,
+    focusSlot,
+    setPlaced,
+    setTyped,
+    setCheckedWith,
+    setSelectedBlank,
+  ]);
 
   const onInputKey = useCallback(
     (e: ReactKeyboardEvent<HTMLInputElement>) => {
@@ -513,7 +582,7 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
           </span>
           <div className="nb-module__actions">
             {checked ? (
-              <Button variant="primary" onClick={retry} autoFocus>
+              <Button variant="primary" onClick={retry} autoFocus={life.autoFocus}>
                 {t("common.retry")}
               </Button>
             ) : (

@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SequenceBuilder } from "./SequenceBuilder";
 import { sequenceBuilderSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = sequenceBuilderSchema.parse({
   id: "s",
@@ -144,5 +145,38 @@ describe("SequenceBuilder", () => {
     rerender(<SequenceBuilder config={config} resetKey={2} />);
     await waitFor(() => expect(screen.queryByText("Not quite")).not.toBeInTheDocument());
     expect(await screen.findByRole("button", { name: "Check" })).toBeEnabled();
+  });
+
+  it("restores the current order and a checked attempt", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<SequenceBuilder config={config} onStateChange={onStateChange} />);
+    await putInOrder(user, ["Plan", "Brief", "Launch"]);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    const states = rows().map((r) => r.getAttribute("data-state"));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<SequenceBuilder config={config} initialState={saved} />);
+    expect(rowTexts()).toEqual(["Plan", "Brief", "Launch"]);
+    expect(rows().map((r) => r.getAttribute("data-state"))).toEqual(states);
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<SequenceBuilder config={config} onStateChange={onStateChange} />);
+    await putInOrder(user, ["Brief", "Plan", "Launch"]);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<SequenceBuilder config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Check" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

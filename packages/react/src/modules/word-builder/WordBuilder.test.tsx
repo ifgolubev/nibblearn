@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { wordBuilderSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { WordBuilder } from "./WordBuilder";
 
 const config = wordBuilderSchema.parse({
@@ -180,5 +181,49 @@ describe("WordBuilder", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/alternatives must use/);
+  });
+
+  it("restores the current item, placed tiles and a checked attempt", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<WordBuilder config={config} onStateChange={onStateChange} />);
+    await build(user, ["ROAS", "=", "Revenue", "÷", "Ad spend"]);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("Order the rule.");
+    await waitFor(() => expect(screen.queryByText("Build the formula for ROAS.")).toBeNull());
+    await build(user, ["Confirm", "the", "build"]);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText(/tiles in the right place/)).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<WordBuilder config={config} initialState={saved} />);
+    expect(screen.getByText("Order the rule.")).toBeInTheDocument();
+    expect(within(answer()).getAllByRole("button")).toHaveLength(3);
+    expect(screen.getByText(/tiles in the right place/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<WordBuilder config={config} onStateChange={onStateChange} />);
+    await build(user, ["ROAS", "=", "Revenue", "÷", "Ad spend"]);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("Order the rule.");
+    await waitFor(() => expect(screen.queryByText("Build the formula for ROAS.")).toBeNull());
+    await build(user, ["Confirm", "the", "brief", "before", "the", "build"]);
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    expect(saved.result?.score).toBe(1);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<WordBuilder config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByRole("button", { name: "Check" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

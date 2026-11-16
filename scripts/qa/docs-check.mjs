@@ -8,15 +8,25 @@ import process from "node:process";
 
 const require = createRequire(import.meta.url);
 const root = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const dts = {
-  "@nibblearn/react": readFileSync(join(root, "packages/react/dist/index.d.ts"), "utf8"),
-  "@nibblearn/core": readFileSync(join(root, "packages/core/dist/index.d.ts"), "utf8"),
-};
-const runtime = {
-  "@nibblearn/react": Object.keys(require(join(root, "packages/react/dist/index.cjs"))),
-  "@nibblearn/core": Object.keys(require(join(root, "packages/core/dist/index.cjs"))),
-};
+const pkgs = ["core", "react", "editor", "embed"];
+const dts = Object.fromEntries(
+  pkgs.map((p) => [
+    `@nibblearn/${p}`,
+    readFileSync(join(root, `packages/${p}/dist/index.d.ts`), "utf8"),
+  ]),
+);
+const runtime = Object.fromEntries(
+  pkgs.map((p) => [
+    `@nibblearn/${p}`,
+    Object.keys(require(join(root, `packages/${p}/dist/index.cjs`))),
+  ]),
+);
+// Packages whose declarations re-export another package (`export * from "@nibblearn/core"`).
+const reexports = (pkg) =>
+  [...dts[pkg].matchAll(/export \* from ["'](@nibblearn\/[a-z]+)["']/g)].map((m) => m[1]);
 const exported = (pkg, name) =>
+  ownExport(pkg, name) || reexports(pkg).some((dep) => exported(dep, name));
+const ownExport = (pkg, name) =>
   runtime[pkg].includes(name) ||
   new RegExp(`\\b(?:type|interface|class|const|function)\\s+${name}\\b`).test(dts[pkg]) ||
   new RegExp(`\\b${name}\\b[^;]*\\}\\s*;?\\s*$`, "m").test(
@@ -27,6 +37,8 @@ const files = [
   "README.md",
   "packages/react/README.md",
   "packages/core/README.md",
+  "packages/editor/README.md",
+  "packages/embed/README.md",
   "packages/react/MODULE_GUIDE.md",
   "CONTRIBUTING.md",
   ...readdirSync(join(root, "docs"))
@@ -39,7 +51,7 @@ let links = 0;
 for (const file of files) {
   const text = readFileSync(join(root, file), "utf8");
   for (const m of text.matchAll(
-    /import\s+(type\s+)?\{([^}]+)\}\s+from\s+["'](@nibblearn\/(?:react|core))["']/g,
+    /import\s+(type\s+)?\{([^}]+)\}\s+from\s+["'](@nibblearn\/(?:react|core|editor|embed))["']/g,
   )) {
     for (const raw of m[2].split(",")) {
       const name = raw

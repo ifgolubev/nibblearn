@@ -1,6 +1,11 @@
 {
   "modules": [
     {
+      "export": "accordionDemo",
+      "file": "modules/accordion.json",
+      "id": "launch-faq"
+    },
+    {
       "export": "branchingScenarioDemo",
       "file": "modules/branching-scenario.json",
       "id": "unhappy-client"
@@ -11,6 +16,16 @@
       "id": "spring-media-plan"
     },
     {
+      "export": "calloutDemo",
+      "file": "modules/callout.json",
+      "id": "naming-rule"
+    },
+    {
+      "export": "carouselDemo",
+      "file": "modules/carousel.json",
+      "id": "first-week"
+    },
+    {
       "export": "categorySortDemo",
       "file": "modules/category-sort.json",
       "id": "who-does-what"
@@ -19,6 +34,11 @@
       "export": "choiceChallengeDemo",
       "file": "modules/choice-challenge.json",
       "id": "kpi-challenge"
+    },
+    {
+      "export": "columnsDemo",
+      "file": "modules/columns.json",
+      "id": "do-dont"
     },
     {
       "export": "conversationDemo",
@@ -94,6 +114,11 @@
       "export": "storyCardsDemo",
       "file": "modules/story-cards.json",
       "id": "agency-welcome"
+    },
+    {
+      "export": "tabsDemo",
+      "file": "modules/tabs.json",
+      "id": "funnel-stages"
     },
     {
       "export": "trueFalseDemo",

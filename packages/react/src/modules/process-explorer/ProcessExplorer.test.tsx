@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProcessExplorer } from "./ProcessExplorer";
 import { processExplorerSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const base = {
   id: "proc",
@@ -181,5 +182,40 @@ describe("ProcessExplorer hardening", () => {
     });
     render(<ProcessExplorer config={config} />);
     expect(screen.getAllByText("Alpha").length).toBeGreaterThan(0);
+  });
+
+  it("restores the open stage and the explored stages", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ProcessExplorer config={config} onStateChange={onStateChange} />);
+    const nodes = within(screen.getByRole("list", { name: "Stages" })).getAllByRole("button");
+    await user.click(nodes[1]!);
+    expect(await screen.findByText("2 of 3 stages explored")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<ProcessExplorer config={config} initialState={saved} />);
+    expect(screen.getByRole("heading", { level: 3, name: "Creative" })).toBeInTheDocument();
+    expect(screen.getByText("2 of 3 stages explored")).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ProcessExplorer config={config} onStateChange={onStateChange} />);
+    const nodes = within(screen.getByRole("list", { name: "Stages" })).getAllByRole("button");
+    await user.click(nodes[1]!);
+    await screen.findByRole("heading", { level: 3, name: "Creative" });
+    await user.click(screen.getByRole("button", { name: "Next stage" }));
+    await screen.findByRole("heading", { level: 3, name: "Launch" });
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    expect(await screen.findByText("You explored the whole process.")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<ProcessExplorer config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("You explored the whole process.")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

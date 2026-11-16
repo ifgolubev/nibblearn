@@ -1,11 +1,15 @@
 /* ==========================================================================
    Nibblearn design tokens
-   Every value can be overridden by consumers on .nb-root or any ancestor.
+   Every value can be overridden by consumers on .nb-root (or .nb-theme) in their own CSS,
+   or through NibblearnProvider props (accent, radius, fontFamily).
+   .nb-theme carries the tokens only (used by the provider wrapper); .nb-root also gets the
+   base styles from base.css.
    Default theme: neutral zinc surfaces, an indigo-blue accent, a warm amber
    highlight for celebrations, near-black dark mode, friendly grotesque display type.
    ========================================================================== */
 
-.nb-root {
+.nb-root,
+.nb-theme {
   /* Typography */
   --nb-font:
     "Inter", "Inter Variable", "Inter var", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
@@ -75,13 +79,18 @@
   --nb-fg-subtle: #5f5f69;
   --nb-border: #e7e7ea;
   --nb-border-strong: #d4d4d8;
+  /* Hover, active, soft and ring shades are derived from --nb-accent: override it alone. */
   --nb-accent: #3b5bdb;
-  --nb-accent-hover: #364fc7;
-  --nb-accent-active: #2f44ad;
+  --nb-accent-hover: color-mix(in oklab, var(--nb-accent) 92%, black);
+  --nb-accent-active: color-mix(in oklab, var(--nb-accent) 84%, black);
   --nb-accent-fg: #ffffff;
-  --nb-accent-soft: #eef1fd;
-  --nb-accent-soft-fg: #2f44ad;
-  --nb-accent-ring: rgba(59, 91, 219, 0.28);
+  --nb-accent-soft: color-mix(in oklab, var(--nb-accent) 8%, var(--nb-surface));
+  /* --nb-accent-soft-fg-light / -dark: computed for custom accents (readable on any hue). */
+  --nb-accent-soft-fg: var(
+    --nb-accent-soft-fg-light,
+    color-mix(in oklab, var(--nb-accent) 84%, black)
+  );
+  --nb-accent-ring: color-mix(in srgb, var(--nb-accent) 28%, transparent);
   --nb-success: #15803d;
   --nb-success-fg: #ffffff;
   --nb-success-soft: #ecfdf3;
@@ -125,7 +134,9 @@
 
 /* ---------- Dark theme ---------- */
 .nb-root[data-nb-theme="dark"],
-:where(.dark, [data-theme="dark"], [data-mode="dark"]) .nb-root:not([data-nb-theme="light"]) {
+.nb-theme[data-nb-theme="dark"],
+:where(.dark, [data-theme="dark"], [data-mode="dark"]) .nb-root:not([data-nb-theme="light"]),
+:where(.dark, [data-theme="dark"], [data-mode="dark"]) .nb-theme:not([data-nb-theme="light"]) {
   color-scheme: dark;
   --nb-bg: #0c0c0f;
   --nb-surface: #131316;
@@ -137,12 +148,15 @@
   --nb-border: #27272e;
   --nb-border-strong: #3a3a42;
   --nb-accent: #91a7ff;
-  --nb-accent-hover: #a5b4fc;
-  --nb-accent-active: #7b93f5;
+  --nb-accent-hover: color-mix(in oklab, var(--nb-accent) 82%, white);
+  --nb-accent-active: color-mix(in hsl, var(--nb-accent) 92%, black);
   --nb-accent-fg: #0c0c0f;
-  --nb-accent-soft: rgba(145, 167, 255, 0.14);
-  --nb-accent-soft-fg: #c5d0ff;
-  --nb-accent-ring: rgba(145, 167, 255, 0.45);
+  --nb-accent-soft: color-mix(in srgb, var(--nb-accent) 14%, transparent);
+  --nb-accent-soft-fg: var(
+    --nb-accent-soft-fg-dark,
+    color-mix(in oklab, var(--nb-accent) 52%, white)
+  );
+  --nb-accent-ring: color-mix(in srgb, var(--nb-accent) 45%, transparent);
   --nb-success: #4ade80;
   --nb-success-fg: #052e14;
   --nb-success-soft: rgba(74, 222, 128, 0.13);
@@ -181,7 +195,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .nb-root[data-nb-theme="system"] {
+  .nb-root[data-nb-theme="system"],
+  .nb-theme[data-nb-theme="system"] {
     color-scheme: dark;
     --nb-bg: #0c0c0f;
     --nb-surface: #131316;
@@ -193,12 +208,15 @@
     --nb-border: #27272e;
     --nb-border-strong: #3a3a42;
     --nb-accent: #91a7ff;
-    --nb-accent-hover: #a5b4fc;
-    --nb-accent-active: #7b93f5;
+    --nb-accent-hover: color-mix(in oklab, var(--nb-accent) 82%, white);
+    --nb-accent-active: color-mix(in hsl, var(--nb-accent) 92%, black);
     --nb-accent-fg: #0c0c0f;
-    --nb-accent-soft: rgba(145, 167, 255, 0.14);
-    --nb-accent-soft-fg: #c5d0ff;
-    --nb-accent-ring: rgba(145, 167, 255, 0.45);
+    --nb-accent-soft: color-mix(in srgb, var(--nb-accent) 14%, transparent);
+    --nb-accent-soft-fg: var(
+      --nb-accent-soft-fg-dark,
+      color-mix(in oklab, var(--nb-accent) 52%, white)
+    );
+    --nb-accent-ring: color-mix(in srgb, var(--nb-accent) 45%, transparent);
     --nb-success: #4ade80;
     --nb-success-fg: #052e14;
     --nb-success-soft: rgba(74, 222, 128, 0.13);
@@ -238,14 +256,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nb-root {
+  .nb-root,
+  .nb-theme {
     --nb-duration-fast: 0ms;
     --nb-duration: 0ms;
     --nb-duration-slow: 0ms;
   }
 }
-.nb-root[data-nb-motion="reduced"] {
+.nb-root[data-nb-motion="reduced"],
+.nb-theme[data-nb-motion="reduced"] {
   --nb-duration-fast: 0ms;
   --nb-duration: 0ms;
   --nb-duration-slow: 0ms;
+}
+
+/* The provider wrapper carries tokens only: it must not change the host's colour scheme. */
+.nb-theme:not(.nb-root) {
+  color-scheme: inherit;
 }

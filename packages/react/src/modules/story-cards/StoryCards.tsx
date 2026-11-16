@@ -16,6 +16,10 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -32,14 +36,7 @@ export type StoryCardsProps = ModuleProps<StoryCardsConfig>;
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
-export function StoryCards({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: StoryCardsProps) {
+export function StoryCards({ config: rawConfig, ...rest }: StoryCardsProps) {
   const parsed = useMemo(() => storyCardsSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -49,29 +46,25 @@ export function StoryCards({
       />
     );
   }
-  return (
-    <StoryCardsInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <StoryCardsInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts StoryCardsRun with fresh state (keyed by runId). */
 function StoryCardsInner(props: StoryCardsProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "story-cards",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <StoryCardsRun key={life.runId} {...props} life={life} />;
+  return <StoryCardsRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 function StoryCardsRun({
@@ -86,11 +79,21 @@ function StoryCardsRun({
   const { cards } = config.content;
   const { behavior } = config;
 
-  const [index, setIndex] = useState(0);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const [index, setIndex] = usePersistedState(life, "index", 0, G.int(0, cards.length - 1));
   const [direction, setDirection] = useState<1 | -1>(1);
   /** cardIndex -> chosen option index */
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [finished, setFinished] = useState(false);
+  const [answers, setAnswers] = usePersistedState<Record<number, number>>(
+    life,
+    "answers",
+    {},
+    G.recordOf(G.int(0, 5), G.indexKey(cards.length)),
+  );
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "cards"], cards.length, (i) => {
+    setIndex(i);
+    setFinished(false);
+  });
   /** Move focus onto the card once it has animated in (keyboard navigation). */
   const focusCard = useRef(false);
   const cardRef = useRef<HTMLElement | null>(null);
@@ -108,7 +111,8 @@ function StoryCardsRun({
       ),
     [cards, answers],
   );
-  const nextBlocked = Boolean(behavior.requireChecks && card.check && !answered);
+  // Preview (editors) never blocks on unanswered checks.
+  const nextBlocked = Boolean(!life.preview && behavior.requireChecks && card.check && !answered);
 
   const finish = useCallback(() => {
     setFinished(true);
@@ -127,7 +131,7 @@ function StoryCardsRun({
       life.complete({ details });
     }
     announce(t("a11y.moduleComplete"));
-  }, [checkCorrect, checkTotal, cards.length, life, announce, t]);
+  }, [setFinished, checkCorrect, checkTotal, cards.length, announce, t, life]);
 
   const next = useCallback(() => {
     if (finished || nextBlocked) return;
@@ -139,7 +143,7 @@ function StoryCardsRun({
     setIndex((i) => i + 1);
     focusCard.current = true;
     life.emit("module:interact", { action: "next", cardIndex: index + 1 });
-  }, [finished, nextBlocked, isLast, finish, life, index]);
+  }, [finished, nextBlocked, isLast, setIndex, life, index, finish]);
 
   const back = useCallback(() => {
     if (finished || !behavior.allowBack || index === 0) return;
@@ -147,7 +151,7 @@ function StoryCardsRun({
     setIndex((i) => i - 1);
     focusCard.current = true;
     life.emit("module:interact", { action: "back", cardIndex: index - 1 });
-  }, [finished, behavior.allowBack, index, life]);
+  }, [finished, behavior.allowBack, index, setIndex, life]);
 
   const answer = useCallback(
     (optionIndex: number) => {
@@ -155,10 +159,16 @@ function StoryCardsRun({
       const correct = Boolean(card.check.options[optionIndex]?.correct);
       setAnswers((prev) => ({ ...prev, [index]: optionIndex }));
       life.attempt();
-      life.emit("module:answer", { cardIndex: index, optionIndex, correct });
+      life.emit("module:answer", {
+        cardIndex: index,
+        itemIndex: index,
+        optionIndex,
+        response: optionIndex,
+        correct,
+      });
       announce(correct ? t("a11y.correctAnswer") : t("a11y.incorrectAnswer"));
     },
-    [card.check, answered, index, life, announce, t],
+    [card.check, answered, setAnswers, life, index, announce, t],
   );
 
   const onKeyDown = useCallback(

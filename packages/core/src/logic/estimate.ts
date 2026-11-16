@@ -54,8 +54,11 @@ function decimalsOf(step: number): number {
 export function snapEstimate(q: Pick<EstimateQuestion, "min" | "max" | "step">, raw: number) {
   if (!Number.isFinite(raw)) return q.min;
   const steps = Math.round((raw - q.min) / q.step);
-  const v = Math.min(q.max, Math.max(q.min, q.min + steps * q.step));
-  return Number(v.toFixed(Math.min(12, decimalsOf(q.step) + decimalsOf(q.min))));
+  const v = Number(
+    (q.min + steps * q.step).toFixed(Math.min(12, decimalsOf(q.step) + decimalsOf(q.min))),
+  );
+  // Clamp after rounding: an off-grid max (1.25 with step 0.1) must not round past itself.
+  return Math.min(q.max, Math.max(q.min, v));
 }
 
 /** A neutral starting guess: the middle of the scale, on the step grid. */

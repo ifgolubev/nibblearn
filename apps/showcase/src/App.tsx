@@ -24,6 +24,7 @@ const ExamplePage = lazy(() =>
 );
 const DocsPage = lazy(() => import("./pages/Docs").then((m) => ({ default: m.DocsPage })));
 const EmbedPage = lazy(() => import("./pages/Embed").then((m) => ({ default: m.EmbedPage })));
+const EditorPage = lazy(() => import("./pages/Editor").then((m) => ({ default: m.EditorPage })));
 
 function PageFallback() {
   return (
@@ -45,6 +46,7 @@ export function App() {
             <Route path="/modules/:type" element={<ModulePage />} />
             <Route path="/playground" element={<PlaygroundPage />} />
             <Route path="/playground/lesson" element={<LessonPlaygroundPage />} />
+            <Route path="/editor" element={<EditorPage />} />
             <Route path="/examples" element={<ExamplesPage />} />
             <Route path="/examples/:id" element={<ExamplePage />} />
             <Route path="/docs" element={<DocsPage />} />

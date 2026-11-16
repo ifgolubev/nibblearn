@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BranchingScenario } from "./BranchingScenario";
 import { branchingScenarioSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const base = {
   id: "scn",
@@ -233,5 +234,47 @@ describe("BranchingScenario", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/could not be loaded/);
+  });
+
+  it("restores the path and shown feedback mid-scenario", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<BranchingScenario config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("radio", { name: /Ask what success/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("The client relaxes a little.")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: /Propose a plan/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("+2 points")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<BranchingScenario config={config} initialState={saved} />);
+    expect(screen.getByText("The client relaxes a little.")).toBeInTheDocument();
+    expect(screen.getByText("+2 points")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Your decisions" })).toHaveTextContent(
+      "Ask what success looks like",
+    );
+  });
+
+  it("restores the ending without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<BranchingScenario config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("radio", { name: /Ask what success/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("radio", { name: /Propose a plan/ }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("Great outcome")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<BranchingScenario config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("Great outcome")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

@@ -97,6 +97,8 @@ describe("estimate logic", () => {
   it("snaps guesses to the grid and starts in the middle", () => {
     expect(snapEstimate({ min: 0, max: 0.1, step: 0.001 }, 0.0284)).toBe(0.028);
     expect(snapEstimate({ min: 5, max: 60, step: 0.5 }, 100)).toBe(60);
+    // An off-grid max is never exceeded by rounding.
+    expect(snapEstimate({ min: 0, max: 1.25, step: 0.1 }, 1.25)).toBe(1.25);
     expect(snapEstimate({ min: 5, max: 60, step: 0.5 }, Number.NaN)).toBe(5);
     expect(estimateStart({ min: 0, max: 10, step: 1 })).toBe(5);
     expect(estimateStart({ min: 0, max: 0.6, step: 0.001 })).toBe(0.3);

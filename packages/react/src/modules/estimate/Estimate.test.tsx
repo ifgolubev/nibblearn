@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { estimateSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { Estimate } from "./Estimate";
 
 const base = {
@@ -239,5 +240,43 @@ describe("Estimate", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/answer must be within/);
+  });
+
+  it("restores a locked-in answer as revealed", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<Estimate config={config} onStateChange={onStateChange} />);
+    fireEvent.change(slider(), { target: { value: "0.032" } });
+    await user.click(screen.getByRole("button", { name: "Lock in" }));
+    expect(await screen.findByText("Bullseye!")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<Estimate config={config} initialState={saved} />);
+    expect(screen.getByText("Bullseye!")).toBeInTheDocument();
+    expect(screen.getByText("It was 2.8%.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<Estimate config={config} onStateChange={onStateChange} />);
+    for (let i = 0; i < config.content.questions.length; i++) {
+      await user.click(await screen.findByRole("button", { name: "Lock in" }));
+      await user.click(
+        await screen.findByRole("button", {
+          name: i + 1 < config.content.questions.length ? "Next" : "Finish",
+        }),
+      );
+    }
+    const saved = await latestState(onStateChange);
+    expect(saved.result).not.toBeNull();
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<Estimate config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByRole("button", { name: "Lock in" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

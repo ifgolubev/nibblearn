@@ -45,6 +45,10 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Badge } from "../../primitives/Badge";
@@ -127,15 +131,20 @@ export function InboxTriage({ config: rawConfig, ...rest }: InboxTriageProps) {
 
 /** Owns the lifecycle; every reset remounts InboxTriageRun with fresh state (keyed by runId). */
 function InboxTriageInner(props: InboxTriageProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "inbox-triage",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <InboxTriageRun key={life.runId} {...props} life={life} />;
+  return <InboxTriageRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 type FocusTarget = "subject" | "summary" | number;
@@ -153,12 +162,29 @@ function InboxTriageRun({
   const { behavior } = config;
   const instant = behavior.feedback === "instant";
 
-  const [decisions, setDecisions] = useState<Record<string, string>>({});
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const messageKey = G.oneOf(messages.map((m) => m.id));
+  const [decisions, setDecisions] = usePersistedState<Record<string, string>>(
+    life,
+    "decisions",
+    {},
+    G.recordOf(G.oneOf(actions.map((a) => a.id)), messageKey, messages.length),
+  );
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [view, setView] = useState<"list" | "message">("list");
-  const [read, setRead] = useState<Record<string, true>>({});
+  const [read, setRead] = usePersistedState<Record<string, true>>(
+    life,
+    "read",
+    {},
+    G.recordOf((v) => (v === true ? true : undefined), messageKey, messages.length),
+  );
   const [focusIndex, setFocusIndex] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "messages"], messages.length, (i) => {
+    setActiveIndex(i);
+    setView("message");
+    setFinished(false);
+  });
   const [focusTick, setFocusTick] = useState(0);
 
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -197,13 +223,13 @@ function InboxTriageRun({
       life.emit("module:interact", { action: "open", messageId: m.id });
       requestFocus("subject");
     },
-    [messages, life, requestFocus],
+    [messages, life, requestFocus, setActiveIndex, setView, setRead],
   );
 
   const backToList = useCallback(() => {
     setView("list");
     if (activeIndex !== null) requestFocus(activeIndex);
-  }, [activeIndex, requestFocus]);
+  }, [activeIndex, requestFocus, setView]);
 
   const choose = useCallback(
     (action: InboxAction) => {
@@ -214,6 +240,9 @@ function InboxTriageRun({
       setDecisions({ ...decisions, [active.id]: action.id });
       const { status, points } = gradeTriageDecision(active, action.id);
       life.emit("module:answer", {
+        itemId: active.id,
+        response: action.id,
+        correct: status === "correct",
         messageId: active.id,
         action: action.id,
         status,
@@ -231,7 +260,7 @@ function InboxTriageRun({
         announce(t("inbox.filedAs", { action: action.label }));
       }
     },
-    [active, finished, decisions, instant, life, actionById, announce, t],
+    [active, finished, decisions, instant, life, actionById, announce, t, setDecisions],
   );
 
   const finish = useCallback(() => {
@@ -253,7 +282,7 @@ function InboxTriageRun({
       `${t("inbox.summary", { correct: ev.correct, total: ev.total })} ${t("a11y.moduleComplete")}`,
     );
     requestFocus("summary");
-  }, [allHandled, config, decisions, life, announce, t, requestFocus]);
+  }, [allHandled, config, decisions, life, announce, t, requestFocus, setFinished]);
 
   const goNext = useCallback(() => {
     const idx = nextUnhandledIndex(messages, decisions, activeIndex ?? -1);
@@ -460,6 +489,7 @@ function InboxTriageRun({
             {active ? (
               <MessageView
                 key={active.id}
+                canFocus={life.autoFocus}
                 moduleId={config.id}
                 message={active}
                 ownerName={owner.name}
@@ -519,6 +549,8 @@ interface MessageViewProps {
   onBack: () => void;
   onChoose: (action: InboxAction) => void;
   onNext: () => void;
+  /** The module may move focus by itself (see `ModuleLifecycle.autoFocus`). */
+  canFocus: boolean;
 }
 
 function MessageView({
@@ -533,6 +565,7 @@ function MessageView({
   onBack,
   onChoose,
   onNext,
+  canFocus,
 }: MessageViewProps) {
   const { t } = useNibblearn();
   const reduced = useReducedMotion();
@@ -679,7 +712,7 @@ function MessageView({
           <div className="nb-inbox__dock-foot">
             <Button
               variant="primary"
-              autoFocus
+              autoFocus={canFocus}
               onClick={onNext}
               trailing={<ArrowRight aria-hidden />}
             >

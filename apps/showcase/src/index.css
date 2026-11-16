@@ -100,6 +100,8 @@ body {
   letter-spacing: -0.025em;
   line-height: 1.15;
   margin: 0 0 1rem;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .prose-docs h2 {
   font-size: 1.5rem;
@@ -144,17 +146,26 @@ body {
   background: var(--site-surface-2);
   padding: 0.1em 0.4em;
   border-radius: 6px;
+  /* Long identifiers and URLs must not widen the page on narrow screens. */
+  overflow-wrap: anywhere;
 }
 .prose-docs pre {
   margin: 0 0 1.25rem;
+}
+.prose-docs .docs-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0 0 1.25rem;
+  border-radius: 6px;
+}
+.prose-docs .docs-table:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
 .prose-docs table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
-  margin: 0 0 1.25rem;
-  display: block;
-  overflow-x: auto;
 }
 .prose-docs th,
 .prose-docs td {

@@ -126,6 +126,33 @@
 .nb-rich {
   overflow-wrap: anywhere;
 }
+.nb-rich :where(ul, ol) {
+  margin: 0.4em 0;
+  padding-inline-start: 1.4em;
+}
+.nb-rich ul {
+  list-style: disc;
+}
+.nb-rich ol {
+  list-style: decimal;
+}
+.nb-rich li + li {
+  margin-top: 0.2em;
+}
+.nb-rich :where(p, ul, ol) + :where(p, ul, ol) {
+  margin-top: 0.6em;
+}
+.nb-rich a {
+  color: var(--nb-accent-soft-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  border-radius: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nb-rich a:hover {
+    text-decoration-thickness: 2px;
+  }
+}
 .nb-rich p + p {
   margin-top: var(--nb-space-3);
 }
@@ -154,6 +181,24 @@
   color: var(--nb-fg-subtle);
   font-size: var(--nb-text-sm);
   border: 1px dashed var(--nb-border-strong);
+}
+.nb-image--loading {
+  min-height: 7rem;
+  background: var(--nb-surface-2);
+  animation: nb-image-pulse 1.4s ease-in-out infinite;
+}
+@keyframes nb-image-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nb-image--loading {
+    animation: none;
+  }
+}
+.nb-root[data-nb-motion="reduced"] .nb-image--loading {
+  animation: none;
 }
 .nb-image__caption {
   font-size: var(--nb-text-xs);

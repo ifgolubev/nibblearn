@@ -4,7 +4,7 @@ Nibblearn lessons are plain JSON with a strict, well-described schema. That make
 
 ## Why the schema suits LLMs
 
-- **Discriminated by `type`.** Every module is an object with `id`, `type`, `content` and optional `behavior`. The model only needs to learn 22 small shapes.
+- **Discriminated by `type`.** Every module is an object with `id`, `type`, `content` and optional `behavior`. The model only needs to learn 27 small shapes.
 - **Defaults everywhere.** Only `id`, `type` and the `content` essentials are required; every behaviour flag has a sensible default, so minimal output is valid output.
 - **Referential checks with messages.** Branch targets, category ids, blanks in templates and formula identifiers are all validated with a path (`modules[3].content.nodes[2].choices[0].next`) and a plain-English message the model can act on.
 - **Safe text.** Fields accept only `**bold**`, `*italic*`, `` `code` `` and newlines. The model cannot inject HTML, and you do not need to sanitise.
@@ -13,7 +13,7 @@ Nibblearn lessons are plain JSON with a strict, well-described schema. That make
 ## Authoring rules
 
 1. **Ids**: lower-case kebab-case, unique within a lesson for modules; unique within a module for nodes, items, categories, blanks and inputs. Only `a–z A–Z 0–9 - _`.
-2. **Types**: one of the 22 built-in strings below (or a type you registered). Anything else is rejected.
+2. **Types**: one of the 27 built-in strings below (or a type you registered). Anything else is rejected.
 3. **Required fields**: see the cheat sheet. When in doubt, include `title` and `instructions` on every module.
 4. **Where explanations go**: in the field designed for them, never in the prompt or option text. `options[].explanation` for per-option feedback, `questions[].explanation` for the general answer, `content.explanation` for sequence/fill-blanks, `choices[].feedback` for scenario choices, `responses[].feedback` for conversations, `mistakes[].explanation` for spot-the-mistake, `stages[].details` for process stages, `questions[].explanation` for estimates, `content.explanation` for the budget allocator.
 5. **Length**: 15–90 seconds per activity. That is 3–8 flashcards, 2–4 questions, 4–6 pairs, 4–6 sequence steps, 6–10 sort items, 2–4 blanks, 3–5 hotspots, 3–6 scenario decisions.
@@ -58,8 +58,13 @@ image-compare          content.before / content.after: { "image": { "src", "alt"
 word-builder           content.items[1-10]: [{ "id"?, "prompt", "tokens": ["correct", "order", "2-14 tiles"], "alternatives"?: [["same", "tokens", "other", "order"]], "distractors": []?, "display": "sentence"|"formula", "hint"?, "explanation"? }]
 priority-matrix        content.axes: { "x": {"label","low","high"}, "y": {"label","low","high"} }, content.quadrants[exactly 4]: [{ "id", "position": "top-left"|"top-right"|"bottom-left"|"bottom-right" (each once), "label", "description"?, "color"? }], content.items[3-16]: [{ "id", "text", "quadrantId", "explanation"? }], "explanation"?
 inbox-triage           content.owner: { "name", "role"? }, content.actions[2-5]: [{ "id", "label", "description"?, "icon"?: "reply"|"forward"|"calendar"|"archive"|"flag"|"alert", "tone"?: "accent"|"lime"|"pink"|"sky"|"violet" }], content.messages[3-12]: [{ "id", "from": { "name", "role"?, "email"? }, "subject", "preview", "body", "time" (label, e.g. "08:57"), "flags"?: ["vip"|"external"|"attachment"|"suspicious-link"], "correctAction": actionId, "acceptable"?: [actionIds, not correctAction], "explanation" }], "summary"?; behavior: { "feedback": "instant"|"end", "allowRetry", "showScore" }
+callout                content: { "variant"?: "info"|"tip"|"warning"|"success"|"note", "title"?, "text" }
+accordion              content.items[1-30]: [{ "id", "title", "text", "image"? }], behavior: { "allowMultiple"?, "defaultOpen"?: "none"|"first"|"all", "completeOn"?: "view"|"all-items" }
+tabs                   content.tabs[2-8]: [{ "id", "label" (≤40 chars), "text", "image"? }], behavior: { "completeOn"? }
+carousel               content.slides[1-30]: [{ "id", "title"?, "text"?, "image"? } (at least one of them)], behavior: { "loop"?, "showDots"?, "completeOn"? }
+columns                content.columns[2-4]: [{ "id", "title"?, "text"?, "image"? }], layout: { "ratio"?: "equal"|"1-2"|"2-1" }
 
-TEXT FIELDS: plain text; only **bold**, *italic*, `code`, "\n" and blank lines. No HTML, no Markdown headings/lists/links.
+TEXT FIELDS: plain text; only **bold**, *italic*, `code`, [links](https://…), "\n" and blank lines. In paragraph fields (card bodies, explanations, content blocks), lines starting with "- " or "1. " become lists. No HTML, no Markdown headings.
 ```
 
 ## Reusable prompt
@@ -105,6 +110,11 @@ image-compare:          content.before: { "image": { "src", "alt", "width", "hei
 word-builder:           content.items[1-10]: [{ "id"?, "prompt", "tokens": ["the", "correct", "answer", "in", "order"] (2-14 tiles; one word or operator per tile), "alternatives"?: [[…]] (other accepted orders using exactly the same tokens), "distractors": ["1-2", "wrong tiles"], "display": "sentence"|"formula" (formula for equations like ["ROAS", "=", "Revenue", "÷", "Ad spend"]), "hint"?, "explanation" }]
 priority-matrix:        content.axes: { "x": { "label": "Urgency", "low": "low", "high": "high" }, "y": { "label": "Importance", "low": "low", "high": "high" } }, content.quadrants: exactly 4 [{ "id", "position": "top-left"|"top-right"|"bottom-left"|"bottom-right" (each used once; top = high y, right = high x), "label" (short, e.g. "Do now"), "description"?, "color"?: "accent"|"lime"|"pink"|"sky"|"violet" }], content.items[3-16]: [{ "id", "text", "quadrantId", "explanation" }], content.explanation?
 inbox-triage:           content.owner: { "name", "role"? }, content.actions[2-5]: [{ "id", "label", "description"?, "icon"?: "reply"|"forward"|"calendar"|"archive"|"flag"|"alert", "tone"?: "accent"|"lime"|"pink"|"sky"|"violet" }], content.messages[3-12]: [{ "id", "from": { "name", "role"?, "email"? }, "subject", "preview" (one line), "body" (blank lines = paragraphs), "time": "08:57", "flags"?: ["vip"|"external"|"attachment"|"suspicious-link"], "correctAction": "<actionId>", "acceptable"?: ["<actionId>"] (partial credit; never repeat correctAction), "explanation" }], "summary"?; behavior: { "feedback": "instant"|"end" }  (mix urgent, delegable, deferrable and ignorable messages; every message needs an explanation of the triage judgement)
+callout:                content: { "variant": "tip", "title": "Short heading", "text": "One key rule or warning." }
+accordion:              content.items[1-30]: [{ "id", "title", "text" }], behavior: { "completeOn": "all-items" } for FAQs the learner should read
+tabs:                   content.tabs[2-8]: [{ "id", "label": "≤ 40 chars", "text" }] for parallel views (stages, roles)
+carousel:               content.slides[1-30]: [{ "id", "title", "text" }] for sequences (steps, timeline)
+columns:                content.columns[2-4]: [{ "id", "title", "text" }] for comparisons ("Do" / "Don't")
 (hotspot-explorer, screenshot-walkthrough, label-diagram and image-compare require image URLs; skip them unless the source includes usable image URLs.)
 
 TRAINING DOCUMENT

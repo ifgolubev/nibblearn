@@ -1,7 +1,7 @@
 {
   "name": "@nibblearn/react",
-  "version": "0.1.0",
-  "description": "Tiny interactions. Real learning. Beautiful, accessible, interactive learning modules and a Lesson Player for React \u2014 flashcards, matching, branching scenarios, simulations and more, driven by JSON or components.",
+  "version": "0.2.0",
+  "description": "Tiny interactions. Real learning. Beautiful, accessible, interactive learning modules and a Lesson Player for React — flashcards, matching, branching scenarios, simulations and more, driven by JSON or components.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -31,7 +31,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build && dts-bundle-generator src/index.ts -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist",
+    "build": "vite build && node ../../scripts/dts-shim.mjs . core && dts-bundle-generator src/index.ts -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints styles.css"
@@ -82,8 +82,7 @@
     "ui"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "engines": {
     "node": ">=20"

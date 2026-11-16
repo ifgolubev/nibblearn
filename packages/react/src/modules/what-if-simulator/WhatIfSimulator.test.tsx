@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { whatIfSimulatorSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { WhatIfSimulator } from "./WhatIfSimulator";
 
 const base = {
@@ -231,5 +232,44 @@ describe("WhatIfSimulator", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/could not be loaded/);
+  });
+
+  it("restores the inputs and a completed challenge without completing again", async () => {
+    const onStateChange = vi.fn();
+    const onComplete = vi.fn();
+    const first = render(
+      <WhatIfSimulator
+        config={withChallenge}
+        onStateChange={onStateChange}
+        onComplete={onComplete}
+      />,
+    );
+    fireEvent.change(slider("Conversion rate"), { target: { value: "0.06" } });
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    const saved = await latestState(onStateChange);
+    expect(saved.data.inputs).toEqual({ spend: 10000, cpc: 1.5, cvr: 0.06 });
+    first.unmount();
+
+    const again = vi.fn();
+    render(<WhatIfSimulator config={withChallenge} initialState={saved} onComplete={again} />);
+    expect(slider("Conversion rate")).toHaveAttribute("aria-valuetext", "6%");
+    expect(screen.getAllByText("Challenge complete!").length).toBeGreaterThan(0);
+    expect(again).not.toHaveBeenCalled();
+  });
+
+  it("ignores restored inputs outside their range", async () => {
+    const onStateChange = vi.fn();
+    const first = render(<WhatIfSimulator config={withChallenge} onStateChange={onStateChange} />);
+    fireEvent.change(slider("Conversion rate"), { target: { value: "0.03" } });
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(
+      <WhatIfSimulator
+        config={withChallenge}
+        initialState={{ ...saved, data: { inputs: { cvr: 5, spend: "x" } } }}
+      />,
+    );
+    expect(slider("Conversion rate")).toHaveAttribute("aria-valuetext", "2%");
   });
 });

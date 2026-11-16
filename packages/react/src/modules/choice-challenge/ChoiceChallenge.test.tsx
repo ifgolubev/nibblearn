@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChoiceChallenge } from "./ChoiceChallenge";
 import { choiceChallengeSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const config = choiceChallengeSchema.parse({
   id: "q",
@@ -95,5 +96,47 @@ describe("ChoiceChallenge", () => {
     rerender(<ChoiceChallenge config={config} resetKey={2} />);
     await waitFor(() => expect(screen.queryByText("Correct")).not.toBeInTheDocument());
     expect(await screen.findByRole("button", { name: "Check" })).toBeDisabled();
+  });
+
+  it("restores mid-progress from a saved state", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ChoiceChallenge config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("radio", { name: /CPA/ }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(await screen.findByRole("checkbox", { name: /CPC/ }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onEvent = vi.fn();
+    render(<ChoiceChallenge config={config} initialState={saved} onEvent={onEvent} />);
+    expect(screen.getByText("Question 2 of 2")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /CPC/ })).toHaveAttribute("data-state", "selected");
+    expect(screen.getByRole("checkbox", { name: /CPM/ })).toHaveAttribute("data-state", "idle");
+    // Resuming does not count as a new start.
+    expect(onEvent.mock.calls.map((c) => c[0].type)).not.toContain("module:start");
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ChoiceChallenge config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("radio", { name: /CPA/ }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(await screen.findByRole("checkbox", { name: /CPC/ }));
+    await user.click(screen.getByRole("checkbox", { name: /CPM/ }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+    const saved = await latestState(onStateChange);
+    expect(saved.result?.score).toBe(1);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<ChoiceChallenge config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(screen.queryByText(/Question \d of 2/)).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

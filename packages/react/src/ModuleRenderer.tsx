@@ -2,7 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import type { ModuleRegistry } from "./registry";
 import type { ModuleProps } from "./modules/types";
 import { defaultRegistry } from "./defaultRegistry";
-import { useNibblearn } from "./context/NibblearnProvider";
+import { useRootProps } from "./hooks/useRootProps";
 
 export interface ModuleRendererProps extends ModuleProps<{ id: string; type: string }> {
   /** Registry used to resolve `config.type`. Defaults to all built-in modules. */
@@ -24,11 +24,11 @@ export function ModuleRenderer({
   fallback = null,
   ...rest
 }: ModuleRendererProps) {
-  const { theme } = useNibblearn();
+  const rootProps = useRootProps();
   const Component = registry.component(config.type);
   if (!Component) {
     return (
-      <div className="nb-root nb-invalid" role="alert" data-nb-theme={theme}>
+      <div className="nb-root nb-invalid" role="alert" {...rootProps}>
         <div className="nb-invalid__title">
           Unknown module type: <code>{config.type}</code>
         </div>
@@ -37,7 +37,8 @@ export function ModuleRenderer({
   }
   return (
     <Suspense fallback={fallback}>
-      <Component config={config} {...rest} />
+      {/* Another module (id or type) is a new instance: no state or session carries over. */}
+      <Component key={`${config.type}:${config.id}`} config={config} {...rest} />
     </Suspense>
   );
 }

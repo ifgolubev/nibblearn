@@ -1,0 +1,2401 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`moduleToText > accordion: text and markdown snapshots > markdown 1`] = `
+"## Launch-week questions
+
+Open the questions new account managers ask most.
+
+### Who signs off a campaign before launch?
+
+The account lead approves budget and targeting; the client approves creative. Both approvals are recorded in Orbit CRM before anything goes live.
+
+### Can I change a live budget?
+
+Yes, within ±20% per day without asking the client. Larger changes need a written OK:
+
+- Note the reason in Orbit CRM
+- Tell the client the same day
+- Check pacing again after 24 hours
+
+### What if tracking breaks?
+
+Pause conversion-optimised campaigns first, then open a tracking ticket. Spend without tracking teaches the bidding algorithm the wrong lesson.
+
+### When do clients get reports?
+
+Every Monday by 10:00 local time. Northwind Outdoor also gets a short mid-week note during launches (illustrative schedule)."
+`;
+
+exports[`moduleToText > accordion: text and markdown snapshots > text 1`] = `
+"Launch-week questions
+
+Open the questions new account managers ask most.
+
+Who signs off a campaign before launch?
+
+The account lead approves budget and targeting; the client approves creative. Both approvals are recorded in Orbit CRM before anything goes live.
+
+Can I change a live budget?
+
+Yes, within ±20% per day without asking the client. Larger changes need a written OK:
+
+- Note the reason in Orbit CRM
+- Tell the client the same day
+- Check pacing again after 24 hours
+
+What if tracking breaks?
+
+Pause conversion-optimised campaigns first, then open a tracking ticket. Spend without tracking teaches the bidding algorithm the wrong lesson.
+
+When do clients get reports?
+
+Every Monday by 10:00 local time. Northwind Outdoor also gets a short mid-week note during launches (illustrative schedule)."
+`;
+
+exports[`moduleToText > branching-scenario: text and markdown snapshots > markdown 1`] = `
+"## The unhappy client
+
+Harbor Supply Co. is three weeks into a paid-social campaign and the numbers are not where they hoped. Every choice shapes how this ends.
+
+It is Tuesday, 9:40. Your account lead forwards a two-line email from **Dana Whitfield**, Head of Growth at Harbor Supply Co.: *"Can we talk today? Campaign results are not what we signed up for."*
+
+The campaign has spent **$18,400** of a $30,000 budget. CPA is **$62** against a $45 target. You have 20 minutes before the call.
+
+### The call opens cold
+
+Dana, Head of Growth: "I'll be direct. We're over 60% through the budget and CPA is almost 40% above target. My CFO is asking why we're still spending. What's going on?"
+
+You have the dashboard open. Conversion rate from the landing page dropped from 3.1% to 1.9% after their site team redesigned the checkout two weeks ago. Ad CTR is actually up.
+
+- Acknowledge the gap, then ask what the CFO needs to see by Friday. (good)
+- Explain that the checkout redesign on their side is what tanked conversion. (poor)
+- Offer to pause spend immediately while you investigate.
+
+Acknowledge the gap, then ask what the CFO needs to see by Friday.: You validated the concern without defending yet, and you found out what a good outcome looks like for *her*. That gives you a target.
+
+Explain that the checkout redesign on their side is what tanked conversion.: You may be right, but leading with blame on a tense call makes the client defend her own team instead of listening to you.
+
+Offer to pause spend immediately while you investigate.: Safe, and it shows you take the budget seriously. But pausing without a diagnosis loses momentum and learning data.
+
+### A door opens
+
+Dana, Head of Growth: "Honestly? He needs to see CPA trending toward $45 and a plan with dates. I don't need a miracle, I need to not look blindsided."
+
+You now share your screen: CTR is up 22%, but landing-page conversion halved the day the new checkout went live. The cause is almost certainly on their site, not in the ads.
+
+- Walk through the data together and propose a joint fix: a two-step checkout test on their side, retargeting shifted to cart abandoners on yours. (good)
+- Show the conversion drop and suggest their site team should look into it before you change anything.
+- Promise to cut CPA to $45 by Friday by reallocating all spend to the best-performing audience. (poor)
+
+Walk through the data together and propose a joint fix: a two-step checkout test on their side, retargeting shifted to cart abandoners on yours.: You framed the finding as a shared problem with a shared fix. Dana now has something concrete to bring to her CFO, and it includes her team.
+
+Show the conversion drop and suggest their site team should look into it before you change anything.: Accurate, but it hands the problem back over the fence. Dana hears "not our fault" even if you did not say it.
+
+Promise to cut CPA to $45 by Friday by reallocating all spend to the best-performing audience.: You cannot fix a landing-page problem with media allocation. Overpromising to end an uncomfortable call sets up a worse one next week.
+
+### Walls go up
+
+Dana, Head of Growth: "So this is our fault? The checkout was redesigned because *your* team said the old one was slow on mobile. I'm not going to the CFO with 'the agency says it's us.'"
+
+The call has turned into a negotiation about blame. You can still turn it around, but it will cost something.
+
+- Back up: "You're right, that came out wrong. Let's look at the numbers together and figure out what we can each fix this week." (good)
+- Hold your ground and send the analytics export after the call as proof. (poor)
+
+Back up: "You're right, that came out wrong. Let's look at the numbers together and figure out what we can each fix this week.": A clean reset. Owning the misstep quickly costs you less than digging in. Dana is willing to look at the data now.
+
+Hold your ground and send the analytics export after the call as proof.: Being right and being retained are different things. Proof delivered after a hostile call reads as a paper trail, not a partnership.
+
+### Spend paused
+
+Dana, Head of Growth: "Okay. Pause it. But I need to know by Thursday whether this campaign is salvageable or whether we're writing off the quarter."
+
+With spend paused you have 48 hours and no new data. The conversion drop on their checkout is still the real story.
+
+- Use the pause to run a quick checkout audit with their dev lead and come back Thursday with a joint plan. (good)
+- Rebuild the ad creative and audiences from scratch so you have something new to show on Thursday. (poor)
+
+Use the pause to run a quick checkout audit with their dev lead and come back Thursday with a joint plan.: You turned a pause into a diagnostic window and brought their team in. Thursday's meeting now has a story and a plan.
+
+Rebuild the ad creative and audiences from scratch so you have something new to show on Thursday.: New creative does not fix a checkout that lost half its conversions. You will show effort on Thursday, not a solution.
+
+### Renewed, with a plan
+
+Thursday's follow-up has Dana, her dev lead, and you on the same slide: CTR up 22%, checkout fix shipping Monday, retargeting live on cart abandoners. CPA drops to **$48** within ten days.
+
+Dana's CFO signs off on the remaining budget. Three weeks later she asks about Q3.
+
+The winning pattern: acknowledge first, diagnose together, propose a fix that includes the client's team. Being right about the cause mattered less than how you shared it.
+
+### Still on the account, barely
+
+Their site team eventually fixes the checkout, but it takes three weeks and nobody at Harbor connects the recovery to you. The campaign finishes at a **$55 CPA**.
+
+Dana keeps the contract through the quarter and opens an RFP for next year.
+
+You were accurate but passive. Handing a problem back over the fence protects you in the moment and costs you the relationship over time. Clients remember who helped, not who was right.
+
+### The Friday call
+
+Friday arrives. CPA is **$59**. Reallocating spend did nothing because the leak was on the landing page, and now Dana has told her CFO a number you cannot deliver.
+
+"I defended you on Tuesday. I'm not doing that twice." The account moves to a 30-day notice.
+
+Promises made to end an uncomfortable conversation turn into a worse conversation later. Diagnose before you commit, and never commit to a fix outside your control.
+
+### Churned
+
+Your analytics export is correct and nobody reads it. Dana forwards the thread to procurement with one line: *"Not a fit."*
+
+The campaign ends at **$64 CPA** with $9,000 unspent. Harbor Supply Co. signs with another agency in June.
+
+A tense client call is not a court case. Winning the argument about whose fault it was cost you the account. Lead with the relationship, then bring the data.
+
+Try another path to see how the same facts land differently depending on how you lead the conversation."
+`;
+
+exports[`moduleToText > branching-scenario: text and markdown snapshots > text 1`] = `
+"The unhappy client
+
+Harbor Supply Co. is three weeks into a paid-social campaign and the numbers are not where they hoped. Every choice shapes how this ends.
+
+It is Tuesday, 9:40. Your account lead forwards a two-line email from Dana Whitfield, Head of Growth at Harbor Supply Co.: "Can we talk today? Campaign results are not what we signed up for."  The campaign has spent $18,400 of a $30,000 budget. CPA is $62 against a $45 target. You have 20 minutes before the call.
+
+The call opens cold
+
+Dana, Head of Growth: "I'll be direct. We're over 60% through the budget and CPA is almost 40% above target. My CFO is asking why we're still spending. What's going on?"  You have the dashboard open. Conversion rate from the landing page dropped from 3.1% to 1.9% after their site team redesigned the checkout two weeks ago. Ad CTR is actually up.
+
+- Acknowledge the gap, then ask what the CFO needs to see by Friday. (good)
+- Explain that the checkout redesign on their side is what tanked conversion. (poor)
+- Offer to pause spend immediately while you investigate.
+
+Acknowledge the gap, then ask what the CFO needs to see by Friday.: You validated the concern without defending yet, and you found out what a good outcome looks like for her. That gives you a target.
+
+Explain that the checkout redesign on their side is what tanked conversion.: You may be right, but leading with blame on a tense call makes the client defend her own team instead of listening to you.
+
+Offer to pause spend immediately while you investigate.: Safe, and it shows you take the budget seriously. But pausing without a diagnosis loses momentum and learning data.
+
+A door opens
+
+Dana, Head of Growth: "Honestly? He needs to see CPA trending toward $45 and a plan with dates. I don't need a miracle, I need to not look blindsided."  You now share your screen: CTR is up 22%, but landing-page conversion halved the day the new checkout went live. The cause is almost certainly on their site, not in the ads.
+
+- Walk through the data together and propose a joint fix: a two-step checkout test on their side, retargeting shifted to cart abandoners on yours. (good)
+- Show the conversion drop and suggest their site team should look into it before you change anything.
+- Promise to cut CPA to $45 by Friday by reallocating all spend to the best-performing audience. (poor)
+
+Walk through the data together and propose a joint fix: a two-step checkout test on their side, retargeting shifted to cart abandoners on yours.: You framed the finding as a shared problem with a shared fix. Dana now has something concrete to bring to her CFO, and it includes her team.
+
+Show the conversion drop and suggest their site team should look into it before you change anything.: Accurate, but it hands the problem back over the fence. Dana hears "not our fault" even if you did not say it.
+
+Promise to cut CPA to $45 by Friday by reallocating all spend to the best-performing audience.: You cannot fix a landing-page problem with media allocation. Overpromising to end an uncomfortable call sets up a worse one next week.
+
+Walls go up
+
+Dana, Head of Growth: "So this is our fault? The checkout was redesigned because your team said the old one was slow on mobile. I'm not going to the CFO with 'the agency says it's us.'"  The call has turned into a negotiation about blame. You can still turn it around, but it will cost something.
+
+- Back up: "You're right, that came out wrong. Let's look at the numbers together and figure out what we can each fix this week." (good)
+- Hold your ground and send the analytics export after the call as proof. (poor)
+
+Back up: "You're right, that came out wrong. Let's look at the numbers together and figure out what we can each fix this week.": A clean reset. Owning the misstep quickly costs you less than digging in. Dana is willing to look at the data now.
+
+Hold your ground and send the analytics export after the call as proof.: Being right and being retained are different things. Proof delivered after a hostile call reads as a paper trail, not a partnership.
+
+Spend paused
+
+Dana, Head of Growth: "Okay. Pause it. But I need to know by Thursday whether this campaign is salvageable or whether we're writing off the quarter."  With spend paused you have 48 hours and no new data. The conversion drop on their checkout is still the real story.
+
+- Use the pause to run a quick checkout audit with their dev lead and come back Thursday with a joint plan. (good)
+- Rebuild the ad creative and audiences from scratch so you have something new to show on Thursday. (poor)
+
+Use the pause to run a quick checkout audit with their dev lead and come back Thursday with a joint plan.: You turned a pause into a diagnostic window and brought their team in. Thursday's meeting now has a story and a plan.
+
+Rebuild the ad creative and audiences from scratch so you have something new to show on Thursday.: New creative does not fix a checkout that lost half its conversions. You will show effort on Thursday, not a solution.
+
+Renewed, with a plan
+
+Thursday's follow-up has Dana, her dev lead, and you on the same slide: CTR up 22%, checkout fix shipping Monday, retargeting live on cart abandoners. CPA drops to $48 within ten days.  Dana's CFO signs off on the remaining budget. Three weeks later she asks about Q3.
+
+The winning pattern: acknowledge first, diagnose together, propose a fix that includes the client's team. Being right about the cause mattered less than how you shared it.
+
+Still on the account, barely
+
+Their site team eventually fixes the checkout, but it takes three weeks and nobody at Harbor connects the recovery to you. The campaign finishes at a $55 CPA.  Dana keeps the contract through the quarter and opens an RFP for next year.
+
+You were accurate but passive. Handing a problem back over the fence protects you in the moment and costs you the relationship over time. Clients remember who helped, not who was right.
+
+The Friday call
+
+Friday arrives. CPA is $59. Reallocating spend did nothing because the leak was on the landing page, and now Dana has told her CFO a number you cannot deliver.  "I defended you on Tuesday. I'm not doing that twice." The account moves to a 30-day notice.
+
+Promises made to end an uncomfortable conversation turn into a worse conversation later. Diagnose before you commit, and never commit to a fix outside your control.
+
+Churned
+
+Your analytics export is correct and nobody reads it. Dana forwards the thread to procurement with one line: "Not a fit."  The campaign ends at $64 CPA with $9,000 unspent. Harbor Supply Co. signs with another agency in June.
+
+A tense client call is not a court case. Winning the argument about whose fault it was cost you the account. Lead with the relationship, then bring the data.
+
+Try another path to see how the same facts land differently depending on how you lead the conversation."
+`;
+
+exports[`moduleToText > budget-allocator: text and markdown snapshots > markdown 1`] = `
+"## Spring media plan
+
+Brightline Media is planning Northwind Outdoor's spring push. Split the **$120,000** budget across five channels to get the most conversions, then lock in your plan and compare it with the optimum. Response curves and figures are illustrative.
+
+Budget: 120000 USD. Goal: Conversions.
+
+Reach at least **3,800 conversions** from the same $120,000.
+
+- Programmatic display: Open-exchange banners with audience targeting. Cheap reach that tires quickly.
+- Premium CTV: Living-room reach on premium streaming apps (about $38 CPM). Scales steadily.
+- Streaming audio: Podcast and music-streaming spots. Great for recall, light on direct response.
+- Digital out-of-home: Screens near trailheads and outdoor retailers. 5% minimum agreed with the media owner.
+- Search & social: High-intent search plus paid social. Converts best, but inventory caps out at 45%.
+
+Explanation: Search & social converts best per dollar, but its curve flattens fast and inventory caps it at 45%. Premium CTV looks expensive at first, yet its response is almost a straight line, so it keeps earning while cheaper channels saturate. The optimal plan here puts **45%** in search & social, **30%** in CTV and **15%** in programmatic, and keeps audio and out-of-home at token levels.
+
+The rule of thumb: give the next dollar to whichever channel has the highest *marginal* return, not the best average.
+
+Every plan trades reach for efficiency. Keep the marginal-return habit when you build the real Northwind flowchart."
+`;
+
+exports[`moduleToText > budget-allocator: text and markdown snapshots > text 1`] = `
+"Spring media plan
+
+Brightline Media is planning Northwind Outdoor's spring push. Split the $120,000 budget across five channels to get the most conversions, then lock in your plan and compare it with the optimum. Response curves and figures are illustrative.
+
+Budget: 120000 USD. Goal: Conversions.
+
+Reach at least 3,800 conversions from the same $120,000.
+
+- Programmatic display: Open-exchange banners with audience targeting. Cheap reach that tires quickly.
+- Premium CTV: Living-room reach on premium streaming apps (about $38 CPM). Scales steadily.
+- Streaming audio: Podcast and music-streaming spots. Great for recall, light on direct response.
+- Digital out-of-home: Screens near trailheads and outdoor retailers. 5% minimum agreed with the media owner.
+- Search & social: High-intent search plus paid social. Converts best, but inventory caps out at 45%.
+
+Explanation: Search & social converts best per dollar, but its curve flattens fast and inventory caps it at 45%. Premium CTV looks expensive at first, yet its response is almost a straight line, so it keeps earning while cheaper channels saturate. The optimal plan here puts 45% in search & social, 30% in CTV and 15% in programmatic, and keeps audio and out-of-home at token levels.  The rule of thumb: give the next dollar to whichever channel has the highest marginal return, not the best average.
+
+Every plan trades reach for efficiency. Keep the marginal-return habit when you build the real Northwind flowchart."
+`;
+
+exports[`moduleToText > callout: text and markdown snapshots > markdown 1`] = `
+"TIP: One naming rule for every campaign
+
+Name campaigns **CLIENT · CAMPAIGN · CHANNEL · MARKET**, for example \`NWO · Spring Launch · Search · US\`.
+
+Pulse Analytics groups reports by these four parts, so a missing part hides spend from the client dashboard."
+`;
+
+exports[`moduleToText > callout: text and markdown snapshots > text 1`] = `
+"TIP: One naming rule for every campaign
+
+Name campaigns CLIENT · CAMPAIGN · CHANNEL · MARKET, for example NWO · Spring Launch · Search · US.
+
+Pulse Analytics groups reports by these four parts, so a missing part hides spend from the client dashboard."
+`;
+
+exports[`moduleToText > carousel: text and markdown snapshots > markdown 1`] = `
+"## Your first week
+
+### Monday: meet the team
+
+Shadow the Harbor Supply Co. account call and read the last three weekly reports.
+
+### Tuesday: tools
+
+Get access to Pulse Analytics and Orbit CRM. Build one dashboard view of your own.
+
+### Wednesday: your first audit
+
+Review one live campaign against the launch checklist and list what you would change.
+
+### Friday: present
+
+Walk your lead through the audit in ten minutes. **Two clear recommendations beat ten small ones.**"
+`;
+
+exports[`moduleToText > carousel: text and markdown snapshots > text 1`] = `
+"Your first week
+
+Monday: meet the team
+
+Shadow the Harbor Supply Co. account call and read the last three weekly reports.
+
+Tuesday: tools
+
+Get access to Pulse Analytics and Orbit CRM. Build one dashboard view of your own.
+
+Wednesday: your first audit
+
+Review one live campaign against the launch checklist and list what you would change.
+
+Friday: present
+
+Walk your lead through the audit in ten minutes. Two clear recommendations beat ten small ones."
+`;
+
+exports[`moduleToText > category-sort: text and markdown snapshots > markdown 1`] = `
+"## Who does what at Brightline Media
+
+Sort each activity into the team that owns it. Drag an item into a category, or tap the item and then the category.
+
+### Strategy
+
+Objectives, audiences and the plan
+
+- Translate the client brief into campaign objectives
+- Define target audience personas
+- Recommend the channel mix and budget split
+
+### Media Buying
+
+Running the money in-platform
+
+- Adjust bids and budgets in the ad platforms
+- Choose placements and exclude low-quality inventory
+
+### Analytics
+
+Tracking, measurement and insight
+
+- Install and verify conversion tracking
+- Build the weekly performance dashboard
+- Pick the attribution model for reporting
+
+### Account Management
+
+The client relationship
+
+- Run the quarterly business review with the client
+- Negotiate scope changes and invoicing
+
+Translate the client brief into campaign objectives: Strategy turns the brief into measurable objectives before any channel is chosen.
+
+Adjust bids and budgets in the ad platforms: In-flight bid and budget changes are hands-on-keyboard media buying work.
+
+Install and verify conversion tracking: Analytics owns the tracking stack so that every team reports from the same numbers.
+
+Run the quarterly business review with the client: QBRs are a relationship ritual led by the account team, with input from the others.
+
+Define target audience personas: Personas are a planning artefact that media and creative then act on.
+
+Choose placements and exclude low-quality inventory: Placement selection and brand-safety exclusions are configured by the buyers.
+
+Build the weekly performance dashboard: Dashboards are an analytics deliverable, even though account managers present them.
+
+Negotiate scope changes and invoicing: Commercial conversations about scope and billing sit with account management.
+
+Pick the attribution model for reporting: Attribution is a measurement decision; analytics recommends it, strategy signs it off.
+
+Recommend the channel mix and budget split: The channel mix is a strategic recommendation that media buying then executes.
+
+Hint: Ask who would be blamed if the task went wrong: the planner, the buyer, the analyst or the client lead.
+
+You now know who to ask for what. Expect to hand off work across all four teams in your first month."
+`;
+
+exports[`moduleToText > category-sort: text and markdown snapshots > text 1`] = `
+"Who does what at Brightline Media
+
+Sort each activity into the team that owns it. Drag an item into a category, or tap the item and then the category.
+
+Strategy
+
+Objectives, audiences and the plan
+
+- Translate the client brief into campaign objectives
+- Define target audience personas
+- Recommend the channel mix and budget split
+
+Media Buying
+
+Running the money in-platform
+
+- Adjust bids and budgets in the ad platforms
+- Choose placements and exclude low-quality inventory
+
+Analytics
+
+Tracking, measurement and insight
+
+- Install and verify conversion tracking
+- Build the weekly performance dashboard
+- Pick the attribution model for reporting
+
+Account Management
+
+The client relationship
+
+- Run the quarterly business review with the client
+- Negotiate scope changes and invoicing
+
+Translate the client brief into campaign objectives: Strategy turns the brief into measurable objectives before any channel is chosen.
+
+Adjust bids and budgets in the ad platforms: In-flight bid and budget changes are hands-on-keyboard media buying work.
+
+Install and verify conversion tracking: Analytics owns the tracking stack so that every team reports from the same numbers.
+
+Run the quarterly business review with the client: QBRs are a relationship ritual led by the account team, with input from the others.
+
+Define target audience personas: Personas are a planning artefact that media and creative then act on.
+
+Choose placements and exclude low-quality inventory: Placement selection and brand-safety exclusions are configured by the buyers.
+
+Build the weekly performance dashboard: Dashboards are an analytics deliverable, even though account managers present them.
+
+Negotiate scope changes and invoicing: Commercial conversations about scope and billing sit with account management.
+
+Pick the attribution model for reporting: Attribution is a measurement decision; analytics recommends it, strategy signs it off.
+
+Recommend the channel mix and budget split: The channel mix is a strategic recommendation that media buying then executes.
+
+Hint: Ask who would be blamed if the task went wrong: the planner, the buyer, the analyst or the client lead.
+
+You now know who to ask for what. Expect to hand off work across all four teams in your first month."
+`;
+
+exports[`moduleToText > choice-challenge: text and markdown snapshots > markdown 1`] = `
+"## Pick the right KPI
+
+Three quick questions about campaign metrics.
+
+Think about what ties spend directly to results.
+
+Which KPI best measures the **efficiency** of an acquisition campaign?
+- Impressions
+- **Cost per acquisition (CPA)** ✓
+- Click-through rate (CTR)
+- Follower count
+*Explanation:* Efficiency is about outcomes per unit of spend. CPA divides spend by the number of acquisitions, which makes it the most direct efficiency metric.
+
+Explanation for "Impressions": Impressions measure reach, not efficiency.
+
+Explanation for "Cost per acquisition (CPA)": CPA tells you what each result costs.
+
+Explanation for "Click-through rate (CTR)": CTR measures ad relevance, not cost efficiency.
+
+Explanation for "Follower count": Followers say nothing about acquisition cost.
+
+Hint: Efficiency metrics usually have the word *cost* in them.
+
+Select every metric that is calculated from **spend**.
+- **CPC — cost per click** ✓
+- **CPM — cost per thousand impressions** ✓
+- CTR — click-through rate
+- **ROAS — return on ad spend** ✓
+*Explanation:* CTR is clicks ÷ impressions; it never looks at spend. The other three all divide or multiply by spend.
+
+A campaign has a CTR of 4% and a conversion rate of 0.5%. What is the most likely issue?
+- The ads are not relevant to the audience
+- **The landing page is not converting visitors** ✓
+- The budget is too low
+*Explanation:* A high CTR shows the ads work. A very low conversion rate means visitors leave after clicking, which points to the landing page."
+`;
+
+exports[`moduleToText > choice-challenge: text and markdown snapshots > text 1`] = `
+"Pick the right KPI
+
+Three quick questions about campaign metrics.
+
+Think about what ties spend directly to results.
+
+Which KPI best measures the efficiency of an acquisition campaign?
+- Impressions
+- Cost per acquisition (CPA) (correct)
+- Click-through rate (CTR)
+- Follower count
+Explanation: Efficiency is about outcomes per unit of spend. CPA divides spend by the number of acquisitions, which makes it the most direct efficiency metric.
+
+Explanation for "Impressions": Impressions measure reach, not efficiency.
+
+Explanation for "Cost per acquisition (CPA)": CPA tells you what each result costs.
+
+Explanation for "Click-through rate (CTR)": CTR measures ad relevance, not cost efficiency.
+
+Explanation for "Follower count": Followers say nothing about acquisition cost.
+
+Hint: Efficiency metrics usually have the word cost in them.
+
+Select every metric that is calculated from spend.
+- CPC — cost per click (correct)
+- CPM — cost per thousand impressions (correct)
+- CTR — click-through rate
+- ROAS — return on ad spend (correct)
+Explanation: CTR is clicks ÷ impressions; it never looks at spend. The other three all divide or multiply by spend.
+
+A campaign has a CTR of 4% and a conversion rate of 0.5%. What is the most likely issue?
+- The ads are not relevant to the audience
+- The landing page is not converting visitors (correct)
+- The budget is too low
+Explanation: A high CTR shows the ads work. A very low conversion rate means visitors leave after clicking, which points to the landing page."
+`;
+
+exports[`moduleToText > columns: text and markdown snapshots > markdown 1`] = `
+"## Client emails: do and don't
+
+### Do
+
+- Lead with the number that changed
+- Say what you will do next
+- Keep it under 150 words
+
+### Don't
+
+- Paste raw platform exports
+- Hide bad news at the end
+- Promise results you cannot control"
+`;
+
+exports[`moduleToText > columns: text and markdown snapshots > text 1`] = `
+"Client emails: do and don't
+
+Do
+
+- Lead with the number that changed
+- Say what you will do next
+- Keep it under 150 words
+
+Don't
+
+- Paste raw platform exports
+- Hide bad news at the end
+- Promise results you cannot control"
+`;
+
+exports[`moduleToText > conversation: text and markdown snapshots > markdown 1`] = `
+"## Urgent client message on Friday 5pm
+
+Priya runs marketing at Harbor Supply Co. It is 5:02pm on a Friday and she has just messaged you. Pick the reply you would actually send.
+
+Priya Nair: Marketing Lead, Harbor Supply Co., Online
+
+Priya Nair: Hey, are you still around?
+
+Priya Nair: The spring sale ads are showing the **old 15% code** instead of the 25% one. Our support inbox is filling up and the sale went live an hour ago.
+
+- Proactive: I'm here. Pausing the affected ads now and I'll confirm in 5 minutes which placements had the old code.
+- Defensive: That's odd, the brief we got had 15% in it. Can you double check what was sent over?
+- Vague: Oh no, sorry to hear that! Let me look into it and get back to you.
+
+I'm here. Pausing the affected ads now and I'll confirm in 5 minutes which placements had the old code.: You answered the question she did not ask: *is anyone handling this?* Concrete action plus a time box lowers her stress immediately.
+
+That's odd, the brief we got had 15% in it. Can you double check what was sent over?: Even if the brief was wrong, 5pm on a Friday with a live sale is not the moment. She hears *not our problem* while customers are seeing the wrong code.
+
+Oh no, sorry to hear that! Let me look into it and get back to you.: Warm but empty. *Get back to you* when? Doing what? With a live problem, the client needs a specific next action.
+
+5 minutes later
+
+Priya Nair: Okay, thank you. I can see spend has stopped.
+
+Priya Nair: It was three of the five ad sets, right? Those are the ones people are complaining about.
+
+- Proactive: Correct, three ad sets. The fix is a creative swap, about 20 minutes to rebuild and resubmit. I'd rather push the right version tonight than leave the sale dark over the weekend. Okay with you?
+- Cautious: Yes. I'll fix it Monday first thing so we don't rush changes at this hour.
+
+Correct, three ad sets. The fix is a creative swap, about 20 minutes to rebuild and resubmit. I'd rather push the right version tonight than leave the sale dark over the weekend. Okay with you?: You confirmed the scope, gave an estimate, and offered a recommendation with a reason. Asking for her go-ahead keeps her in control.
+
+Yes. I'll fix it Monday first thing so we don't rush changes at this hour.: Caution is reasonable, but a sale is running *now*. Leaving it paused all weekend turns a 20-minute fix into a lost weekend of revenue.
+
+25 minutes later
+
+Priya Nair: Live again with 25%. Just placed a test order myself, code works.
+
+Priya Nair: Honestly I was dreading this message. Thanks for jumping on it.
+
+- Accountable: Glad it's sorted. I'll send a short note Monday on how the old code slipped through and what we're changing so it doesn't happen again. Enjoy your weekend.
+- Friendly: No problem at all! Have a great weekend.
+
+Glad it's sorted. I'll send a short note Monday on how the old code slipped through and what we're changing so it doesn't happen again. Enjoy your weekend.: You closed the loop *and* pre-empted the post-mortem question before she had to ask it. This is how trust is built after a mistake.
+
+No problem at all! Have a great weekend.: Perfectly pleasant, but it leaves the *why did this happen* conversation for Monday, when she may already be asking it.
+
+Saturday, 10:14
+
+Priya Nair: Sale is our biggest weekend of the quarter and ads are off. Can we really not get this live today?
+
+- Accountable: You're right, I should have offered that last night. Rebuilding the three ad sets now, live within the hour.
+- Rigid: I can't make changes to live campaigns on weekends without a change request from your side.
+
+You're right, I should have offered that last night. Rebuilding the three ad sets now, live within the hour.: A quick, specific recovery. You lost some goodwill overnight, but owning it without excuses gets most of it back.
+
+I can't make changes to live campaigns on weekends without a change request from your side.: Process is there to protect the client, not to stop you from helping them. Quoting it during their biggest weekend reads as hiding.
+
+Priya Nair: I'm not trying to assign blame, I'm trying to stop customers from seeing the wrong discount.
+
+Priya Nair: Can you pause them or not?
+
+- Accountable: Yes, sorry, pausing the affected ad sets now. I'll confirm in 5 minutes and we can sort out the brief on Monday.
+- Defensive: I can, but I want to be clear this wasn't an error on our side.
+
+Yes, sorry, pausing the affected ad sets now. I'll confirm in 5 minutes and we can sort out the brief on Monday.: Good recovery. You dropped the argument and moved to action. Parking the brief question for Monday is the right call.
+
+I can, but I want to be clear this wasn't an error on our side.: Twice defensive. She now has a live problem *and* an agency that seems more worried about fault than fixing it.
+
+20 minutes later
+
+Priya Nair: Any update? Support says 40 tickets now.
+
+- Proactive: Yes. Three of five ad sets had the old code. They're paused as of now and I can have the corrected version live in about 20 minutes if you want me to push it tonight.
+- Vague: Still digging into it, will let you know as soon as I have something.
+
+Yes. Three of five ad sets had the old code. They're paused as of now and I can have the corrected version live in about 20 minutes if you want me to push it tonight.: Specific, scoped and actionable. Twenty minutes late, but this is the message she needed from the start.
+
+Still digging into it, will let you know as soon as I have something.: Forty tickets and no action. Vague updates during an incident are worse than silence because they confirm nothing is happening.
+
+Priya Nair: That would be great. Really appreciate it. Have a good one.
+
+You treated an awkward Friday message as a chance to show how the agency behaves under pressure: act first, scope the problem, recommend with a reason, close the loop. Priya will remember the recovery more than the mistake.
+
+Priya Nair: Thanks. Talk Monday.
+
+The problem got fixed and the relationship is intact, but there was room to be faster or more explicit about what happens next. Notice where a specific commitment would have saved a follow-up message.
+
+Monday, 09:03
+
+Priya Nair: Hi. Can we set up a call with your account director this week? We need to talk about how incidents get handled.
+
+Priya did not need an explanation, a brief review, or a process reminder. She needed the wrong discount to stop appearing. When a client is in a live problem, lead with action and keep accountability conversations for later."
+`;
+
+exports[`moduleToText > conversation: text and markdown snapshots > text 1`] = `
+"Urgent client message on Friday 5pm
+
+Priya runs marketing at Harbor Supply Co. It is 5:02pm on a Friday and she has just messaged you. Pick the reply you would actually send.
+
+Priya Nair: Marketing Lead, Harbor Supply Co., Online
+
+Priya Nair: Hey, are you still around?
+
+Priya Nair: The spring sale ads are showing the old 15% code instead of the 25% one. Our support inbox is filling up and the sale went live an hour ago.
+
+- Proactive: I'm here. Pausing the affected ads now and I'll confirm in 5 minutes which placements had the old code.
+- Defensive: That's odd, the brief we got had 15% in it. Can you double check what was sent over?
+- Vague: Oh no, sorry to hear that! Let me look into it and get back to you.
+
+I'm here. Pausing the affected ads now and I'll confirm in 5 minutes which placements had the old code.: You answered the question she did not ask: is anyone handling this? Concrete action plus a time box lowers her stress immediately.
+
+That's odd, the brief we got had 15% in it. Can you double check what was sent over?: Even if the brief was wrong, 5pm on a Friday with a live sale is not the moment. She hears not our problem while customers are seeing the wrong code.
+
+Oh no, sorry to hear that! Let me look into it and get back to you.: Warm but empty. Get back to you when? Doing what? With a live problem, the client needs a specific next action.
+
+5 minutes later
+
+Priya Nair: Okay, thank you. I can see spend has stopped.
+
+Priya Nair: It was three of the five ad sets, right? Those are the ones people are complaining about.
+
+- Proactive: Correct, three ad sets. The fix is a creative swap, about 20 minutes to rebuild and resubmit. I'd rather push the right version tonight than leave the sale dark over the weekend. Okay with you?
+- Cautious: Yes. I'll fix it Monday first thing so we don't rush changes at this hour.
+
+Correct, three ad sets. The fix is a creative swap, about 20 minutes to rebuild and resubmit. I'd rather push the right version tonight than leave the sale dark over the weekend. Okay with you?: You confirmed the scope, gave an estimate, and offered a recommendation with a reason. Asking for her go-ahead keeps her in control.
+
+Yes. I'll fix it Monday first thing so we don't rush changes at this hour.: Caution is reasonable, but a sale is running now. Leaving it paused all weekend turns a 20-minute fix into a lost weekend of revenue.
+
+25 minutes later
+
+Priya Nair: Live again with 25%. Just placed a test order myself, code works.
+
+Priya Nair: Honestly I was dreading this message. Thanks for jumping on it.
+
+- Accountable: Glad it's sorted. I'll send a short note Monday on how the old code slipped through and what we're changing so it doesn't happen again. Enjoy your weekend.
+- Friendly: No problem at all! Have a great weekend.
+
+Glad it's sorted. I'll send a short note Monday on how the old code slipped through and what we're changing so it doesn't happen again. Enjoy your weekend.: You closed the loop and pre-empted the post-mortem question before she had to ask it. This is how trust is built after a mistake.
+
+No problem at all! Have a great weekend.: Perfectly pleasant, but it leaves the why did this happen conversation for Monday, when she may already be asking it.
+
+Saturday, 10:14
+
+Priya Nair: Sale is our biggest weekend of the quarter and ads are off. Can we really not get this live today?
+
+- Accountable: You're right, I should have offered that last night. Rebuilding the three ad sets now, live within the hour.
+- Rigid: I can't make changes to live campaigns on weekends without a change request from your side.
+
+You're right, I should have offered that last night. Rebuilding the three ad sets now, live within the hour.: A quick, specific recovery. You lost some goodwill overnight, but owning it without excuses gets most of it back.
+
+I can't make changes to live campaigns on weekends without a change request from your side.: Process is there to protect the client, not to stop you from helping them. Quoting it during their biggest weekend reads as hiding.
+
+Priya Nair: I'm not trying to assign blame, I'm trying to stop customers from seeing the wrong discount.
+
+Priya Nair: Can you pause them or not?
+
+- Accountable: Yes, sorry, pausing the affected ad sets now. I'll confirm in 5 minutes and we can sort out the brief on Monday.
+- Defensive: I can, but I want to be clear this wasn't an error on our side.
+
+Yes, sorry, pausing the affected ad sets now. I'll confirm in 5 minutes and we can sort out the brief on Monday.: Good recovery. You dropped the argument and moved to action. Parking the brief question for Monday is the right call.
+
+I can, but I want to be clear this wasn't an error on our side.: Twice defensive. She now has a live problem and an agency that seems more worried about fault than fixing it.
+
+20 minutes later
+
+Priya Nair: Any update? Support says 40 tickets now.
+
+- Proactive: Yes. Three of five ad sets had the old code. They're paused as of now and I can have the corrected version live in about 20 minutes if you want me to push it tonight.
+- Vague: Still digging into it, will let you know as soon as I have something.
+
+Yes. Three of five ad sets had the old code. They're paused as of now and I can have the corrected version live in about 20 minutes if you want me to push it tonight.: Specific, scoped and actionable. Twenty minutes late, but this is the message she needed from the start.
+
+Still digging into it, will let you know as soon as I have something.: Forty tickets and no action. Vague updates during an incident are worse than silence because they confirm nothing is happening.
+
+Priya Nair: That would be great. Really appreciate it. Have a good one.
+
+You treated an awkward Friday message as a chance to show how the agency behaves under pressure: act first, scope the problem, recommend with a reason, close the loop. Priya will remember the recovery more than the mistake.
+
+Priya Nair: Thanks. Talk Monday.
+
+The problem got fixed and the relationship is intact, but there was room to be faster or more explicit about what happens next. Notice where a specific commitment would have saved a follow-up message.
+
+Monday, 09:03
+
+Priya Nair: Hi. Can we set up a call with your account director this week? We need to talk about how incidents get handled.
+
+Priya did not need an explanation, a brief review, or a process reminder. She needed the wrong discount to stop appearing. When a client is in a live problem, lead with action and keep accountability conversations for later."
+`;
+
+exports[`moduleToText > estimate: text and markdown snapshots > markdown 1`] = `
+"## Benchmark instincts
+
+How well do you know the Northwind Outdoor account? Drag the slider to your best estimate for each number from Brightline Media's March reporting, then lock it in. All figures are illustrative.
+
+Clicks ÷ impressions across search, social, display, email and affiliate.
+
+What was Northwind's account-wide **click-through rate** in March? (0–0.1)
+*Answer:* 0.028
+*Explanation:* **2.8%** — 28 clicks for every 1,000 impressions, flat on February. A blended CTR hides a wide spread: search ads usually sit far above it, display banners far below.
+
+Hint: Search pulls the blend up; display pulls it down. Most blended accounts land in low single digits.
+
+What did one conversion cost Northwind on average in March (**CPA**)? (5–60)
+*Answer:* 21.4
+*Explanation:* **$21.40**, down 8.1% on February. That is why the Spring Launch search campaign targets a CPA of $22: just above today's average, so the algorithm has room to scale.
+
+Living-room streaming apps, bought through private marketplace deals.
+
+What does Brightline typically pay per 1,000 impressions on **premium CTV**? (5–80)
+*Answer:* 38
+*Explanation:* About **$38 CPM**. CTV costs four to five times as much as open-exchange display per impression, but it earns full-screen, sound-on attention, which is why its returns scale so steadily in the spring media plan.
+
+Hint: Premium video is among the most expensive inventory: think several times a display CPM.
+
+Total spend was $48,200 across five channels.
+
+What **share of March spend** went to display? (0–0.6)
+*Answer:* 0.168
+*Explanation:* **16.8%** — $8,100 of $48,200. Display returned only 1.9× ROAS against a 3.0× target, which makes it the first candidate for a budget conversation.
+
+Revenue ÷ spend on paid search only.
+
+What **ROAS** did paid search deliver in March? (0–10 ×)
+*Answer:* 4.1 ×
+*Explanation:* **4.1×** — every dollar on search returned $4.10, comfortably above the account's 3.4× blend and Northwind's 3.0× target.
+
+Good instincts come from reading the dashboard every Monday. Keep these benchmarks in mind when a number looks off."
+`;
+
+exports[`moduleToText > estimate: text and markdown snapshots > text 1`] = `
+"Benchmark instincts
+
+How well do you know the Northwind Outdoor account? Drag the slider to your best estimate for each number from Brightline Media's March reporting, then lock it in. All figures are illustrative.
+
+Clicks ÷ impressions across search, social, display, email and affiliate.
+
+What was Northwind's account-wide click-through rate in March? (0–0.1)
+Answer: 0.028
+Explanation: 2.8% — 28 clicks for every 1,000 impressions, flat on February. A blended CTR hides a wide spread: search ads usually sit far above it, display banners far below.
+
+Hint: Search pulls the blend up; display pulls it down. Most blended accounts land in low single digits.
+
+What did one conversion cost Northwind on average in March (CPA)? (5–60)
+Answer: 21.4
+Explanation: $21.40, down 8.1% on February. That is why the Spring Launch search campaign targets a CPA of $22: just above today's average, so the algorithm has room to scale.
+
+Living-room streaming apps, bought through private marketplace deals.
+
+What does Brightline typically pay per 1,000 impressions on premium CTV? (5–80)
+Answer: 38
+Explanation: About $38 CPM. CTV costs four to five times as much as open-exchange display per impression, but it earns full-screen, sound-on attention, which is why its returns scale so steadily in the spring media plan.
+
+Hint: Premium video is among the most expensive inventory: think several times a display CPM.
+
+Total spend was $48,200 across five channels.
+
+What share of March spend went to display? (0–0.6)
+Answer: 0.168
+Explanation: 16.8% — $8,100 of $48,200. Display returned only 1.9× ROAS against a 3.0× target, which makes it the first candidate for a budget conversation.
+
+Revenue ÷ spend on paid search only.
+
+What ROAS did paid search deliver in March? (0–10 ×)
+Answer: 4.1 ×
+Explanation: 4.1× — every dollar on search returned $4.10, comfortably above the account's 3.4× blend and Northwind's 3.0× target.
+
+Good instincts come from reading the dashboard every Monday. Keep these benchmarks in mind when a number looks off."
+`;
+
+exports[`moduleToText > fill-blanks: text and markdown snapshots > markdown 1`] = `
+"## Complete the metric formulas
+
+Tap a word to drop it into the next blank. Tap a filled blank to put the word back.
+
+**ROAS** is revenue divided by [ad spend / spend], so a ROAS of 3.4× means every dollar brought back $3.40. **CPA** is spend divided by the number of [conversions / acquisitions] — it tells you what each result cost. **CTR** is [clicks] divided by [impressions], which makes it a quick read on how relevant an ad is to the people who saw it.
+
+Extra words: sessions, followers, page views
+
+Hint: ROAS stands for *return on ad spend* — the denominator is in the name.
+
+Explanation: ROAS = revenue ÷ ad spend. It ignores margin, so pair it with CPA when judging profitability.
+
+Hint: The *A* in CPA is the outcome you pay for: a purchase, a sign-up, a lead.
+
+Explanation: CPA = spend ÷ conversions. Define what counts as a conversion before comparing campaigns.
+
+Hint: CTR starts with *click*.
+
+Hint: You can only click an ad after it has been shown — that showing has a name.
+
+Explanation: CTR = clicks ÷ impressions. A CTR of 2.8% means 28 clicks for every 1,000 impressions.
+
+Explanation: ROAS tells you how much revenue each unit of spend returned, CPA tells you what each result cost, and CTR tells you how often people who saw the ad clicked it. Together they describe return, efficiency and relevance.
+
+Nice — you can now read a Pulse Analytics overview without a glossary."
+`;
+
+exports[`moduleToText > fill-blanks: text and markdown snapshots > text 1`] = `
+"Complete the metric formulas
+
+Tap a word to drop it into the next blank. Tap a filled blank to put the word back.
+
+ROAS is revenue divided by [ad spend / spend], so a ROAS of 3.4× means every dollar brought back $3.40. CPA is spend divided by the number of [conversions / acquisitions] — it tells you what each result cost. CTR is [clicks] divided by [impressions], which makes it a quick read on how relevant an ad is to the people who saw it.
+
+Extra words: sessions, followers, page views
+
+Hint: ROAS stands for return on ad spend — the denominator is in the name.
+
+Explanation: ROAS = revenue ÷ ad spend. It ignores margin, so pair it with CPA when judging profitability.
+
+Hint: The A in CPA is the outcome you pay for: a purchase, a sign-up, a lead.
+
+Explanation: CPA = spend ÷ conversions. Define what counts as a conversion before comparing campaigns.
+
+Hint: CTR starts with click.
+
+Hint: You can only click an ad after it has been shown — that showing has a name.
+
+Explanation: CTR = clicks ÷ impressions. A CTR of 2.8% means 28 clicks for every 1,000 impressions.
+
+Explanation: ROAS tells you how much revenue each unit of spend returned, CPA tells you what each result cost, and CTR tells you how often people who saw the ad clicked it. Together they describe return, efficiency and relevance.
+
+Nice — you can now read a Pulse Analytics overview without a glossary."
+`;
+
+exports[`moduleToText > flashcards: text and markdown snapshots > markdown 1`] = `
+"## Metric deck
+
+Eight metrics every Brightline Media account runs on. Flip, then rate yourself honestly.
+
+### Cost: CPM
+
+**Cost per mille** — what you pay for 1,000 ad impressions.
+
+Spend ÷ impressions × 1,000.
+
+Hint: The *M* is the Roman numeral for a thousand.
+
+### Cost: CPC
+
+**Cost per click** — average spend for one click on the ad.
+
+Spend ÷ clicks.
+
+### Rate: CTR
+
+**Click-through rate** — the share of impressions that turned into clicks.
+
+Clicks ÷ impressions. A relevance signal for the creative.
+
+Hint: It compares two counts and never looks at spend.
+
+### Cost: CPA
+
+**Cost per acquisition** — what one conversion (lead, signup, sale) costs.
+
+Spend ÷ conversions.
+
+### Return: ROAS
+
+**Return on ad spend** — revenue earned for every unit of spend.
+
+Revenue ÷ spend. A ROAS of 3.4× means €3.40 back per €1.
+
+### Return: LTV
+
+**Lifetime value** — the total revenue (or margin) a customer brings over the whole relationship.
+
+Used to decide how high a CPA you can afford.
+
+Hint: Think beyond the first purchase.
+
+### Rate: CVR
+
+**Conversion rate** — the share of visitors who completed the goal.
+
+Conversions ÷ clicks (or sessions). A landing-page signal.
+
+### Return: AOV
+
+**Average order value** — revenue divided by the number of orders.
+
+Raising AOV lifts ROAS without buying more traffic.
+
+Deck done. Those eight metrics cover almost every conversation you'll have with a client."
+`;
+
+exports[`moduleToText > flashcards: text and markdown snapshots > text 1`] = `
+"Metric deck
+
+Eight metrics every Brightline Media account runs on. Flip, then rate yourself honestly.
+
+Cost: CPM
+
+Cost per mille — what you pay for 1,000 ad impressions.  Spend ÷ impressions × 1,000.
+
+Hint: The M is the Roman numeral for a thousand.
+
+Cost: CPC
+
+Cost per click — average spend for one click on the ad.  Spend ÷ clicks.
+
+Rate: CTR
+
+Click-through rate — the share of impressions that turned into clicks.  Clicks ÷ impressions. A relevance signal for the creative.
+
+Hint: It compares two counts and never looks at spend.
+
+Cost: CPA
+
+Cost per acquisition — what one conversion (lead, signup, sale) costs.  Spend ÷ conversions.
+
+Return: ROAS
+
+Return on ad spend — revenue earned for every unit of spend.  Revenue ÷ spend. A ROAS of 3.4× means €3.40 back per €1.
+
+Return: LTV
+
+Lifetime value — the total revenue (or margin) a customer brings over the whole relationship.  Used to decide how high a CPA you can afford.
+
+Hint: Think beyond the first purchase.
+
+Rate: CVR
+
+Conversion rate — the share of visitors who completed the goal.  Conversions ÷ clicks (or sessions). A landing-page signal.
+
+Return: AOV
+
+Average order value — revenue divided by the number of orders.  Raising AOV lifts ROAS without buying more traffic.
+
+Deck done. Those eight metrics cover almost every conversation you'll have with a client."
+`;
+
+exports[`moduleToText > hotspot-explorer: text and markdown snapshots > markdown 1`] = `
+"## Tour the Pulse Analytics overview
+
+This is the dashboard you will open every Monday. Explore the six markers to learn what each area tells you.
+
+*[Image: Pulse Analytics overview dashboard for the Northwind Outdoor account, March 2026]*
+
+### Date range picker: Always check the date range first
+
+Every number on the page is scoped to this range. Client reports use **calendar months**; the Compare toggle next to it overlays the previous period so you can explain *why* a metric moved.
+
+### Spend card: Spend
+
+Total media cost across all channels — $48,200 this month. The red pill shows spend is **up 6.2%** on February. Spend going up is not a problem by itself; read it together with ROAS and CPA.
+
+### ROAS card: ROAS — return on ad spend
+
+Revenue ÷ spend. **3.4×** means every dollar spent returned $3.40 in revenue. Northwind's target is 3.0×, so green here is genuinely good news.
+
+### Daily spend vs. revenue chart: Daily trend
+
+Purple is spend, green is revenue. Look for the two lines **diverging** — that is efficiency improving. The dashed *Bid change* marker on 15 March is an annotation left by the account team; add one whenever you change something that could move the lines.
+
+### Channel breakdown table: Channel breakdown
+
+Spend and ROAS per channel. Email has the highest ROAS (6.8×) but the smallest spend — a classic signal that it is **under-invested**. Display at 1.9× is below target and worth a conversation.
+
+### Attribution section in the sidebar: Attribution
+
+Channel ROAS on this page uses *last click*. Open **Attribution** when a client asks why Paid social looks weak — the data-driven model there usually gives social more credit for assisted conversions.
+
+You now know every area of the overview. Next up: reading a channel report."
+`;
+
+exports[`moduleToText > hotspot-explorer: text and markdown snapshots > text 1`] = `
+"Tour the Pulse Analytics overview
+
+This is the dashboard you will open every Monday. Explore the six markers to learn what each area tells you.
+
+[Image: Pulse Analytics overview dashboard for the Northwind Outdoor account, March 2026]
+
+Date range picker: Always check the date range first
+
+Every number on the page is scoped to this range. Client reports use calendar months; the Compare toggle next to it overlays the previous period so you can explain why a metric moved.
+
+Spend card: Spend
+
+Total media cost across all channels — $48,200 this month. The red pill shows spend is up 6.2% on February. Spend going up is not a problem by itself; read it together with ROAS and CPA.
+
+ROAS card: ROAS — return on ad spend
+
+Revenue ÷ spend. 3.4× means every dollar spent returned $3.40 in revenue. Northwind's target is 3.0×, so green here is genuinely good news.
+
+Daily spend vs. revenue chart: Daily trend
+
+Purple is spend, green is revenue. Look for the two lines diverging — that is efficiency improving. The dashed Bid change marker on 15 March is an annotation left by the account team; add one whenever you change something that could move the lines.
+
+Channel breakdown table: Channel breakdown
+
+Spend and ROAS per channel. Email has the highest ROAS (6.8×) but the smallest spend — a classic signal that it is under-invested. Display at 1.9× is below target and worth a conversation.
+
+Attribution section in the sidebar: Attribution
+
+Channel ROAS on this page uses last click. Open Attribution when a client asks why Paid social looks weak — the data-driven model there usually gives social more credit for assisted conversions.
+
+You now know every area of the overview. Next up: reading a channel report."
+`;
+
+exports[`moduleToText > image-compare: text and markdown snapshots > markdown 1`] = `
+"## Landing page: before and after the CRO sprint
+
+Northwind Outdoor's trail-guide page converted 2.1% of visitors into sign-ups. After a two-week sprint, Brightline Media relaunched it (illustrative figures). Drag the handle to compare the versions and open the numbered notes.
+
+### Before
+
+*[Image: Before: a busy landing page with a promo strip, ten navigation links, a carousel with a small headline and three different buttons, three promo tiles and a nine-field form in the sidebar.]*
+
+### After
+
+*[Image: After: a focused landing page with a large headline, a three-field form with one orange button, a product image of the trail guide and a backpack, and a dark trust bar with ratings.]*
+
+- A headline lost in a carousel: The only mention of the trail guide sits in small type on a rotating slide. Most visitors never see slide two, so the page's one promise gets a few seconds at best.
+- Three buttons, three directions: **Shop now**, **Learn more** and **Find a store** all compete with the form. Each one is a polite exit from the page's real goal: the sign-up.
+- Nine fields before any value: Date of birth, phone and a full postal address — just to receive a free PDF. Every extra field is effort and a privacy question the visitor has to answer before getting anything back.
+- Three fields, one button: The form now asks only for what the guide needs, and its button is the **only** call to action on the page. The headline above it states the promise in five words.
+- Proof next to the decision: Ratings and subscriber numbers sit right under the form, answering “is this worth my email?” at the moment the visitor decides.
+
+Sign-ups rose from 2.1% to 4.6% of visitors. Which change most likely lifted conversion the most?
+- **Cutting the form from nine fields to three** ✓
+- Replacing three buttons with a single call to action
+- Swapping the carousel for a static product hero
+- Adding the ratings and subscriber trust bar
+*Explanation:* In a real sprint you would test these changes separately (or in a multivariate test) to know each one's share of the lift.
+
+Cutting the form from nine fields to three: Yes. On a sign-up page the form **is** the conversion, and each field is a cost paid before any reward. Removing six — especially date of birth and full address — strips out the effort and privacy worries that make people abandon.
+
+Replacing three buttons with a single call to action: Focus helps: the old buttons led people away from the form. But visitors who did reach the form still faced nine fields — the bigger barrier sat there.
+
+Swapping the carousel for a static product hero: A static hero keeps the message on screen and loads faster, but on its own it seldom moves sign-ups as much as removing effort from the form.
+
+Adding the ratings and subscriber trust bar: Social proof reassures people at the moment of decision. It supports the change, but reassurance cannot make up for a form that asks too much.
+
+Good CRO removes friction before it adds persuasion: cut what you ask for, make one action obvious, then put proof right next to it."
+`;
+
+exports[`moduleToText > image-compare: text and markdown snapshots > text 1`] = `
+"Landing page: before and after the CRO sprint
+
+Northwind Outdoor's trail-guide page converted 2.1% of visitors into sign-ups. After a two-week sprint, Brightline Media relaunched it (illustrative figures). Drag the handle to compare the versions and open the numbered notes.
+
+Before
+
+[Image: Before: a busy landing page with a promo strip, ten navigation links, a carousel with a small headline and three different buttons, three promo tiles and a nine-field form in the sidebar.]
+
+After
+
+[Image: After: a focused landing page with a large headline, a three-field form with one orange button, a product image of the trail guide and a backpack, and a dark trust bar with ratings.]
+
+- A headline lost in a carousel: The only mention of the trail guide sits in small type on a rotating slide. Most visitors never see slide two, so the page's one promise gets a few seconds at best.
+- Three buttons, three directions: Shop now, Learn more and Find a store all compete with the form. Each one is a polite exit from the page's real goal: the sign-up.
+- Nine fields before any value: Date of birth, phone and a full postal address — just to receive a free PDF. Every extra field is effort and a privacy question the visitor has to answer before getting anything back.
+- Three fields, one button: The form now asks only for what the guide needs, and its button is the only call to action on the page. The headline above it states the promise in five words.
+- Proof next to the decision: Ratings and subscriber numbers sit right under the form, answering “is this worth my email?” at the moment the visitor decides.
+
+Sign-ups rose from 2.1% to 4.6% of visitors. Which change most likely lifted conversion the most?
+- Cutting the form from nine fields to three (correct)
+- Replacing three buttons with a single call to action
+- Swapping the carousel for a static product hero
+- Adding the ratings and subscriber trust bar
+Explanation: In a real sprint you would test these changes separately (or in a multivariate test) to know each one's share of the lift.
+
+Cutting the form from nine fields to three: Yes. On a sign-up page the form is the conversion, and each field is a cost paid before any reward. Removing six — especially date of birth and full address — strips out the effort and privacy worries that make people abandon.
+
+Replacing three buttons with a single call to action: Focus helps: the old buttons led people away from the form. But visitors who did reach the form still faced nine fields — the bigger barrier sat there.
+
+Swapping the carousel for a static product hero: A static hero keeps the message on screen and loads faster, but on its own it seldom moves sign-ups as much as removing effort from the form.
+
+Adding the ratings and subscriber trust bar: Social proof reassures people at the moment of decision. It supports the change, but reassurance cannot make up for a form that asks too much.
+
+Good CRO removes friction before it adds persuasion: cut what you ask for, make one action obvious, then put proof right next to it."
+`;
+
+exports[`moduleToText > inbox-triage: text and markdown snapshots > markdown 1`] = `
+"## Monday, 9:00 — your inbox at Brightline Media
+
+You're Jordan, an account manager at Brightline Media. The all-hands starts at 10:00 and seven messages are waiting. Open each one and decide what to do with it. Names and figures are fictional.
+
+Jordan Reyes: Account Manager, Brightline Media
+
+Actions: Reply now, Delegate, Schedule, Archive, Report
+
+- Reply now: Needs you personally, before anything else.
+- Delegate: Someone else owns it. Hand it over with context.
+- Schedule: Important, not urgent. Book time for it.
+- Archive: Nothing to do. Clear it out.
+- Report: Looks like a scam. Send it to IT security.
+
+### Conversions at zero since midnight?
+
+From: Priya Nair: Marketing Lead, Harbor Supply Co. · 08:57
+
+The shared Pulse dashboard shows zero purchases from paid social since 00:00, but orders are still coming in…
+
+Hi Jordan,
+
+The Pulse dashboard you share with us shows **zero** conversions from paid social since midnight, but our store is still taking orders, so people are clearly buying. Either tracking broke or the ads stopped working.
+
+Our CEO reviews this dashboard at 10:00 every Monday. Can you tell me what's going on before then?
+
+Priya
+
+Best action: Reply now
+
+Explanation: **Reply now.** A VIP client, a live problem and a deadline about an hour away: this is the one message that cannot wait. Acknowledge it within minutes, say what you are checking (orders on the site but zero tracked conversions points to a broken tag, not dead ads) and promise an update before her 10:00. Pull in Analytics *after* you have replied; delegating without a word leaves her alone with the problem.
+
+### Action required: your ad account will be suspended in 24 hours
+
+From: Adwave Business Support · 08:49
+
+We detected unusual activity. Verify your password within 24 hours to keep your campaigns running…
+
+Dear Advertiser,
+
+We detected unusual sign-in activity on your **Adwave Ads** account. To avoid suspension of all active campaigns, verify your password within 24 hours:
+
+\`adwave-busines.com/verify-account\`
+
+If you do not verify, your campaigns will stop serving and any outstanding balance will be charged immediately.
+
+Adwave Business Support
+
+Best action: Report
+
+Explanation: **Report.** Look past the panic: a generic greeting, a 24-hour threat, a request for your password and a sender domain one letter off (\`adwave-busines.com\`). Real ad platforms never ask for a password by email. Don't click, don't reply and don't forward it around as a warning: report it so IT security can block the domain for everyone. If you're worried, sign in through the bookmark you always use.
+
+### Approval needed: Northwind spring banners (live at 14:00)
+
+From: Tomás Ferreira: Creative Lead, Brightline Media · 08:41
+
+Final banner set attached. Media needs your sign-off by 12:00 to hit the 2pm launch slot…
+
+Morning Jordan,
+
+The final **Northwind Outdoor** spring banners are attached: six sizes, with copy updated from the client's last round of comments.
+
+Media needs your sign-off by **12:00** to traffic them for the 14:00 launch. If anything needs changing we have to know this morning; after lunch there's no time to re-export.
+
+Thanks,
+Tomás
+
+Best action: Reply now
+
+Explanation: **Reply now.** A hard deadline *today*, with a team blocked on you. Approving final creative is the account manager's call, so it can't be delegated, and scheduling it for later risks missing the 12:00 cut-off. Check the six sizes against the client's comments and answer this morning; even "approved, go" is a two-minute job that unblocks three people.
+
+### PO number missing on invoice HSC-0412
+
+From: Helen Brooks: Finance, Brightline Media · 08:15
+
+We can't send the April invoice to Harbor Supply without their purchase order number…
+
+Hi Jordan,
+
+We can't issue invoice **HSC-0412** to Harbor Supply Co. until it carries their purchase order number. The draft is attached.
+
+Could someone send us the PO by Wednesday so it goes out in this billing run?
+
+Thanks,
+Helen, Finance
+
+Best action: Delegate
+
+Explanation: **Delegate.** Real, but not urgent and not yours to chase: your account coordinator keeps the PO log and can answer Finance in five minutes. Forward it with one line of context (*"Harbor Supply's April PO for Helen, please, by Wednesday"*). Replying yourself also gets it done, so it earns partial credit, but it spends your morning on admin someone else owns.
+
+### Can we move next Tuesday's review?
+
+From: Ben Carver: Marketing Director, Northwind Outdoor · 07:58
+
+Our board meeting moved, so Tuesday at 11 no longer works. Could we do Wednesday or Thursday instead…
+
+Hi Jordan,
+
+Our board meeting has moved to next Tuesday morning, so our 11:00 performance review no longer works on my side. Could we do Wednesday or Thursday instead? Any time after 10 is fine.
+
+No need for a new deck; the March numbers are what I want to go through.
+
+Best,
+Ben
+
+Best action: Schedule
+
+Explanation: **Schedule.** A client request, but the meeting is a week away and Ben has offered flexible options. It needs a calendar decision, not an instant reply: check the team's availability after the all-hands and send a new invite today. Answering within the day keeps the relationship warm without pulling you away from this morning's urgent messages.
+
+### What's new in Pulse: custom dashboards and five more updates
+
+From: Pulse Analytics: Product updates · 07:30
+
+This month: drag-and-drop widgets, scheduled exports and a refreshed date picker…
+
+Hi there,
+
+Here's what shipped in Pulse Analytics this month.
+
+**Custom dashboards:** drag and drop widgets to build a view for each client.
+**Scheduled exports:** send a PDF snapshot to your inbox every Monday.
+**New date picker:** compare any two periods in two clicks.
+
+Read the full release notes in your account.
+
+Best action: Archive
+
+Explanation: **Archive.** Useful someday, needed never at 9:00 on a Monday. A newsletter has no deadline and nobody waiting on you. Archive it (or filter these into a folder) so your inbox only holds things that need a decision. If a feature looks genuinely useful, the release notes will still be there on Friday.
+
+### Northwind March deck for Thursday's pitch?
+
+From: Aisha Rahman: New Business Lead, Brightline Media · Fri
+
+We're pitching an outdoor gear brand on Thursday. Could I borrow the structure of your March Northwind deck…
+
+Hey Jordan,
+
+We're pitching an outdoor gear brand on **Thursday**, and your March Northwind performance deck is the best example we have of how we report. Could you send it over so we can reuse the structure?
+
+No rush today; Wednesday is fine.
+
+Aisha
+
+Best action: Schedule
+
+Explanation: **Schedule.** Worth a yes, but nothing breaks before Wednesday, and the deck needs your judgement first: it is full of Northwind's confidential figures, which must come out before it is reused for another brand. Book 20 minutes this afternoon to strip the numbers and send it. Delegating to your coordinator works too *if* you spell out what to remove, so it earns partial credit.
+
+Triage is a judgement call, not a speed test. Fires first: the VIP client with a deadline and the creative team blocked on your approval. Report threats before anyone clicks. Then hand over what others own, book what can wait, and clear what needs nothing. Ten minutes of sorting at 9:00 protects the rest of your Monday."
+`;
+
+exports[`moduleToText > inbox-triage: text and markdown snapshots > text 1`] = `
+"Monday, 9:00 — your inbox at Brightline Media
+
+You're Jordan, an account manager at Brightline Media. The all-hands starts at 10:00 and seven messages are waiting. Open each one and decide what to do with it. Names and figures are fictional.
+
+Jordan Reyes: Account Manager, Brightline Media
+
+Actions: Reply now, Delegate, Schedule, Archive, Report
+
+- Reply now: Needs you personally, before anything else.
+- Delegate: Someone else owns it. Hand it over with context.
+- Schedule: Important, not urgent. Book time for it.
+- Archive: Nothing to do. Clear it out.
+- Report: Looks like a scam. Send it to IT security.
+
+Conversions at zero since midnight?
+
+From: Priya Nair: Marketing Lead, Harbor Supply Co. · 08:57
+
+The shared Pulse dashboard shows zero purchases from paid social since 00:00, but orders are still coming in…
+
+Hi Jordan,  The Pulse dashboard you share with us shows zero conversions from paid social since midnight, but our store is still taking orders, so people are clearly buying. Either tracking broke or the ads stopped working.  Our CEO reviews this dashboard at 10:00 every Monday. Can you tell me what's going on before then?  Priya
+
+Best action: Reply now
+
+Explanation: Reply now. A VIP client, a live problem and a deadline about an hour away: this is the one message that cannot wait. Acknowledge it within minutes, say what you are checking (orders on the site but zero tracked conversions points to a broken tag, not dead ads) and promise an update before her 10:00. Pull in Analytics after you have replied; delegating without a word leaves her alone with the problem.
+
+Action required: your ad account will be suspended in 24 hours
+
+From: Adwave Business Support · 08:49
+
+We detected unusual activity. Verify your password within 24 hours to keep your campaigns running…
+
+Dear Advertiser,  We detected unusual sign-in activity on your Adwave Ads account. To avoid suspension of all active campaigns, verify your password within 24 hours:  adwave-busines.com/verify-account  If you do not verify, your campaigns will stop serving and any outstanding balance will be charged immediately.  Adwave Business Support
+
+Best action: Report
+
+Explanation: Report. Look past the panic: a generic greeting, a 24-hour threat, a request for your password and a sender domain one letter off (adwave-busines.com). Real ad platforms never ask for a password by email. Don't click, don't reply and don't forward it around as a warning: report it so IT security can block the domain for everyone. If you're worried, sign in through the bookmark you always use.
+
+Approval needed: Northwind spring banners (live at 14:00)
+
+From: Tomás Ferreira: Creative Lead, Brightline Media · 08:41
+
+Final banner set attached. Media needs your sign-off by 12:00 to hit the 2pm launch slot…
+
+Morning Jordan,  The final Northwind Outdoor spring banners are attached: six sizes, with copy updated from the client's last round of comments.  Media needs your sign-off by 12:00 to traffic them for the 14:00 launch. If anything needs changing we have to know this morning; after lunch there's no time to re-export.  Thanks, Tomás
+
+Best action: Reply now
+
+Explanation: Reply now. A hard deadline today, with a team blocked on you. Approving final creative is the account manager's call, so it can't be delegated, and scheduling it for later risks missing the 12:00 cut-off. Check the six sizes against the client's comments and answer this morning; even "approved, go" is a two-minute job that unblocks three people.
+
+PO number missing on invoice HSC-0412
+
+From: Helen Brooks: Finance, Brightline Media · 08:15
+
+We can't send the April invoice to Harbor Supply without their purchase order number…
+
+Hi Jordan,  We can't issue invoice HSC-0412 to Harbor Supply Co. until it carries their purchase order number. The draft is attached.  Could someone send us the PO by Wednesday so it goes out in this billing run?  Thanks, Helen, Finance
+
+Best action: Delegate
+
+Explanation: Delegate. Real, but not urgent and not yours to chase: your account coordinator keeps the PO log and can answer Finance in five minutes. Forward it with one line of context ("Harbor Supply's April PO for Helen, please, by Wednesday"). Replying yourself also gets it done, so it earns partial credit, but it spends your morning on admin someone else owns.
+
+Can we move next Tuesday's review?
+
+From: Ben Carver: Marketing Director, Northwind Outdoor · 07:58
+
+Our board meeting moved, so Tuesday at 11 no longer works. Could we do Wednesday or Thursday instead…
+
+Hi Jordan,  Our board meeting has moved to next Tuesday morning, so our 11:00 performance review no longer works on my side. Could we do Wednesday or Thursday instead? Any time after 10 is fine.  No need for a new deck; the March numbers are what I want to go through.  Best, Ben
+
+Best action: Schedule
+
+Explanation: Schedule. A client request, but the meeting is a week away and Ben has offered flexible options. It needs a calendar decision, not an instant reply: check the team's availability after the all-hands and send a new invite today. Answering within the day keeps the relationship warm without pulling you away from this morning's urgent messages.
+
+What's new in Pulse: custom dashboards and five more updates
+
+From: Pulse Analytics: Product updates · 07:30
+
+This month: drag-and-drop widgets, scheduled exports and a refreshed date picker…
+
+Hi there,  Here's what shipped in Pulse Analytics this month.  Custom dashboards: drag and drop widgets to build a view for each client. Scheduled exports: send a PDF snapshot to your inbox every Monday. New date picker: compare any two periods in two clicks.  Read the full release notes in your account.
+
+Best action: Archive
+
+Explanation: Archive. Useful someday, needed never at 9:00 on a Monday. A newsletter has no deadline and nobody waiting on you. Archive it (or filter these into a folder) so your inbox only holds things that need a decision. If a feature looks genuinely useful, the release notes will still be there on Friday.
+
+Northwind March deck for Thursday's pitch?
+
+From: Aisha Rahman: New Business Lead, Brightline Media · Fri
+
+We're pitching an outdoor gear brand on Thursday. Could I borrow the structure of your March Northwind deck…
+
+Hey Jordan,  We're pitching an outdoor gear brand on Thursday, and your March Northwind performance deck is the best example we have of how we report. Could you send it over so we can reuse the structure?  No rush today; Wednesday is fine.  Aisha
+
+Best action: Schedule
+
+Explanation: Schedule. Worth a yes, but nothing breaks before Wednesday, and the deck needs your judgement first: it is full of Northwind's confidential figures, which must come out before it is reused for another brand. Book 20 minutes this afternoon to strip the numbers and send it. Delegating to your coordinator works too if you spell out what to remove, so it earns partial credit.
+
+Triage is a judgement call, not a speed test. Fires first: the VIP client with a deadline and the creative team blocked on your approval. Report threats before anyone clicks. Then hand over what others own, book what can wait, and clear what needs nothing. Ten minutes of sorting at 9:00 protects the rest of your Monday."
+`;
+
+exports[`moduleToText > label-diagram: text and markdown snapshots > markdown 1`] = `
+"## Anatomy of a display ad
+
+Brightline Media is reviewing Northwind Outdoor's spring banner. Drag each label onto the numbered part of the ad — or tap a label, then a zone. Two labels belong nowhere on the creative.
+
+*[Image: Northwind Outdoor spring sale banner: logo top left, the headline “Trails are calling.”, a round −25% spring gear badge, a backpack and tent illustration, an orange “Shop the sale” button and two lines of small print.]*
+
+- Logo
+- Headline
+- Offer
+- Product shot
+- Call to action
+- Disclaimer
+- Tracking pixel
+- Frequency cap
+
+Logo: The logo tells people **who is talking** before they read a word. Most banners get under two seconds of attention, so brand recognition is often the only thing that sticks — keep it clear and in the same corner across every size.
+
+Headline: The headline carries the **one idea** of the ad. Three words read at a glance; anything much longer than six tends to be skipped at banner sizes.
+
+Offer: The offer gives a **reason to act now**. A specific number (−25%) beats vague promises like “great savings”, and it must match what the landing page delivers or the click is wasted.
+
+Product shot: The product shot shows **what is being sold** and sets the mood. One clear hero product reads better at small sizes than a busy collage.
+
+Call to action: The call to action tells people **what happens next**. A high-contrast button with a verb (“Shop the sale”) makes the ad feel clickable and sets expectations for the landing page.
+
+Disclaimer: The disclaimer holds the **terms of the offer**: dates, exclusions and who the advertiser is. Small, but it keeps the ad honest and compliant — so it still has to be legible.
+
+Explanation: Not everything in a campaign is visible: a **tracking pixel** is an invisible 1×1 image that reports views, and a **frequency cap** is an ad-server setting that limits how often one person sees the ad. Neither appears on the creative itself."
+`;
+
+exports[`moduleToText > label-diagram: text and markdown snapshots > text 1`] = `
+"Anatomy of a display ad
+
+Brightline Media is reviewing Northwind Outdoor's spring banner. Drag each label onto the numbered part of the ad — or tap a label, then a zone. Two labels belong nowhere on the creative.
+
+[Image: Northwind Outdoor spring sale banner: logo top left, the headline “Trails are calling.”, a round −25% spring gear badge, a backpack and tent illustration, an orange “Shop the sale” button and two lines of small print.]
+
+- Logo
+- Headline
+- Offer
+- Product shot
+- Call to action
+- Disclaimer
+- Tracking pixel
+- Frequency cap
+
+Logo: The logo tells people who is talking before they read a word. Most banners get under two seconds of attention, so brand recognition is often the only thing that sticks — keep it clear and in the same corner across every size.
+
+Headline: The headline carries the one idea of the ad. Three words read at a glance; anything much longer than six tends to be skipped at banner sizes.
+
+Offer: The offer gives a reason to act now. A specific number (−25%) beats vague promises like “great savings”, and it must match what the landing page delivers or the click is wasted.
+
+Product shot: The product shot shows what is being sold and sets the mood. One clear hero product reads better at small sizes than a busy collage.
+
+Call to action: The call to action tells people what happens next. A high-contrast button with a verb (“Shop the sale”) makes the ad feel clickable and sets expectations for the landing page.
+
+Disclaimer: The disclaimer holds the terms of the offer: dates, exclusions and who the advertiser is. Small, but it keeps the ad honest and compliant — so it still has to be legible.
+
+Explanation: Not everything in a campaign is visible: a tracking pixel is an invisible 1×1 image that reports views, and a frequency cap is an ad-server setting that limits how often one person sees the ad. Neither appears on the creative itself."
+`;
+
+exports[`moduleToText > match-pairs: text and markdown snapshots > markdown 1`] = `
+"## Match the metric to its meaning
+
+Tap a metric, then tap its definition — or drag the metric onto the definition. Fewer mistakes, higher score.
+
+| Metric | What it tells you |
+| --- | --- |
+| CPM | What 1,000 ad impressions cost |
+| CPC | What a single click costs |
+| CTR | Share of impressions that turned into clicks |
+| CPA | What one acquisition (lead or sale) costs |
+| ROAS | Revenue earned for every unit of ad spend |
+| Frequency | Average number of times one person saw the ad |
+| Reach | Number of unique people who saw the ad |
+| Conversion rate | Share of visitors who completed the goal |
+
+CPM: Cost per mille. A CPM of $8 means every thousand impressions cost $8 — useful for comparing reach-focused placements.
+
+CPC: Cost per click. Spend ÷ clicks. The Northwind Outdoor account averages $1.40 on search and $0.62 on social.
+
+CTR: Click-through rate. Clicks ÷ impressions. A 2% CTR means 2 clicks for every 100 impressions.
+
+CPA: Cost per acquisition. Spend ÷ conversions. It is the efficiency metric most clients care about.
+
+ROAS: Return on ad spend. Revenue ÷ spend. A ROAS of 4.0 means $4 of revenue for every $1 spent.
+
+Frequency: Impressions ÷ reach. When frequency climbs past 4–5 on social, creative fatigue usually follows.
+
+Reach: Unlike impressions, reach counts each person once — the right metric for awareness goals.
+
+Conversion rate: Conversions ÷ clicks (or sessions). A high CTR with a low conversion rate points at the landing page, not the ad.
+
+You now speak fluent media metrics. The explanations below are worth a second read."
+`;
+
+exports[`moduleToText > match-pairs: text and markdown snapshots > text 1`] = `
+"Match the metric to its meaning
+
+Tap a metric, then tap its definition — or drag the metric onto the definition. Fewer mistakes, higher score.
+
+Metric — What it tells you
+CPM — What 1,000 ad impressions cost
+CPC — What a single click costs
+CTR — Share of impressions that turned into clicks
+CPA — What one acquisition (lead or sale) costs
+ROAS — Revenue earned for every unit of ad spend
+Frequency — Average number of times one person saw the ad
+Reach — Number of unique people who saw the ad
+Conversion rate — Share of visitors who completed the goal
+
+CPM: Cost per mille. A CPM of $8 means every thousand impressions cost $8 — useful for comparing reach-focused placements.
+
+CPC: Cost per click. Spend ÷ clicks. The Northwind Outdoor account averages $1.40 on search and $0.62 on social.
+
+CTR: Click-through rate. Clicks ÷ impressions. A 2% CTR means 2 clicks for every 100 impressions.
+
+CPA: Cost per acquisition. Spend ÷ conversions. It is the efficiency metric most clients care about.
+
+ROAS: Return on ad spend. Revenue ÷ spend. A ROAS of 4.0 means $4 of revenue for every $1 spent.
+
+Frequency: Impressions ÷ reach. When frequency climbs past 4–5 on social, creative fatigue usually follows.
+
+Reach: Unlike impressions, reach counts each person once — the right metric for awareness goals.
+
+Conversion rate: Conversions ÷ clicks (or sessions). A high CTR with a low conversion rate points at the landing page, not the ad.
+
+You now speak fluent media metrics. The explanations below are worth a second read."
+`;
+
+exports[`moduleToText > priority-matrix: text and markdown snapshots > markdown 1`] = `
+"## Monday morning at Brightline Media
+
+It's 9:05 and you're the account manager on Northwind Outdoor and Harbor Supply Co. Place each task on the matrix: drag it into a quadrant, or tap the task and then the quadrant.
+
+Urgency: low → high
+
+Importance: low → high
+
+### Schedule
+
+Important, not urgent — block time for it
+
+- Draft the Q3 strategy deck for Harbor Supply
+- Book training on the new attribution tool
+
+### Do now
+
+Urgent and important — handle it yourself, today
+
+- Tracking is broken on Northwind's live campaign
+- Approve creative due to launch at 2pm today
+
+### Drop
+
+Neither — let it go
+
+- Reply to a vendor's newsletter survey
+- Tidy the shared drive's archive folder
+
+### Delegate
+
+Urgent, not important — hand it on
+
+- Reformat last week's slides for an internal sync
+- Pull a routine weekly export
+
+Tracking is broken on Northwind's live campaign: Every hour without tracking is spend you can't measure or optimise, and the campaign is live. Get Analytics on it before anything else.
+
+Draft the Q3 strategy deck for Harbor Supply: It shapes next quarter's budget, but the review is three weeks away. Block focused time this week so it never becomes an emergency.
+
+Reformat last week's slides for an internal sync: Someone needs it today, but it doesn't need an account manager. A coordinator can turn it around while you deal with the client work.
+
+Reply to a vendor's newsletter survey: No deadline that matters and no effect on any client. Archive it and move on.
+
+Approve creative due to launch at 2pm today: A missed approval delays the launch and the media plan behind it. It's time-bound and client-facing, so it's yours this morning.
+
+Book training on the new attribution tool: Better attribution will change how you report to every client, but nothing breaks if you book it on Wednesday instead of now.
+
+Pull a routine weekly export: Due today, but it follows a fixed recipe. Hand it to the analyst who owns the dashboard — or ask them to automate it.
+
+Tidy the shared drive's archive folder: Satisfying, but neither urgent nor important on a Monday morning. Leave it for a quiet Friday, or for never.
+
+Explanation: Urgency is about the clock; importance is about the client and the business. Do the urgent-and-important work yourself, protect time for the important work before it turns urgent, hand routine urgent tasks to the right person, and give yourself permission to drop the rest.
+
+Run this triage every Monday before you open Slack. It takes two minutes and saves the week."
+`;
+
+exports[`moduleToText > priority-matrix: text and markdown snapshots > text 1`] = `
+"Monday morning at Brightline Media
+
+It's 9:05 and you're the account manager on Northwind Outdoor and Harbor Supply Co. Place each task on the matrix: drag it into a quadrant, or tap the task and then the quadrant.
+
+Urgency: low → high
+
+Importance: low → high
+
+Schedule
+
+Important, not urgent — block time for it
+
+- Draft the Q3 strategy deck for Harbor Supply
+- Book training on the new attribution tool
+
+Do now
+
+Urgent and important — handle it yourself, today
+
+- Tracking is broken on Northwind's live campaign
+- Approve creative due to launch at 2pm today
+
+Drop
+
+Neither — let it go
+
+- Reply to a vendor's newsletter survey
+- Tidy the shared drive's archive folder
+
+Delegate
+
+Urgent, not important — hand it on
+
+- Reformat last week's slides for an internal sync
+- Pull a routine weekly export
+
+Tracking is broken on Northwind's live campaign: Every hour without tracking is spend you can't measure or optimise, and the campaign is live. Get Analytics on it before anything else.
+
+Draft the Q3 strategy deck for Harbor Supply: It shapes next quarter's budget, but the review is three weeks away. Block focused time this week so it never becomes an emergency.
+
+Reformat last week's slides for an internal sync: Someone needs it today, but it doesn't need an account manager. A coordinator can turn it around while you deal with the client work.
+
+Reply to a vendor's newsletter survey: No deadline that matters and no effect on any client. Archive it and move on.
+
+Approve creative due to launch at 2pm today: A missed approval delays the launch and the media plan behind it. It's time-bound and client-facing, so it's yours this morning.
+
+Book training on the new attribution tool: Better attribution will change how you report to every client, but nothing breaks if you book it on Wednesday instead of now.
+
+Pull a routine weekly export: Due today, but it follows a fixed recipe. Hand it to the analyst who owns the dashboard — or ask them to automate it.
+
+Tidy the shared drive's archive folder: Satisfying, but neither urgent nor important on a Monday morning. Leave it for a quiet Friday, or for never.
+
+Explanation: Urgency is about the clock; importance is about the client and the business. Do the urgent-and-important work yourself, protect time for the important work before it turns urgent, hand routine urgent tasks to the right person, and give yourself permission to drop the rest.
+
+Run this triage every Monday before you open Slack. It takes two minutes and saves the week."
+`;
+
+exports[`moduleToText > process-explorer: text and markdown snapshots > markdown 1`] = `
+"## How a campaign moves through the agency
+
+Select each stage to see who owns it, how long it takes and what has to be true before it starts.
+
+### 1. Client brief
+
+Goals, audience, budget and timing are agreed.
+
+The account manager runs a 45-minute briefing call and turns it into a one-page brief. A brief is only *done* when the client has signed off on the objective, the primary KPI and the budget.
+
+Ambiguous briefs are the number one cause of rework later, so push back on vague goals like “more awareness” until they become measurable.
+
+Account team · 1–2 days
+
+- One measurable objective and primary KPI
+- Budget and flight dates confirmed
+- Audience and exclusions written down
+- Brief signed off by the client
+
+### 2. Strategy
+
+Channels, messaging angles and a media split are proposed.
+
+Strategy translates the brief into a plan: which channels, what the core message is, how the budget splits across them and what results are realistic.
+
+The output is a short deck plus a media plan spreadsheet with projected reach, clicks and cost per result for each channel.
+
+Strategy lead · 3–4 days
+
+- Channel mix with rationale
+- Messaging angles per audience
+- Media plan with projections
+- Client approval recorded
+
+### 3. Creative production
+
+Copy, visuals and video are produced in every required format.
+
+Designers and copywriters produce the assets listed in the media plan: static images, short video cuts and ad copy variants. Every asset is reviewed against the brand guide before it goes to the client.
+
+Aim for at least **three** distinct concepts per audience so optimisation has something to choose between.
+
+Creative team · 1–2 weeks
+
+- Concepts approved internally
+- Assets exported in every placement size
+- Copy variants proof-read
+- Client approval on final assets
+
+### 4. Tracking setup
+
+Pixels, conversions and UTM naming are verified before spend starts.
+
+Nothing launches without working measurement. Analytics installs or verifies pixels, defines conversion events and applies the agency UTM convention to every link.
+
+A test conversion is recorded in each platform and in the client's analytics before the launch checklist is signed.
+
+Analytics · 2 days
+
+- Pixels firing on all key pages
+- Conversion events defined and tested
+- UTM parameters follow the naming convention
+- Dashboard connected to live data
+
+### 5. Launch
+
+Campaigns go live after a four-eyes check.
+
+The media buyer builds the campaigns, a second person reviews targeting, budgets and links, and the campaigns go live. The first 24 hours are watched closely for delivery issues and disapproved ads.
+
+The client gets a short launch confirmation with screenshots of the live ads.
+
+Media buyer · 1 day
+
+- Four-eyes check completed
+- Daily budgets match the media plan
+- Launch confirmation sent to the client
+
+### 6. Optimisation
+
+Budgets and creative are adjusted weekly against the KPI.
+
+Each week the media buyer reviews performance against the plan, shifts budget towards what works and pauses what does not. Creative fatigue usually shows after two to three weeks: when frequency climbs and click-through drops, the team requests a creative refresh.
+
+Media buyer · Ongoing
+
+- Weekly performance review logged
+- Budget shifts documented
+- Underperforming ads paused
+- Creative refresh requested when fatigue appears
+
+- Request a creative refresh
+
+### 7. Reporting
+
+Results, learnings and next steps are shared with the client.
+
+At the end of the flight the account team compiles a report: results against the KPI, what was learned about audiences and creative, and a recommendation for the next campaign.
+
+The best reports lead with **three insights**, not thirty charts.
+
+Account team · 2 days
+
+- Results vs. KPI and projections
+- Three key learnings
+- Recommendation for the next campaign
+- Report presented live to the client"
+`;
+
+exports[`moduleToText > process-explorer: text and markdown snapshots > text 1`] = `
+"How a campaign moves through the agency
+
+Select each stage to see who owns it, how long it takes and what has to be true before it starts.
+
+1. Client brief
+
+Goals, audience, budget and timing are agreed.
+
+The account manager runs a 45-minute briefing call and turns it into a one-page brief. A brief is only done when the client has signed off on the objective, the primary KPI and the budget.  Ambiguous briefs are the number one cause of rework later, so push back on vague goals like “more awareness” until they become measurable.
+
+Account team · 1–2 days
+
+- One measurable objective and primary KPI
+- Budget and flight dates confirmed
+- Audience and exclusions written down
+- Brief signed off by the client
+
+2. Strategy
+
+Channels, messaging angles and a media split are proposed.
+
+Strategy translates the brief into a plan: which channels, what the core message is, how the budget splits across them and what results are realistic.  The output is a short deck plus a media plan spreadsheet with projected reach, clicks and cost per result for each channel.
+
+Strategy lead · 3–4 days
+
+- Channel mix with rationale
+- Messaging angles per audience
+- Media plan with projections
+- Client approval recorded
+
+3. Creative production
+
+Copy, visuals and video are produced in every required format.
+
+Designers and copywriters produce the assets listed in the media plan: static images, short video cuts and ad copy variants. Every asset is reviewed against the brand guide before it goes to the client.  Aim for at least three distinct concepts per audience so optimisation has something to choose between.
+
+Creative team · 1–2 weeks
+
+- Concepts approved internally
+- Assets exported in every placement size
+- Copy variants proof-read
+- Client approval on final assets
+
+4. Tracking setup
+
+Pixels, conversions and UTM naming are verified before spend starts.
+
+Nothing launches without working measurement. Analytics installs or verifies pixels, defines conversion events and applies the agency UTM convention to every link.  A test conversion is recorded in each platform and in the client's analytics before the launch checklist is signed.
+
+Analytics · 2 days
+
+- Pixels firing on all key pages
+- Conversion events defined and tested
+- UTM parameters follow the naming convention
+- Dashboard connected to live data
+
+5. Launch
+
+Campaigns go live after a four-eyes check.
+
+The media buyer builds the campaigns, a second person reviews targeting, budgets and links, and the campaigns go live. The first 24 hours are watched closely for delivery issues and disapproved ads.  The client gets a short launch confirmation with screenshots of the live ads.
+
+Media buyer · 1 day
+
+- Four-eyes check completed
+- Daily budgets match the media plan
+- Launch confirmation sent to the client
+
+6. Optimisation
+
+Budgets and creative are adjusted weekly against the KPI.
+
+Each week the media buyer reviews performance against the plan, shifts budget towards what works and pauses what does not. Creative fatigue usually shows after two to three weeks: when frequency climbs and click-through drops, the team requests a creative refresh.
+
+Media buyer · Ongoing
+
+- Weekly performance review logged
+- Budget shifts documented
+- Underperforming ads paused
+- Creative refresh requested when fatigue appears
+
+- Request a creative refresh
+
+7. Reporting
+
+Results, learnings and next steps are shared with the client.
+
+At the end of the flight the account team compiles a report: results against the KPI, what was learned about audiences and creative, and a recommendation for the next campaign.  The best reports lead with three insights, not thirty charts.
+
+Account team · 2 days
+
+- Results vs. KPI and projections
+- Three key learnings
+- Recommendation for the next campaign
+- Report presented live to the client"
+`;
+
+exports[`moduleToText > screenshot-walkthrough: text and markdown snapshots > markdown 1`] = `
+"## Find a client's last call note
+
+Every account manager logs calls in Orbit CRM. Follow the steps to find what Maya from Northwind Bakery said on her last call.
+
+1. Open your contacts: Click **Contacts** in the sidebar.
+2. Search for the client: Type **Maya** into the search box and press Enter. (Search contacts, deals, tasks…) Type: Maya
+3. Open the contact: Click the row for **Maya Lindqvist** to open her profile.
+4. Go to the activity timeline: Switch to the **Activity** tab.
+5. Review the last call note: Read the most recent **call note** at the top of the timeline. Maya wants the first creative concepts by next Thursday.
+
+*[Image: Orbit CRM dashboard with the sidebar navigation on the left.]*
+
+Note: The sidebar is the same on every page, so you can jump to Contacts from anywhere.
+
+*[Image: Contacts list showing six people and a search box in the top bar.]*
+
+Note: Search matches first names, last names and companies, so a first name is usually enough.
+
+*[Image: Contacts list filtered to one result: Maya Lindqvist.]*
+
+*[Image: Maya Lindqvist's profile with Overview, Activity and Deals tabs.]*
+
+Note: Overview shows static details. Activity is where calls, emails and meetings are logged in order.
+
+*[Image: Activity timeline with the most recent call note at the top.]*
+
+Note: Call notes are what the creative team reads before a kickoff. Keep them short and concrete.
+
+You can now find any client's latest conversation in under a minute. Next time, try the same path for **Tomas Herrera**."
+`;
+
+exports[`moduleToText > screenshot-walkthrough: text and markdown snapshots > text 1`] = `
+"Find a client's last call note
+
+Every account manager logs calls in Orbit CRM. Follow the steps to find what Maya from Northwind Bakery said on her last call.
+
+1. Open your contacts: Click Contacts in the sidebar.
+2. Search for the client: Type Maya into the search box and press Enter. (Search contacts, deals, tasks…) Type: Maya
+3. Open the contact: Click the row for Maya Lindqvist to open her profile.
+4. Go to the activity timeline: Switch to the Activity tab.
+5. Review the last call note: Read the most recent call note at the top of the timeline. Maya wants the first creative concepts by next Thursday.
+
+[Image: Orbit CRM dashboard with the sidebar navigation on the left.]
+
+Note: The sidebar is the same on every page, so you can jump to Contacts from anywhere.
+
+[Image: Contacts list showing six people and a search box in the top bar.]
+
+Note: Search matches first names, last names and companies, so a first name is usually enough.
+
+[Image: Contacts list filtered to one result: Maya Lindqvist.]
+
+[Image: Maya Lindqvist's profile with Overview, Activity and Deals tabs.]
+
+Note: Overview shows static details. Activity is where calls, emails and meetings are logged in order.
+
+[Image: Activity timeline with the most recent call note at the top.]
+
+Note: Call notes are what the creative team reads before a kickoff. Keep them short and concrete.
+
+You can now find any client's latest conversation in under a minute. Next time, try the same path for Tomas Herrera."
+`;
+
+exports[`moduleToText > sequence-builder: text and markdown snapshots > markdown 1`] = `
+"## Launching a paid media campaign
+
+Put the seven stages of a Brightline Media campaign launch in the order they happen. Drag the rows or use the arrow buttons.
+
+1. Receive and clarify the client brief: Everything downstream depends on the objective, budget, audience and timing agreed here.
+2. Research the audience and the competition: Audience insights and competitor spend shape the channel mix before any money is committed.
+3. Build the media plan and budget split: Channels, flighting and the budget split are proposed only once the research is in.
+4. Produce and approve creative assets: Creative is cut to the formats the plan requires, so it follows the plan, not the other way round.
+5. Set up campaigns, tracking and QA: Ads, audiences and conversion tracking are configured and checked before anything goes live.
+6. Launch and optimise in-flight: Once live, bids, budgets and creative rotation are tuned against the plan's targets.
+7. Report results and recommend next steps: The wrap-up report closes the loop and feeds the next brief.
+
+Hint: You cannot plan what you have not researched, and you cannot build what you have not planned.
+
+Explanation: The sequence runs from understanding (brief, research) to planning, to production (creative, setup), and finally to execution and learning (launch, report). Skipping a step usually means redoing a later one.
+
+That is the Brightline launch playbook. Keep it handy for your first campaign."
+`;
+
+exports[`moduleToText > sequence-builder: text and markdown snapshots > text 1`] = `
+"Launching a paid media campaign
+
+Put the seven stages of a Brightline Media campaign launch in the order they happen. Drag the rows or use the arrow buttons.
+
+1. Receive and clarify the client brief: Everything downstream depends on the objective, budget, audience and timing agreed here.
+2. Research the audience and the competition: Audience insights and competitor spend shape the channel mix before any money is committed.
+3. Build the media plan and budget split: Channels, flighting and the budget split are proposed only once the research is in.
+4. Produce and approve creative assets: Creative is cut to the formats the plan requires, so it follows the plan, not the other way round.
+5. Set up campaigns, tracking and QA: Ads, audiences and conversion tracking are configured and checked before anything goes live.
+6. Launch and optimise in-flight: Once live, bids, budgets and creative rotation are tuned against the plan's targets.
+7. Report results and recommend next steps: The wrap-up report closes the loop and feeds the next brief.
+
+Hint: You cannot plan what you have not researched, and you cannot build what you have not planned.
+
+Explanation: The sequence runs from understanding (brief, research) to planning, to production (creative, setup), and finally to execution and learning (launch, report). Skipping a step usually means redoing a later one.
+
+That is the Brightline launch playbook. Keep it handy for your first campaign."
+`;
+
+exports[`moduleToText > spot-the-mistake: text and markdown snapshots > markdown 1`] = `
+"## Campaign setup review
+
+A junior buyer has prepared this search campaign for Northwind Outdoor. Three things would break it at launch. Select each field you believe is wrong.
+
+### Campaign setup — Spring Launch · Search
+
+Pulse Ads · Draft #4 · prepared by J. Okafor · awaiting QA sign-off
+
+- [Basics] Campaign name: NWO · Spring Launch · Search · US (Naming convention: CLIENT · CAMPAIGN · CHANNEL · MARKET)
+- [Basics] Objective: Sales — online purchases
+- [Budget] Daily budget: 250.00 (≈ 7,750.00 per month)
+- [Budget] Currency: EUR (Account billing currency: USD)
+- [Schedule] Start date: 2026-04-01
+- [Schedule] End date: 2026-03-15 (Campaign pauses automatically at 23:59 account time)
+- [Audience] Targeting: United States · English · All devices
+- [Audience] Bid strategy: Maximize conversions · Target CPA 22.00 (Current CPA on the account: 21.40)
+- [Tracking] Tracking template: {lpurl}?utm_source=google&utm_medium=cpc&utm_campaign=spring_launch_2026
+- [Tracking] UTM campaign: spring_launch_2026 (Must match the Pulse Analytics campaign key)
+- [Tracking] Landing URL: https://northwind-outdoor.example/spring-lauch (Live page: /spring-launch)
+
+Mistake: Currency: Currency mismatch
+
+The account bills in **USD** but the campaign is set to EUR. The platform would reject the draft or, worse, convert the budget at launch — a 250 EUR daily budget is about 270 USD, blowing the approved plan.
+
+Hint: The account bills in one currency. Which field disagrees with it?
+
+Mistake: End date: Ends before it starts
+
+The end date (15 March) is **before** the start date (1 April). The campaign would never serve. End dates should be at least the full flight: 30 April for a one-month spring launch.
+
+Hint: Read the schedule as a timeline.
+
+Mistake: Landing URL: Broken landing URL
+
+The path is spelled \`/spring-lauch\` — the live page is \`/spring-launch\`. Every click would land on a 404 while still being billed. Always paste the URL from the browser, never retype it.
+
+Three small fields, three ways to waste the first week of a launch. Before sign-off, read the budget block, the schedule block and the tracking block as a whole — mismatches show up when you compare fields, not when you check them one by one.
+
+Sharp eyes. This is exactly the QA pass every Brightline campaign gets before launch."
+`;
+
+exports[`moduleToText > spot-the-mistake: text and markdown snapshots > text 1`] = `
+"Campaign setup review
+
+A junior buyer has prepared this search campaign for Northwind Outdoor. Three things would break it at launch. Select each field you believe is wrong.
+
+Campaign setup — Spring Launch · Search
+
+Pulse Ads · Draft #4 · prepared by J. Okafor · awaiting QA sign-off
+
+- [Basics] Campaign name: NWO · Spring Launch · Search · US (Naming convention: CLIENT · CAMPAIGN · CHANNEL · MARKET)
+- [Basics] Objective: Sales — online purchases
+- [Budget] Daily budget: 250.00 (≈ 7,750.00 per month)
+- [Budget] Currency: EUR (Account billing currency: USD)
+- [Schedule] Start date: 2026-04-01
+- [Schedule] End date: 2026-03-15 (Campaign pauses automatically at 23:59 account time)
+- [Audience] Targeting: United States · English · All devices
+- [Audience] Bid strategy: Maximize conversions · Target CPA 22.00 (Current CPA on the account: 21.40)
+- [Tracking] Tracking template: {lpurl}?utm_source=google&utm_medium=cpc&utm_campaign=spring_launch_2026
+- [Tracking] UTM campaign: spring_launch_2026 (Must match the Pulse Analytics campaign key)
+- [Tracking] Landing URL: https://northwind-outdoor.example/spring-lauch (Live page: /spring-launch)
+
+Mistake: Currency: Currency mismatch
+
+The account bills in USD but the campaign is set to EUR. The platform would reject the draft or, worse, convert the budget at launch — a 250 EUR daily budget is about 270 USD, blowing the approved plan.
+
+Hint: The account bills in one currency. Which field disagrees with it?
+
+Mistake: End date: Ends before it starts
+
+The end date (15 March) is before the start date (1 April). The campaign would never serve. End dates should be at least the full flight: 30 April for a one-month spring launch.
+
+Hint: Read the schedule as a timeline.
+
+Mistake: Landing URL: Broken landing URL
+
+The path is spelled /spring-lauch — the live page is /spring-launch. Every click would land on a 404 while still being billed. Always paste the URL from the browser, never retype it.
+
+Three small fields, three ways to waste the first week of a launch. Before sign-off, read the budget block, the schedule block and the tracking block as a whole — mismatches show up when you compare fields, not when you check them one by one.
+
+Sharp eyes. This is exactly the QA pass every Brightline campaign gets before launch."
+`;
+
+exports[`moduleToText > story-cards: text and markdown snapshots > markdown 1`] = `
+"## Welcome to the agency
+
+Six short cards to get you oriented at Brightline Media.
+
+### Chapter 1: Hello, and welcome to Brightline Media
+
+We're a performance marketing agency of **48 people** across Lisbon and Tallinn.
+
+Over the next few minutes you'll meet the teams, learn how a campaign moves through the agency, and pick up the one rule every account runs on.
+
+### Who we are: Three teams, one scoreboard
+
+**Strategy** shapes the plan and owns the client relationship.
+
+**Creative** turns the plan into ads, landing pages and copy that earn attention.
+
+**Performance** runs the media, reads the numbers and decides what to scale next.
+
+How the teams hand off: A brief starts in Strategy, moves to Creative for production, and lands in Performance for launch. Every Monday the three leads review one shared dashboard. Nobody owns a metric alone, which is why the handoff notes matter more than the org chart.
+
+### By the numbers
+
+3.4×: median ROAS across retained accounts last quarter
+
+That figure is why clients stay. It is also why we treat every euro of ad spend as if it were our own.
+
+### From the founders: Mara Lindqvist, co-founder
+
+A good campaign is not the one with the prettiest ad. It is the one where we can explain, in one sentence, why the number moved.
+
+### The one rule: Every claim has a metric
+
+When you say a campaign is *working*, you say which number says so and over what period.
+
+If you can't name the metric, the claim is a feeling. Feelings are welcome in retros, not in client reports.
+
+A teammate says the new video ads "feel strong". What's the right follow-up?
+- **Ask which metric moved and over what period** ✓
+- Add the ads to the client report as a win
+- Scale the budget while the momentum lasts
+*Explanation:* At Brightline Media a claim without a metric is just an impression. Ask for the number first, then decide.
+
+### You're set: What happens next
+
+Tomorrow you'll shadow a Monday dashboard review with your team lead.
+
+Before then, run through the **Metric deck** flashcards and the **Metric myths** quiz. Both take under ten minutes.
+
+Your first-week checklist: Day 1: accounts and tools access.
+
+Day 2: shadow the Monday dashboard review.
+
+Day 3: pair with Performance on one live account.
+
+Day 5: present one observation from the account to your lead. One sentence, one metric.
+
+That's the lay of the land. Welcome aboard."
+`;
+
+exports[`moduleToText > story-cards: text and markdown snapshots > text 1`] = `
+"Welcome to the agency
+
+Six short cards to get you oriented at Brightline Media.
+
+Chapter 1: Hello, and welcome to Brightline Media
+
+We're a performance marketing agency of 48 people across Lisbon and Tallinn.  Over the next few minutes you'll meet the teams, learn how a campaign moves through the agency, and pick up the one rule every account runs on.
+
+Who we are: Three teams, one scoreboard
+
+Strategy shapes the plan and owns the client relationship.  Creative turns the plan into ads, landing pages and copy that earn attention.  Performance runs the media, reads the numbers and decides what to scale next.
+
+How the teams hand off: A brief starts in Strategy, moves to Creative for production, and lands in Performance for launch. Every Monday the three leads review one shared dashboard. Nobody owns a metric alone, which is why the handoff notes matter more than the org chart.
+
+By the numbers
+
+3.4×: median ROAS across retained accounts last quarter
+
+That figure is why clients stay. It is also why we treat every euro of ad spend as if it were our own.
+
+From the founders: Mara Lindqvist, co-founder
+
+A good campaign is not the one with the prettiest ad. It is the one where we can explain, in one sentence, why the number moved.
+
+The one rule: Every claim has a metric
+
+When you say a campaign is working, you say which number says so and over what period.  If you can't name the metric, the claim is a feeling. Feelings are welcome in retros, not in client reports.
+
+A teammate says the new video ads "feel strong". What's the right follow-up?
+- Ask which metric moved and over what period (correct)
+- Add the ads to the client report as a win
+- Scale the budget while the momentum lasts
+Explanation: At Brightline Media a claim without a metric is just an impression. Ask for the number first, then decide.
+
+You're set: What happens next
+
+Tomorrow you'll shadow a Monday dashboard review with your team lead.  Before then, run through the Metric deck flashcards and the Metric myths quiz. Both take under ten minutes.
+
+Your first-week checklist: Day 1: accounts and tools access.  Day 2: shadow the Monday dashboard review.  Day 3: pair with Performance on one live account.  Day 5: present one observation from the account to your lead. One sentence, one metric.
+
+That's the lay of the land. Welcome aboard."
+`;
+
+exports[`moduleToText > tabs: text and markdown snapshots > markdown 1`] = `
+"## Three stages of the funnel
+
+Each stage needs its own message and its own metric.
+
+### Awareness
+
+Reach people who have never heard of the brand.
+
+- Main metric: **reach** and **CPM**
+- Typical channels: video, display, paid social
+
+### Consideration
+
+Help interested people compare options.
+
+- Main metric: **CTR** and engaged visits
+- Typical channels: search, retargeting, email
+
+### Conversion
+
+Turn intent into a purchase or a lead.
+
+- Main metric: **CPA** and **ROAS**
+- Typical channels: search, shopping, retargeting"
+`;
+
+exports[`moduleToText > tabs: text and markdown snapshots > text 1`] = `
+"Three stages of the funnel
+
+Each stage needs its own message and its own metric.
+
+Awareness
+
+Reach people who have never heard of the brand.
+
+- Main metric: reach and CPM
+- Typical channels: video, display, paid social
+
+Consideration
+
+Help interested people compare options.
+
+- Main metric: CTR and engaged visits
+- Typical channels: search, retargeting, email
+
+Conversion
+
+Turn intent into a purchase or a lead.
+
+- Main metric: CPA and ROAS
+- Typical channels: search, shopping, retargeting"
+`;
+
+exports[`moduleToText > true-false: text and markdown snapshots > markdown 1`] = `
+"## Metric myths
+
+Eight quick calls. Swipe right for true, left for false, or use the buttons.
+
+Rates: CTR is calculated as clicks divided by impressions.
+*Answer:* True
+*Explanation:* Correct. CTR compares two counts and never involves spend, which makes it a creative-relevance signal.
+
+Return: A lower ROAS is always better for the client.
+*Answer:* False
+*Explanation:* ROAS is revenue ÷ spend, so higher means more revenue per euro. Lower ROAS means the campaign returns less.
+
+Cost: CPM tells you what 1,000 impressions cost.
+*Answer:* True
+*Explanation:* Yes. The *M* stands for mille: spend ÷ impressions × 1,000.
+
+Diagnosis: If CTR is high but CVR is low, the ads are probably the problem.
+*Answer:* False
+*Explanation:* A high CTR shows the ads earn clicks. A low CVR after the click points to the landing page or the offer, not the creative.
+
+Return: LTV helps you decide how high a CPA you can afford.
+*Answer:* True
+*Explanation:* Exactly. If a customer is worth €400 over their lifetime, a €60 CPA may be fine; if they're worth €50, it isn't.
+
+Return: Raising AOV lowers ROAS because customers spend more.
+*Answer:* False
+*Explanation:* The opposite. More revenue per order on the same spend pushes ROAS up.
+
+Cost: CPA is spend divided by the number of conversions.
+*Answer:* True
+*Explanation:* Right. It's the most direct efficiency metric for an acquisition campaign.
+
+Diagnosis: Doubling the budget on a campaign will double its conversions.
+*Answer:* False
+*Explanation:* Audiences saturate and auctions get pricier. Expect CPA to rise as spend scales, which is why we scale in steps and watch the number.
+
+Myths busted. These are the eight mistakes we see most often in client decks."
+`;
+
+exports[`moduleToText > true-false: text and markdown snapshots > text 1`] = `
+"Metric myths
+
+Eight quick calls. Swipe right for true, left for false, or use the buttons.
+
+Rates: CTR is calculated as clicks divided by impressions.
+Answer: True
+Explanation: Correct. CTR compares two counts and never involves spend, which makes it a creative-relevance signal.
+
+Return: A lower ROAS is always better for the client.
+Answer: False
+Explanation: ROAS is revenue ÷ spend, so higher means more revenue per euro. Lower ROAS means the campaign returns less.
+
+Cost: CPM tells you what 1,000 impressions cost.
+Answer: True
+Explanation: Yes. The M stands for mille: spend ÷ impressions × 1,000.
+
+Diagnosis: If CTR is high but CVR is low, the ads are probably the problem.
+Answer: False
+Explanation: A high CTR shows the ads earn clicks. A low CVR after the click points to the landing page or the offer, not the creative.
+
+Return: LTV helps you decide how high a CPA you can afford.
+Answer: True
+Explanation: Exactly. If a customer is worth €400 over their lifetime, a €60 CPA may be fine; if they're worth €50, it isn't.
+
+Return: Raising AOV lowers ROAS because customers spend more.
+Answer: False
+Explanation: The opposite. More revenue per order on the same spend pushes ROAS up.
+
+Cost: CPA is spend divided by the number of conversions.
+Answer: True
+Explanation: Right. It's the most direct efficiency metric for an acquisition campaign.
+
+Diagnosis: Doubling the budget on a campaign will double its conversions.
+Answer: False
+Explanation: Audiences saturate and auctions get pricier. Expect CPA to rise as spend scales, which is why we scale in steps and watch the number.
+
+Myths busted. These are the eight mistakes we see most often in client decks."
+`;
+
+exports[`moduleToText > what-if-simulator: text and markdown snapshots > markdown 1`] = `
+"## Acquisition cost explorer
+
+Drag the sliders to see how budget, bidding and conversion rate shape the cost of every new customer for a fictional paid-search campaign.
+
+Bring **CPA under $30** while keeping spend at or above **$10,000**.
+
+cpa < 30 and spend >= 10000
+
+### Inputs
+
+- Monthly ad spend: Total media budget for the month. (1000–50000)
+- Cost per click (CPC): Average price paid for one click. Rises with competition and falls with better ad relevance. (0.2–8)
+- Conversion rate: Share of visitors who become customers. Landing-page quality moves this most. (0.005–0.1)
+- Average order value: Revenue from a typical first order. (20–500)
+
+### Outputs
+
+- Clicks: Spend ÷ CPC
+- Conversions: Clicks × conversion rate
+- Cost per acquisition (CPA): What one new customer costs: spend ÷ conversions.
+- Revenue: Conversions × average order value
+- ROAS: Revenue earned per dollar spent
+
+- Each customer costs more than they spend on their first order. Lower the CPC, lift the conversion rate, or raise the order value before scaling budget.
+- ROAS of **3× or more** — every dollar of spend returns at least three in revenue. This is the zone where adding budget usually pays off.
+- A CPC above $4 points to crowded auctions or a low Quality Score. Tighter keywords and more relevant ad copy tend to bring it down.
+
+Success: You found a profitable mix. Notice that conversion rate and CPC move CPA far more than raw budget does — budget only scales whatever efficiency you already have."
+`;
+
+exports[`moduleToText > what-if-simulator: text and markdown snapshots > text 1`] = `
+"Acquisition cost explorer
+
+Drag the sliders to see how budget, bidding and conversion rate shape the cost of every new customer for a fictional paid-search campaign.
+
+Bring CPA under $30 while keeping spend at or above $10,000.
+
+cpa < 30 and spend >= 10000
+
+Inputs
+
+- Monthly ad spend: Total media budget for the month. (1000–50000)
+- Cost per click (CPC): Average price paid for one click. Rises with competition and falls with better ad relevance. (0.2–8)
+- Conversion rate: Share of visitors who become customers. Landing-page quality moves this most. (0.005–0.1)
+- Average order value: Revenue from a typical first order. (20–500)
+
+Outputs
+
+- Clicks: Spend ÷ CPC
+- Conversions: Clicks × conversion rate
+- Cost per acquisition (CPA): What one new customer costs: spend ÷ conversions.
+- Revenue: Conversions × average order value
+- ROAS: Revenue earned per dollar spent
+
+- Each customer costs more than they spend on their first order. Lower the CPC, lift the conversion rate, or raise the order value before scaling budget.
+- ROAS of 3× or more — every dollar of spend returns at least three in revenue. This is the zone where adding budget usually pays off.
+- A CPC above $4 points to crowded auctions or a low Quality Score. Tighter keywords and more relevant ad copy tend to bring it down.
+
+Success: You found a profitable mix. Notice that conversion rate and CPC move CPA far more than raw budget does — budget only scales whatever efficiency you already have."
+`;
+
+exports[`moduleToText > word-builder: text and markdown snapshots > markdown 1`] = `
+"## Build it right
+
+Tap the tiles in order to build each formula and team rule. Tap a placed tile to send it back. One tile in every bank does not belong.
+
+Build the formula for **ROAS**.
+*Answer:* ROAS = Revenue ÷ Ad spend
+*Explanation:* ROAS = revenue ÷ ad spend. A ROAS of 3.4× means every dollar of spend brought back $3.40 in revenue. It ignores margin, so read it next to CPA.
+
+Hint: ROAS stands for *return on ad spend* — the denominator is in the name.
+
+Build the formula for **CPA**.
+*Answer:* CPA = Spend ÷ Conversions
+*Explanation:* CPA = spend ÷ conversions. Northwind Outdoor's March CPA of $21.40 means each sale or sign-up cost just over twenty dollars to win.
+
+Hint: CPA is what *one result* cost, so divide by the number of results.
+
+Put Brightline's first rule of every kickoff in order.
+*Answer:* Confirm the brief before you build the campaign
+*Explanation:* A confirmed brief — objective, audience, budget and the KPI that defines success — stops the team from building the wrong campaign beautifully.
+
+Hint: The sentence starts with a verb and ends with what you build.
+
+Complete the account-team rule for when something goes wrong.
+*Answer:* Escalate early and bring a proposed fix
+*Explanation:* Clients forgive problems; they rarely forgive surprises. Raising an issue early, with a fix already sketched, keeps the conversation about solutions instead of blame.
+
+Hint: Timing first, then what you walk in with.
+
+Two formulas and two habits every Brightline account manager uses before lunch on a Monday."
+`;
+
+exports[`moduleToText > word-builder: text and markdown snapshots > text 1`] = `
+"Build it right
+
+Tap the tiles in order to build each formula and team rule. Tap a placed tile to send it back. One tile in every bank does not belong.
+
+Build the formula for ROAS.
+Answer: ROAS = Revenue ÷ Ad spend
+Explanation: ROAS = revenue ÷ ad spend. A ROAS of 3.4× means every dollar of spend brought back $3.40 in revenue. It ignores margin, so read it next to CPA.
+
+Hint: ROAS stands for return on ad spend — the denominator is in the name.
+
+Build the formula for CPA.
+Answer: CPA = Spend ÷ Conversions
+Explanation: CPA = spend ÷ conversions. Northwind Outdoor's March CPA of $21.40 means each sale or sign-up cost just over twenty dollars to win.
+
+Hint: CPA is what one result cost, so divide by the number of results.
+
+Put Brightline's first rule of every kickoff in order.
+Answer: Confirm the brief before you build the campaign
+Explanation: A confirmed brief — objective, audience, budget and the KPI that defines success — stops the team from building the wrong campaign beautifully.
+
+Hint: The sentence starts with a verb and ends with what you build.
+
+Complete the account-team rule for when something goes wrong.
+Answer: Escalate early and bring a proposed fix
+Explanation: Clients forgive problems; they rarely forgive surprises. Raising an issue early, with a fix already sketched, keeps the conversation about solutions instead of blame.
+
+Hint: Timing first, then what you walk in with.
+
+Two formulas and two habits every Brightline account manager uses before lunch on a Monday."
+`;

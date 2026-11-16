@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "id": "content-blocks",
+  "title": "Content blocks",
+  "modules": [
+    {
+      "id": "note",
+      "type": "callout",
+      "content": {
+        "variant": "warning",
+        "title": "Check the date range",
+        "text": "Reports default to **the last 7 days**.\n\n- Change it before exporting\n- Say which range you used"
+      }
+    },
+    {
+      "id": "faq",
+      "type": "accordion",
+      "content": {
+        "items": [
+          {
+            "id": "a",
+            "title": "Who approves budgets?",
+            "text": "The account lead."
+          },
+          {
+            "id": "b",
+            "title": "When are reports due?",
+            "text": "Mondays at 10:00."
+          }
+        ]
+      },
+      "behavior": {
+        "allowMultiple": true,
+        "defaultOpen": "first",
+        "completeOn": "all-items"
+      }
+    },
+    {
+      "id": "stages",
+      "type": "tabs",
+      "content": {
+        "tabs": [
+          {
+            "id": "t1",
+            "label": "Awareness",
+            "text": "Reach and CPM."
+          },
+          {
+            "id": "t2",
+            "label": "Conversion",
+            "text": "CPA and ROAS. See [the guide](https://example.com/guide)."
+          }
+        ]
+      }
+    },
+    {
+      "id": "week",
+      "type": "carousel",
+      "content": {
+        "slides": [
+          {
+            "id": "s1",
+            "title": "Monday",
+            "text": "Meet the team."
+          },
+          {
+            "id": "s2",
+            "text": "Tools and access."
+          }
+        ]
+      },
+      "behavior": {
+        "loop": true,
+        "showDots": false
+      }
+    },
+    {
+      "id": "compare",
+      "type": "columns",
+      "content": {
+        "columns": [
+          {
+            "id": "c1",
+            "title": "Do",
+            "text": "- Lead with the number"
+          },
+          {
+            "id": "c2",
+            "title": "Don't",
+            "text": "- Paste raw exports"
+          }
+        ]
+      },
+      "layout": {
+        "ratio": "1-2"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "first-week",
+  "type": "carousel",
+  "title": "Your first week",
+  "content": {
+    "slides": [
+      {
+        "id": "monday",
+        "title": "Monday: meet the team",
+        "text": "Shadow the Harbor Supply Co. account call and read the last three weekly reports."
+      },
+      {
+        "id": "tuesday",
+        "title": "Tuesday: tools",
+        "text": "Get access to Pulse Analytics and Orbit CRM. Build one dashboard view of your own."
+      },
+      {
+        "id": "wednesday",
+        "title": "Wednesday: your first audit",
+        "text": "Review one live campaign against the launch checklist and list what you would change."
+      },
+      {
+        "id": "friday",
+        "title": "Friday: present",
+        "text": "Walk your lead through the audit in ten minutes. **Two clear recommendations beat ten small ones.**"
+      }
+    ]
+  },
+  "behavior": {
+    "completeOn": "all-items"
+  }
+}

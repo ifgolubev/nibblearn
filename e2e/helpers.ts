@@ -24,6 +24,11 @@ export const MODULE_TYPES = [
   "word-builder",
   "priority-matrix",
   "inbox-triage",
+  "callout",
+  "accordion",
+  "tabs",
+  "carousel",
+  "columns",
 ] as const;
 
 export type ModuleType = (typeof MODULE_TYPES)[number];

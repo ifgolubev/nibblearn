@@ -27,8 +27,11 @@ What the library guarantees:
 - **No code execution from content.** Lesson JSON is validated with Zod and never executed. What-If and Budget formulas are parsed by a small recursive-descent parser with a fixed whitelist of operators and functions; there is no `eval` or `new Function`, and identifiers never resolve through the prototype chain.
 - **No HTML injection.** Learner-facing text goes through a safe inline-markup parser that produces React elements. Raw HTML in content is displayed as text. The library does not use `dangerouslySetInnerHTML`.
 - **No style injection.** Colour fields (`theme.accent`, `appearance.accent`, category / channel / quadrant colours) only accept plain CSS colours (names, tokens, `#hex`, `rgb()`, `hsl()`, `oklch()` …). `url()`, `var()`, `;` and nested functions are rejected, so content cannot make the browser load external resources through styles. `theme.fontFamily` only accepts a plain font list.
-- **No script-capable URLs.** Image `src` accepts `http(s)`, relative, `blob:` and `data:image/*` URLs. `javascript:`, `vbscript:`, `data:text/html` and similar are rejected. Content never produces links or navigation.
+- **No script-capable URLs.** Image `src` accepts `http(s)`, relative, `blob:` and `data:image/*` URLs, and `asset:<key>` references with a restricted key alphabet. `javascript:`, `vbscript:`, `data:text/html` and similar are rejected. Text links only use `http(s)`, `mailto:`, `tel:`, `/path` or `#anchor` targets; any other target is shown as plain text. External links open in a new tab with `rel="noopener noreferrer"`.
+- **Resolved image URLs are checked too.** When the host passes `resolveAsset` to `NibblearnProvider`, every URL it returns goes through the same image-URL check before it reaches an `<img>`; unsafe results show the "image unavailable" placeholder. Without a resolver, `asset:` references are never written to the DOM.
 - **No network activity.** The library makes no requests, sets no cookies and collects no analytics. Progress is stored in `localStorage` (or the adapter you provide) and never leaves the browser on its own.
+- **Saved module state is untrusted.** `initialState` (and `LessonProgress.moduleStates`) is checked field by field when a module restores it: unknown keys, wrong types, out-of-range indices and prototype keys such as `__proto__` are ignored, and the module starts over instead.
+- **JSON inside HTML.** `@nibblearn/embed` reads module configs only from a child `<script type="application/json">` or a `config` attribute of the marked element, never from a URL, and parses them with `JSON.parse`. When you write such a script, escape `<` as `\u003c`.
 - **Bounded input.** Text length, list sizes and module counts are capped by the schemas.
 
 What the host application is responsible for:
@@ -37,6 +40,7 @@ What the host application is responsible for:
 - **Validate before storing.** Call `validateLesson()` on the server before saving lessons that users upload. `LessonPlayer` and every module validate again at render time and show an error state instead of rendering invalid content.
 - **Learner data you forward.** `onEvent` / `onComplete` give you answers and scores. Where you send them, and consent for it, is your decision. When embedding through an `<iframe>`, post messages only to a pinned origin and check `event.origin` in the listener (see `docs/embedding.md`).
 - **Progress storage is not a security boundary.** `localStorage` can be edited by the learner. Do not treat client-side scores as proof for certification; verify on your server if it matters.
+- **Your `resolveAsset` function** receives `src` values from lesson content. Treat them as untrusted keys: look them up in your own storage and check that the learner may see the file before returning a signed URL.
 - **Custom modules** registered by you run with your application's privileges and are outside these guarantees.
 
 ## Supply chain

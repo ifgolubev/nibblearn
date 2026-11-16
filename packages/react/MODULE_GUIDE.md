@@ -11,7 +11,7 @@ packages/core/src/logic/<name>.ts              # pure logic, unit-tested in pack
 packages/react/src/modules/<type>/<Name>.tsx   # component (default + named export)
 packages/react/src/modules/<type>/<type>.css   # scoped styles, class prefix `nb-<short>__`
 packages/react/src/modules/<type>/<Name>.test.tsx
-examples/src/modules/<type>.ts                 # realistic demo config: `export const <camel>Demo = {...} satisfies <Type>Input`
+packages/core/src/examples/modules/<type>.ts   # realistic demo config: `export const <camel>Demo = {...} satisfies <Type>Input`
 ```
 
 ## Component contract
@@ -25,7 +25,7 @@ export default MyModule;
    `<InvalidModule type="…" issues={…} />` on failure. Never crash on bad JSON. See `ChoiceChallenge.tsx`.
 2. **One `ModuleShell`.** Render exactly one `<ModuleShell type id title instructions appearance announcement …>`.
    Pass `title={hideHeader ? undefined : config.title}`.
-3. **Lifecycle.** `const life = useModuleLifecycle({ moduleId, moduleType, onComplete, onEvent, resetKey })`.
+3. **Lifecycle.** `const life = useModuleLifecycle({ moduleId, moduleType, onComplete, onEvent, resetKey })`. Keep progress in `usePersistedState` (a value that fails its guard drops the whole restored session). Move focus by yourself (autoFocus, focus in effects) only when `life.autoFocus` is true: it is false in preview and in a restored session until the learner acts.
    - Keep all run state in an inner component keyed by the run: `<MyModuleBody key={life.runId} life={life} … />`.
      A reset (retry button or a new `resetKey`) remounts the body with fresh state. Do **not** reset state in
      `useEffect(..., [life.runId])` — `react-hooks/set-state-in-effect` flags it. See `CategorySort.tsx`,
@@ -57,7 +57,7 @@ export default MyModule;
     `resetKey`, keyboard operation, invalid config → alert. Use `findBy*` / `waitFor` around animated transitions.
     Use `userEvent.setup()`.
 14. **Demo content.** Original, fictional, marketing-agency flavoured, internally consistent numbers,
-    polished copy. Demos live in `examples/src/modules/<type>.ts`.
+    polished copy. Demos live in `packages/core/src/examples/modules/<type>.ts`; add a minimal config to `packages/core/src/examples/empty.ts` too.
 
 ## Server rendering
 

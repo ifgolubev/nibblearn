@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { latestState } from "../../../test/state-helpers";
 import {
   allocationScore,
   budgetAllocatorSchema,
@@ -214,5 +215,37 @@ describe("BudgetAllocator", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/sum to 100/);
+  });
+
+  it("restores the split and locks", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<BudgetAllocator config={config} onStateChange={onStateChange} />);
+    fireEvent.change(slider("Search"), { target: { value: "60" } });
+    await user.click(screen.getByRole("button", { name: "Lock Video" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<BudgetAllocator config={config} initialState={saved} />);
+    expect(slider("Search")).toHaveValue("60");
+    expect(slider("Video")).toHaveValue("20");
+    expect(screen.getByRole("button", { name: /Lock Video|Unlock Video/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("restores a locked-in plan without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<BudgetAllocator config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: "Lock in plan" }));
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<BudgetAllocator config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.queryByRole("button", { name: "Lock in plan" })).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

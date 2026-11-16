@@ -33,6 +33,34 @@ interface NibblearnEvent {
 
 Payload shapes are stable per module but intentionally untyped; treat them as analytics detail rather than contract.
 
+## Typed payloads
+
+Each event type has a documented payload. Modules may add extra keys, but these are stable:
+
+| Event             | Payload keys                                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `module:interact` | `action` (always): `"open"`, `"select"`, `"move"`, `"place"`, `"change"`, `"flip"`…                                                                  |
+| `module:answer`   | `itemId` or `itemIndex` (when the module has items), `response`, `correct` (boolean, when applicable), `score` (0–1, for partial credit), `attempts` |
+| `module:complete` | `score`, `correct`, `total`, `attempts`                                                                                                              |
+| `lesson:resume`   | `index`                                                                                                                                              |
+| `lesson:navigate` | `from`, `to`                                                                                                                                         |
+| `lesson:complete` | `score`, `points`, `passed`                                                                                                                          |
+
+Narrow an event with `isEventOfType()`, or check a payload before sending it to a backend with `validateEventPayload()`:
+
+```ts
+import { isEventOfType, validateEventPayload, type NibblearnEvent } from "@nibblearn/core";
+
+function handle(event: NibblearnEvent) {
+  if (!validateEventPayload(event).success) return;
+  if (isEventOfType(event, "module:answer")) {
+    console.log(event.payload?.correct, event.payload?.response);
+  }
+}
+```
+
+The Zod schemas are exported too (`moduleAnswerPayloadSchema`, `eventPayloadSchemas`, …).
+
 ## `ModuleResult`
 
 Delivered through `onComplete`/`onModuleComplete` and stored in progress.

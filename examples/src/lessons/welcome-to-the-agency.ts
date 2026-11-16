@@ -1,6 +1,6 @@
 import type { LessonInput } from "@nibblearn/core";
-import { storyCardsDemo } from "../modules/story-cards";
-import { processExplorerDemo } from "../modules/process-explorer";
+import { storyCardsDemo } from "../modules";
+import { processExplorerDemo } from "../modules";
 
 /**
  * Example A — Welcome to the Agency.

@@ -6,7 +6,7 @@ Two packages:
 
 | Package            | What it contains                                                                                                                              |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@nibblearn/react` | Components for all 22 modules, `LessonPlayer`, `NibblearnProvider`, primitives, one stylesheet. Re-exports everything from `@nibblearn/core`. |
+| `@nibblearn/react` | Components for all 27 modules, `LessonPlayer`, `NibblearnProvider`, primitives, one stylesheet. Re-exports everything from `@nibblearn/core`. |
 | `@nibblearn/core`  | Framework-agnostic schemas, `validateLesson`, scoring, progress storage, events, i18n messages. No React dependency.                          |
 
 Package names are provisional; see [Releasing](./release.md) for the naming note.

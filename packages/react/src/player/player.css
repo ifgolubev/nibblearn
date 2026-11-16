@@ -1,4 +1,9 @@
 /* ---------- Lesson player ---------- */
+/* The player root (an nb container itself) needs a sized ancestor for its own @container rules. */
+.nb-player-root {
+  container-type: inline-size;
+  container-name: nb;
+}
 .nb-player {
   position: relative;
   display: flex;
@@ -130,17 +135,19 @@
 /* Intro */
 .nb-intro {
   display: grid;
+  /* minmax(0, …): long titles or buttons must not widen the column past the container. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--nb-space-6);
   padding: var(--nb-space-6) var(--nb-space-4);
 }
 @container nb (min-width: 720px) {
   .nb-intro {
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
     align-items: center;
     padding: var(--nb-space-10) var(--nb-space-6);
   }
   .nb-intro--no-image {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     max-width: 40rem;
     margin-inline: auto;
   }
@@ -164,6 +171,9 @@
   line-height: 1.05;
   color: var(--nb-fg);
   text-wrap: balance;
+  /* A single long word must wrap instead of widening narrow (320px) screens. */
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 @container nb (min-width: 640px) {
   .nb-intro__title {

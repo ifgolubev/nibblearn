@@ -1,0 +1,25 @@
+{
+  "id": "funnel-stages",
+  "type": "tabs",
+  "title": "Three stages of the funnel",
+  "instructions": "Each stage needs its own message and its own metric.",
+  "content": {
+    "tabs": [
+      {
+        "id": "awareness",
+        "label": "Awareness",
+        "text": "Reach people who have never heard of the brand.\n\n- Main metric: **reach** and **CPM**\n- Typical channels: video, display, paid social"
+      },
+      {
+        "id": "consideration",
+        "label": "Consideration",
+        "text": "Help interested people compare options.\n\n- Main metric: **CTR** and engaged visits\n- Typical channels: search, retargeting, email"
+      },
+      {
+        "id": "conversion",
+        "label": "Conversion",
+        "text": "Turn intent into a purchase or a lead.\n\n- Main metric: **CPA** and **ROAS**\n- Typical channels: search, shopping, retargeting"
+      }
+    ]
+  }
+}

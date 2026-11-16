@@ -23,6 +23,10 @@ import type { ModuleProps } from "../types";
 import { resolveContentIcon } from "../../primitives/icons";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -35,14 +39,7 @@ import "./process-explorer.css";
 
 export type ProcessExplorerProps = ModuleProps<ProcessExplorerConfig>;
 
-export function ProcessExplorer({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: ProcessExplorerProps) {
+export function ProcessExplorer({ config: rawConfig, ...rest }: ProcessExplorerProps) {
   const parsed = useMemo(() => processExplorerSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -52,16 +49,7 @@ export function ProcessExplorer({
       />
     );
   }
-  return (
-    <ProcessExplorerInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <ProcessExplorerInner config={parsed.data} {...rest} />;
 }
 
 /** Resolve a kebab-case icon name ("bar-chart-3") through the curated content icon set. */
@@ -71,15 +59,20 @@ function resolveIcon(name: string | undefined): LucideIcon | null {
 
 /** Owns the lifecycle; every reset remounts ProcessExplorerRun with fresh state (keyed by runId). */
 function ProcessExplorerInner(props: ProcessExplorerProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "process-explorer",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <ProcessExplorerRun key={life.runId} {...props} life={life} />;
+  return <ProcessExplorerRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 function ProcessExplorerRun({
@@ -95,12 +88,23 @@ function ProcessExplorerRun({
   const { behavior } = config;
   const total = stages.length;
 
-  const [current, setCurrent] = useState(0);
-  const [visited, setVisited] = useState<string[]>(() => [stages[0]!.id]);
-  const [interacted, setInteracted] = useState(false);
-  const [finished, setFinished] = useState(false);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const stageIds = stages.map((s) => s.id);
+  const [current, setCurrent] = usePersistedState(life, "current", 0, G.int(0, total - 1));
+  const [visited, setVisited] = usePersistedState<string[]>(
+    life,
+    "visited",
+    () => [stages[0]!.id],
+    G.arrayOf(G.oneOf(stageIds), total),
+  );
+  const [interacted, setInteracted] = usePersistedState(life, "interacted", false, G.bool);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "stages"], total, (i) => {
+    setCurrent(i);
+    setFinished(false);
+  });
   const [direction, setDirection] = useState(1);
-  const [focusIndex, setFocusIndex] = useState(0);
+  const [focusIndex, setFocusIndex] = useState(() => current);
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const iconFor = useMemo(() => stages.map((s) => resolveIcon(s.icon)), [stages]);
@@ -116,7 +120,7 @@ function ProcessExplorerRun({
       setCurrent(i);
       setFocusIndex(i);
       setInteracted(true);
-      life.emit("module:interact", { stageId: target.id, stageIndex: i, via });
+      life.emit("module:interact", { action: "open", stageId: target.id, stageIndex: i, via });
       announce(`${t("process.stage", { index: i + 1 })}: ${target.title}`);
       if (visited.includes(target.id)) return;
       const nextVisited = [...visited, target.id];
@@ -126,14 +130,26 @@ function ProcessExplorerRun({
         announce(`${t("process.allExplored")} ${t("a11y.moduleComplete")}`);
       }
     },
-    [total, stages, current, life, announce, t, visited, behavior.requireAll],
+    [
+      total,
+      stages,
+      current,
+      setCurrent,
+      setInteracted,
+      life,
+      announce,
+      t,
+      visited,
+      setVisited,
+      behavior.requireAll,
+    ],
   );
 
   const finish = useCallback(() => {
     life.complete({ details: { visited } });
     setFinished(true);
     announce(t("a11y.moduleComplete"));
-  }, [life, visited, announce, t]);
+  }, [life, visited, setFinished, announce, t]);
 
   const restart = () => {
     life.reset();

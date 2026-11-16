@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react";
+import { useCallback, useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check, X } from "lucide-react";
 import {
@@ -20,6 +14,10 @@ import { shuffle } from "@nibblearn/core";
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -44,14 +42,7 @@ interface QuestionRecord {
 
 const LETTERS = "ABCDEFGH";
 
-export function ChoiceChallenge({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: ChoiceChallengeProps) {
+export function ChoiceChallenge({ config: rawConfig, ...rest }: ChoiceChallengeProps) {
   const parsed = useMemo(() => choiceChallengeSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -61,29 +52,25 @@ export function ChoiceChallenge({
       />
     );
   }
-  return (
-    <ChoiceChallengeInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <ChoiceChallengeInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts ChoiceChallengeRun with fresh state (keyed by runId). */
 function ChoiceChallengeInner(props: ChoiceChallengeProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "choice-challenge",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <ChoiceChallengeRun key={life.runId} {...props} life={life} />;
+  return <ChoiceChallengeRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 function ChoiceChallengeRun({
@@ -98,15 +85,8 @@ function ChoiceChallengeRun({
   const { questions } = config.content;
   const { behavior } = config;
 
-  const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [evaluation, setEvaluation] = useState<ChoiceEvaluation | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [records, setRecords] = useState<QuestionRecord[]>([]);
-  const [qAttempts, setQAttempts] = useState(0);
-  const [finished, setFinished] = useState(false);
-  const optionsRef = useRef<HTMLDivElement>(null);
-
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const [index, setIndex] = usePersistedState(life, "index", 0, G.int(0, questions.length - 1));
   const question = questions[index]!;
   const mode = questionMode(question);
   const options = useMemo<ChoiceOptionWithId[]>(() => {
@@ -114,8 +94,44 @@ function ChoiceChallengeRun({
     return behavior.shuffleOptions ? shuffle(withIds, index + life.runId * 101 + 7) : withIds;
   }, [question, index, behavior.shuffleOptions, life.runId]);
 
+  const [selected, setSelected] = usePersistedState<string[]>(
+    life,
+    "selected",
+    [],
+    G.arrayOf(G.oneOf(options.map((o) => o.id)), 8),
+  );
+  const [checkedSaved, setChecked] = usePersistedState(life, "checked", false, G.bool);
+  const [revealed, setRevealed] = usePersistedState(life, "revealed", false, G.bool);
+  const [records, setRecords] = usePersistedState<QuestionRecord[]>(
+    life,
+    "records",
+    [],
+    G.arrayOf(
+      G.shape({ score: G.range(0, 1), correct: G.bool, attempts: G.int(0, 100_000) }),
+      questions.length,
+    ),
+  );
+  const [qAttempts, setQAttempts] = usePersistedState(life, "qAttempts", 0, G.int(0, 100_000));
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "questions"], questions.length, (i) => {
+    setIndex(i);
+    setSelected([]);
+    setChecked(false);
+    setRevealed(false);
+    setFinished(false);
+  });
+  const optionsRef = useRef<HTMLDivElement>(null);
+
+  // The evaluation is derived from the selection, so restoring the selection restores it too.
+  const evaluation = useMemo<ChoiceEvaluation | null>(
+    () =>
+      checkedSaved && selected.length
+        ? evaluateChoice(options, selected, { partialCredit: behavior.partialCredit })
+        : null,
+    [checkedSaved, selected, options, behavior.partialCredit],
+  );
   const checked = evaluation !== null;
-  const locked = checked && (evaluation.correct || revealed);
+  const locked = evaluation !== null && (evaluation.correct || revealed);
 
   const toggle = useCallback(
     (id: string) => {
@@ -124,9 +140,9 @@ function ChoiceChallengeRun({
         if (mode === "single") return prev.includes(id) ? [] : [id];
         return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       });
-      life.emit("module:interact", { questionIndex: index, optionId: id });
+      life.emit("module:interact", { action: "select", questionIndex: index, optionId: id });
     },
-    [checked, mode, life, index],
+    [checked, mode, life, index, setSelected],
   );
 
   const check = useCallback(() => {
@@ -135,28 +151,43 @@ function ChoiceChallengeRun({
     const attempts = qAttempts + 1;
     setQAttempts(attempts);
     life.attempt();
-    setEvaluation(ev);
+    setChecked(true);
     const exhausted = behavior.maxAttempts > 0 && attempts >= behavior.maxAttempts;
     const willReveal = ev.correct || !behavior.allowRetry || exhausted;
     setRevealed(willReveal);
     life.emit("module:answer", {
       questionIndex: index,
+      itemIndex: index,
       selected,
+      response: selected,
       correct: ev.correct,
       score: ev.score,
       attempts,
     });
     announce(ev.correct ? t("a11y.correctAnswer") : t("a11y.incorrectAnswer"));
-  }, [selected, checked, options, behavior, qAttempts, life, index, announce, t]);
+  }, [
+    selected,
+    checked,
+    options,
+    behavior,
+    qAttempts,
+    life,
+    index,
+    announce,
+    t,
+    setQAttempts,
+    setChecked,
+    setRevealed,
+  ]);
 
   const retry = useCallback(() => {
-    setEvaluation(null);
+    setChecked(false);
     setSelected([]);
     setRevealed(false);
     requestAnimationFrame(() =>
       optionsRef.current?.querySelector<HTMLButtonElement>("button")?.focus(),
     );
-  }, []);
+  }, [setChecked, setSelected, setRevealed]);
 
   const next = useCallback(() => {
     if (!evaluation) return;
@@ -181,10 +212,26 @@ function ChoiceChallengeRun({
     }
     setIndex(index + 1);
     setSelected([]);
-    setEvaluation(null);
+    setChecked(false);
     setRevealed(false);
     setQAttempts(0);
-  }, [evaluation, qAttempts, records, index, questions.length, life, announce, t]);
+  }, [
+    evaluation,
+    qAttempts,
+    records,
+    index,
+    questions.length,
+    life,
+    announce,
+    t,
+    setRecords,
+    setFinished,
+    setIndex,
+    setSelected,
+    setChecked,
+    setRevealed,
+    setQAttempts,
+  ]);
 
   // Keyboard shortcuts: letters/numbers select, Enter checks/advances.
   const onKeyDown = useCallback(
@@ -416,7 +463,7 @@ function ChoiceChallengeRun({
                     variant="primary"
                     onClick={next}
                     trailing={<ArrowRight aria-hidden />}
-                    autoFocus
+                    autoFocus={life.autoFocus}
                   >
                     {index + 1 >= questions.length ? t("common.finish") : t("common.next")}
                   </Button>

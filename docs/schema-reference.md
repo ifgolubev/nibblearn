@@ -22,7 +22,7 @@ Field paths are relative to the module object. "text" means a string up to 4,000
 | `appearance.hideHeader` | boolean        | `false`  | Hide title and instructions.                                                                        |
 | `meta`                  | object         | —        | Free-form, ignored by Nibblearn.                                                                    |
 
-> **Colour and URL fields are validated.** Colour fields accept plain CSS colours only (names, tokens, `#hex`, `rgb()`, `hsl()`, `oklch()` …); `url()` and `var()` are rejected. `fontFamily` accepts a plain font list. Image `src` accepts `http(s)`, relative, `blob:` and `data:image/*` URLs. See [SECURITY.md](https://github.com/ifgolubev/nibblearn/blob/main/SECURITY.md).
+> **Colour and URL fields are validated.** Colour fields accept plain CSS colours only (names, tokens, `#hex`, `rgb()`, `hsl()`, `oklch()` …); `url()` and `var()` are rejected. `fontFamily` accepts a plain font list. Image `src` accepts `http(s)`, relative, `blob:` and `data:image/*` URLs, and `asset:<key>` references resolved by the host (see [Embedding](./embedding.md#images-from-private-storage)). See [SECURITY.md](https://github.com/ifgolubev/nibblearn/blob/main/SECURITY.md).
 
 ### Media
 
@@ -30,7 +30,7 @@ Used wherever a field is typed "media".
 
 | Path              | Type       | Default  | Description                                           |
 | ----------------- | ---------- | -------- | ----------------------------------------------------- |
-| `src`             | string     | required | Absolute or relative URL, or data URI.                |
+| `src`             | string     | required | Absolute or relative URL, data URI, or `asset:<key>`. |
 | `alt`             | string     | `""`     | Alternative text. Empty for decorative images.        |
 | `width`, `height` | number > 0 | —        | Intrinsic size, reserves space to avoid layout shift. |
 | `caption`         | string     | —        | Rendered under the image.                             |
@@ -45,7 +45,13 @@ Used wherever a field is typed "media".
 
 ### Inline markup
 
-Text fields accept a tiny, safe subset: `**bold**`, `*italic*`, `` `code` ``, `\n` for a line break, and a blank line (`\n\n`) to start a new paragraph where the field renders as paragraphs (card bodies, explanations). HTML is never interpreted; anything else is shown literally.
+Text fields accept a tiny, safe subset: `**bold**`, `*italic*`, `` `code` ``, `[label](https://…)` links, `\n` for a line break, and a blank line (`\n\n`) to start a new paragraph where the field renders as paragraphs (card bodies, explanations, content blocks). In those paragraph fields, lines starting with `- ` or `1. ` become lists. HTML is never interpreted; anything else is shown literally.
+
+Links may point to `http(s)`, `mailto:`, `tel:`, `/path` or `#anchor`; anything else (for example `javascript:`) stays plain text. External links open in a new tab and say so to screen readers. Text that is itself a control (answer options, flip cards, draggable items, buttons) shows only the link label, because a link cannot sit inside a control.
+
+### Module version
+
+Every module accepts an optional `schemaVersion` (integer ≥ 1, default 1). Stored modules are upgraded with `migrateModule()`; see [Migrations](./migrations.md).
 
 ## story-cards
 
@@ -1179,3 +1185,87 @@ Score: the first-check fraction, or — when everything ends up correct without 
 ```
 
 Score: 1 point per expert call, 0.5 per acceptable call, 0 otherwise, divided by the number of messages; `correct` counts expert calls. A message is a _priority_ when it is flagged `vip` or `suspicious-link`, or its expert action has the `reply` or `alert` icon; priority messages that got a wrong call are listed in `details.missedPriority`. Exported helpers: `evaluateTriage`, `gradeTriageDecision`, `isPriorityMessage`, `nextUnhandledIndex`.
+
+## Content blocks (category "present")
+
+Five blocks for structuring lesson content. They have no score; they count as completed when shown, or (where `behavior.completeOn` is `"all-items"`) once every part was opened. Their text fields render paragraphs, lists and links and may be up to 20,000 characters.
+
+### callout
+
+| Path              | Type                                                | Default  | Description                   |
+| ----------------- | --------------------------------------------------- | -------- | ----------------------------- |
+| `content.variant` | `info` \| `tip` \| `warning` \| `success` \| `note` | `info`   | Tone and icon.                |
+| `content.title`   | string ≤ 200                                        | —        | Short heading inside the box. |
+| `content.text`    | long text                                           | required | The callout text.             |
+
+### accordion
+
+| Path                     | Type                       | Default  | Description                                        |
+| ------------------------ | -------------------------- | -------- | -------------------------------------------------- |
+| `content.items[]`        | 1–30                       | required | Panels.                                            |
+| `content.items[].id`     | id                         | required | Unique within the block.                           |
+| `content.items[].title`  | string 1–200               | required | Always visible.                                    |
+| `content.items[].text`   | long text                  | required | Shown when the panel is open.                      |
+| `content.items[].image`  | media                      | —        |                                                    |
+| `behavior.allowMultiple` | boolean                    | `false`  | Several panels open at once.                       |
+| `behavior.defaultOpen`   | `none` \| `first` \| `all` | `none`   | Panels open at first.                              |
+| `behavior.completeOn`    | `view` \| `all-items`      | `view`   | `all-items`: complete once every panel was opened. |
+
+### tabs
+
+| Path                   | Type                  | Default  | Description                                      |
+| ---------------------- | --------------------- | -------- | ------------------------------------------------ |
+| `content.tabs[]`       | 2–8                   | required |                                                  |
+| `content.tabs[].id`    | id                    | required | Unique within the block.                         |
+| `content.tabs[].label` | string 1–40           | required | Tab label.                                       |
+| `content.tabs[].text`  | long text             | required | Panel text.                                      |
+| `content.tabs[].image` | media                 | —        |                                                  |
+| `behavior.completeOn`  | `view` \| `all-items` | `view`   | `all-items`: complete once every tab was viewed. |
+
+### carousel
+
+| Path                     | Type                  | Default  | Description                                      |
+| ------------------------ | --------------------- | -------- | ------------------------------------------------ |
+| `content.slides[]`       | 1–30                  | required | Each slide needs a title, text or an image.      |
+| `content.slides[].id`    | id                    | required | Unique within the block.                         |
+| `content.slides[].title` | string ≤ 200          | —        |                                                  |
+| `content.slides[].text`  | long text             | —        |                                                  |
+| `content.slides[].image` | media                 | —        |                                                  |
+| `behavior.loop`          | boolean               | `false`  | Wrap around at the ends.                         |
+| `behavior.showDots`      | boolean               | `true`   | A dot per slide for direct navigation.           |
+| `behavior.completeOn`    | `view` \| `all-items` | `view`   | `all-items`: complete once every slide was seen. |
+
+The carousel never advances on its own.
+
+### columns
+
+| Path                      | Type                      | Default  | Description                                 |
+| ------------------------- | ------------------------- | -------- | ------------------------------------------- |
+| `content.columns[]`       | 2–4                       | required | Stack into one column below 480px of width. |
+| `content.columns[].id`    | id                        | required | Unique within the block.                    |
+| `content.columns[].title` | string ≤ 200              | —        |                                             |
+| `content.columns[].text`  | long text                 | —        |                                             |
+| `content.columns[].image` | media                     | —        |                                             |
+| `layout.ratio`            | `equal` \| `1-2` \| `2-1` | `equal`  | Width ratio when there are two columns.     |
+
+```json
+{
+  "id": "launch-faq",
+  "type": "accordion",
+  "content": {
+    "items": [
+      {
+        "id": "approve",
+        "title": "Who signs off a campaign?",
+        "text": "The account lead approves budget and targeting."
+      },
+      {
+        "id": "budget",
+        "title": "Can I change a live budget?",
+        "text": "Yes, within ±20% per day:\n\n- Note the reason\n- Tell the client"
+      }
+    ]
+  },
+  "behavior": { "completeOn": "all-items" }
+}
+```

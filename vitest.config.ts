@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: ["packages/core", "packages/react"],
+    projects: ["packages/core", "packages/react", "packages/editor", "packages/embed"],
     coverage: {
       provider: "v8",
       include: ["packages/*/src/**"],

@@ -55,6 +55,11 @@ export const componentNames: Record<string, string> = {
   "word-builder": "WordBuilder",
   "priority-matrix": "PriorityMatrix",
   "inbox-triage": "InboxTriage",
+  callout: "Callout",
+  accordion: "Accordion",
+  tabs: "Tabs",
+  carousel: "Carousel",
+  columns: "Columns",
 };
 
 export function stringify(value: unknown): string {

@@ -1,0 +1,76 @@
+{
+  "name": "@nibblearn/embed",
+  "version": "0.2.0",
+  "description": "Embed Nibblearn modules in any HTML page: hydrate(container) or the <nibblearn-module> custom element, with a standalone script that bundles React.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./dist/nibblearn.global.js"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./styles.css": "./dist/styles.css",
+    "./global": "./dist/nibblearn.global.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "vite build && vite build --config vite.global.config.ts && node ../../scripts/dts-shim.mjs . core react && dts-bundle-generator src/index.tsx -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints styles.css global"
+  },
+  "dependencies": {
+    "@nibblearn/core": "workspace:^",
+    "@nibblearn/react": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "lucide-react": "^1.70.0",
+    "publint": "0.3.25",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "^4.6.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ifgolubev/nibblearn.git",
+    "directory": "packages/embed"
+  },
+  "homepage": "https://github.com/ifgolubev/nibblearn#readme",
+  "bugs": {
+    "url": "https://github.com/ifgolubev/nibblearn/issues"
+  },
+  "keywords": [
+    "nibblearn",
+    "embed",
+    "web-component",
+    "custom-element",
+    "elearning",
+    "html"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

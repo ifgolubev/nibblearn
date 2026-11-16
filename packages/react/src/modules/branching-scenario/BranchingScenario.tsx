@@ -24,6 +24,9 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -64,14 +67,7 @@ function formatPoints(points: number): string {
   return points > 0 ? `+${points}` : String(points);
 }
 
-export function BranchingScenario({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: BranchingScenarioProps) {
+export function BranchingScenario({ config: rawConfig, ...rest }: BranchingScenarioProps) {
   const parsed = useMemo(() => branchingScenarioSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -81,16 +77,7 @@ export function BranchingScenario({
       />
     );
   }
-  return (
-    <BranchingScenarioInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <BranchingScenarioInner config={parsed.data} {...rest} />;
 }
 
 function BranchingScenarioInner({
@@ -98,6 +85,10 @@ function BranchingScenarioInner({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: BranchingScenarioProps) {
@@ -107,11 +98,16 @@ function BranchingScenarioInner({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   // Keyed by runId so every reset starts from fresh local state.
   return (
     <ScenarioRun
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -134,11 +130,33 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
   const { behavior, content } = config;
 
   const nodes = useMemo(() => nodeMap(config), [config]);
-  const [started, setStarted] = useState(!content.intro);
-  const [state, setState] = useState<ScenarioState>(() => startScenario(config));
-  const [selected, setSelected] = useState<number | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
-  const completedRef = useRef(false);
+  // Progress is saved in the state snapshot (initialState / onStateChange). The path of choice
+  // indices is replayed through the scenario logic, so only valid paths can be restored.
+  const [started, setStarted] = usePersistedState(life, "started", !content.intro, G.bool);
+  const [state, setState] = useState<ScenarioState>(() => {
+    let s = startScenario(config);
+    const path = G.arrayOf(G.int(0, 5), behavior.maxSteps)(life.restore("path")) ?? [];
+    for (const index of path) {
+      const next = chooseScenario(config, s, index);
+      if (next === s) break;
+      s = next;
+    }
+    return s;
+  });
+  useEffect(() => {
+    life.persist(
+      "path",
+      state.history.map((h) => h.choiceIndex),
+    );
+  }, [life, state]);
+  const [selected, setSelected] = usePersistedState<number | null>(
+    life,
+    "selected",
+    null,
+    G.nullable(G.int(0, 5)),
+  );
+  const [confirmed, setConfirmed] = usePersistedState(life, "confirmed", false, G.bool);
+  const completedRef = useRef(life.completed);
   const choicesRef = useRef<HTMLDivElement>(null);
 
   const node = nodes.get(state.currentId)!;
@@ -176,15 +194,15 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
   const start = useCallback(() => {
     setStarted(true);
     life.emit("module:interact", { action: "start" });
-  }, [life]);
+  }, [life, setStarted]);
 
   const select = useCallback(
     (index: number) => {
       if (confirmed || isEnding) return;
       setSelected((prev) => (prev === index ? null : index));
-      life.emit("module:interact", { nodeId: node.id, choiceIndex: index });
+      life.emit("module:interact", { action: "select", nodeId: node.id, choiceIndex: index });
     },
-    [confirmed, isEnding, life, node.id],
+    [confirmed, isEnding, life, node.id, setSelected],
   );
 
   const advance = useCallback(
@@ -200,7 +218,7 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
           choicesRef.current?.querySelector<HTMLButtonElement>("button")?.focus(),
         );
     },
-    [config, state, finish],
+    [config, state, setSelected, setConfirmed, finish],
   );
 
   const confirm = useCallback(() => {
@@ -209,6 +227,8 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
     if (!choice) return;
     life.attempt();
     life.emit("module:answer", {
+      itemId: node.id,
+      response: choice.id ?? selected,
       nodeId: node.id,
       choiceIndex: selected,
       choiceId: choice.id,
@@ -237,10 +257,12 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
     selected,
     confirmed,
     isEnding,
-    node,
+    node.choices,
+    node.id,
     life,
     stepIndex,
     behavior.showScore,
+    setConfirmed,
     announce,
     t,
     advance,
@@ -320,7 +342,7 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
           size="lg"
           onClick={start}
           trailing={<Play aria-hidden />}
-          autoFocus
+          autoFocus={life.autoFocus}
         >
           {t("common.start")}
         </Button>
@@ -455,7 +477,7 @@ function ScenarioRun({ config, life, hideHeader, className }: ScenarioRunProps) 
                 variant="primary"
                 onClick={next}
                 trailing={<ArrowRight aria-hidden />}
-                autoFocus
+                autoFocus={life.autoFocus}
               >
                 {t("common.continue")}
               </Button>

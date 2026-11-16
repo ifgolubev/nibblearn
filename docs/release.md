@@ -105,7 +105,7 @@ node -e "import('@nibblearn/react').then(m => console.log(Object.keys(m).length)
 
 ## 4. npm trusted publishing (OIDC)
 
-Trusted publishing lets GitHub Actions publish without a long-lived npm token; npm verifies the workflow's OIDC identity and attaches a provenance attestation. Both packages already set `"publishConfig": { "access": "public", "provenance": true }`.
+Trusted publishing lets GitHub Actions publish without a long-lived npm token; npm verifies the workflow's OIDC identity and attaches a provenance attestation. The packages set `"publishConfig": { "access": "public" }`; `release.yml` turns provenance on with `NPM_CONFIG_PROVENANCE: "true"`. It is not in `publishConfig`, because a manual publish from a laptop cannot generate provenance and would fail.
 
 Setup on npmjs.com, per package:
 
@@ -156,7 +156,7 @@ After `changeset publish` pushes tags:
 
 ## 6. Naming note
 
-The packages are published as [`@nibblearn/react`](https://www.npmjs.com/package/@nibblearn/react) and [`@nibblearn/core`](https://www.npmjs.com/package/@nibblearn/core) under the npm organisation `nibblearn`. The first version (0.1.0) was published manually; later releases go through `release.yml`.
+The packages are published as [`@nibblearn/react`](https://www.npmjs.com/package/@nibblearn/react) and [`@nibblearn/core`](https://www.npmjs.com/package/@nibblearn/core) under the npm organisation `nibblearn`. The first version (0.1.0) was published manually; later releases go through `release.yml`. `@nibblearn/editor` and `@nibblearn/embed` were added in 0.2.0: publish them manually once, then add them as trusted publishers too.
 
 Nearby brand: the microlearning app [Nibble](https://nibble-app.com/) (pending US trademark "NIBBLE: YOUR BITE OF KNOWLEDGE", class 9). Consider a trademark check by counsel before marketing heavily.
 

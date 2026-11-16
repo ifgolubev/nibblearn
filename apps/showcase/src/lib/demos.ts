@@ -35,6 +35,11 @@ const map: Record<string, AnyDemo | undefined> = {
   "priority-matrix": (examples as Record<string, unknown>).priorityMatrixDemo as
     AnyDemo | undefined,
   "inbox-triage": (examples as Record<string, unknown>).inboxTriageDemo as AnyDemo | undefined,
+  callout: (examples as Record<string, unknown>).calloutDemo as AnyDemo | undefined,
+  accordion: (examples as Record<string, unknown>).accordionDemo as AnyDemo | undefined,
+  tabs: (examples as Record<string, unknown>).tabsDemo as AnyDemo | undefined,
+  carousel: (examples as Record<string, unknown>).carouselDemo as AnyDemo | undefined,
+  columns: (examples as Record<string, unknown>).columnsDemo as AnyDemo | undefined,
 };
 
 /** Demo config for a module type (undefined if not available). */

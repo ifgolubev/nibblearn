@@ -11,6 +11,9 @@ import {
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -24,14 +27,7 @@ import "./spot-the-mistake.css";
 
 export type SpotTheMistakeProps = ModuleProps<SpotTheMistakeConfig>;
 
-export function SpotTheMistake({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: SpotTheMistakeProps) {
+export function SpotTheMistake({ config: rawConfig, ...rest }: SpotTheMistakeProps) {
   const parsed = useMemo(() => spotTheMistakeSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -41,16 +37,7 @@ export function SpotTheMistake({
       />
     );
   }
-  return (
-    <SpotLifecycle
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <SpotLifecycle config={parsed.data} {...rest} />;
 }
 
 function SpotLifecycle({
@@ -58,6 +45,10 @@ function SpotLifecycle({
   onComplete,
   onEvent,
   resetKey,
+  initialState,
+  onStateChange,
+  mode,
+  focus,
   hideHeader,
   className,
 }: SpotTheMistakeProps) {
@@ -67,10 +58,15 @@ function SpotLifecycle({
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
   return (
     <SpotBody
-      key={life.runId}
+      key={runKey(life, config)}
       config={config}
       life={life}
       hideHeader={hideHeader}
@@ -124,15 +120,18 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
     return map;
   }, [canvas]);
 
-  const [found, setFound] = useState<string[]>([]);
-  const [wrong, setWrong] = useState<string[]>([]);
-  const [selected, setSelected] = useState<string[]>([]);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const targetIds = (canvas.kind === "document" ? canvas.rows : canvas.regions).map((t) => t.id);
+  const targetList = G.arrayOf(G.oneOf(targetIds), targetIds.length);
+  const [found, setFound] = usePersistedState<string[]>(life, "found", [], targetList);
+  const [wrong, setWrong] = usePersistedState<string[]>(life, "wrong", [], targetList);
+  const [selected, setSelected] = usePersistedState<string[]>(life, "selected", [], targetList);
   const [shaking, setShaking] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
-  const [hintCount, setHintCount] = useState(0);
+  const [hintCount, setHintCount] = usePersistedState(life, "hintCount", 0, G.int(0, 100_000));
   const [hint, setHint] = useState<{ text: string; targetId: string } | null>(null);
-  const [finished, setFinished] = useState(false);
-  const [revealed, setRevealed] = useState(false);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  const [revealed, setRevealed] = usePersistedState(life, "revealed", false, G.bool);
 
   const remaining = useMemo(
     () => mistakes.filter((m) => !found.includes(m.targetId)),
@@ -158,7 +157,7 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
       });
       announce(nextFound.length === total ? t("spot.allFound") : t("a11y.moduleComplete"));
     },
-    [total, life, hintCount, announce, t],
+    [total, life, hintCount, announce, t, setFinished, setRevealed],
   );
 
   const describe = useCallback(
@@ -181,6 +180,8 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
       life.attempt();
       life.emit("module:answer", {
         picks,
+        response: picks,
+        correct: misses.length === 0,
         hits,
         misses,
         found: nextFound.length,
@@ -229,6 +230,9 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
       announce,
       t,
       finish,
+      setFound,
+      setWrong,
+      setSelected,
     ],
   );
 
@@ -236,7 +240,7 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
     (id: string) => {
       if (finished) return;
       if (found.includes(id)) return;
-      life.emit("module:interact", { targetId: id });
+      life.emit("module:interact", { action: "select", targetId: id });
       if (instant) {
         if (wrong.includes(id)) return;
         applyPicks([id]);
@@ -244,7 +248,7 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
         setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
       }
     },
-    [finished, found, wrong, instant, applyPicks, life],
+    [finished, found, wrong, instant, applyPicks, life, setSelected],
   );
 
   const showHint = useCallback(() => {
@@ -253,7 +257,7 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
     setHint({ text: m.hint ?? t("spot.hintArea"), targetId: m.targetId });
     setHintCount((c) => c + 1);
     life.emit("module:hint", { targetId: m.targetId, index: hintCount });
-  }, [remaining, hintCount, life, t]);
+  }, [remaining, hintCount, life, t, setHintCount]);
 
   const stateFor = (id: string): TargetState => {
     if (found.includes(id)) return "found";

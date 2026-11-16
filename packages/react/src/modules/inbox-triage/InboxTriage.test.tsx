@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { inboxTriageSchema, type InboxTriageInput } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { InboxTriage } from "./InboxTriage";
 
 const base = {
@@ -220,5 +221,42 @@ describe("InboxTriage", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent("inbox-triage");
+  });
+
+  it("restores decisions and read messages", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<InboxTriage config={config} onStateChange={onStateChange} />);
+    await user.click(item(/Priya Nair/));
+    await user.click(action("Delegate"));
+    expect(screen.getByText("1 of 3 handled")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<InboxTriage config={config} initialState={saved} />);
+    expect(screen.getByText("1 of 3 handled")).toBeInTheDocument();
+    expect(item(/Priya Nair/)).toHaveAccessibleName(/Handled: Delegate/);
+    expect(screen.getByText("2 unread")).toBeInTheDocument();
+  });
+
+  it("restores a finished inbox without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<InboxTriage config={config} onStateChange={onStateChange} />);
+    await user.click(item(/Priya Nair/));
+    await user.click(action("Archive"));
+    await user.click(screen.getByRole("button", { name: "Next message" }));
+    await user.click(action("Delegate"));
+    await user.click(screen.getByRole("button", { name: "Next message" }));
+    await user.click(action("Archive"));
+    await user.click(screen.getByRole("button", { name: "See results" }));
+    expect(await screen.findByText("Inbox zero")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<InboxTriage config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("Inbox zero")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

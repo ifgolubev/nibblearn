@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HotspotExplorer } from "./HotspotExplorer";
 import { hotspotExplorerSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const base = {
   id: "hs",
@@ -147,5 +148,38 @@ describe("HotspotExplorer", () => {
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent(/could not be loaded/);
+  });
+
+  it("restores visited hotspots", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<HotspotExplorer config={config} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: "Hotspot 1: KPI cards" }));
+    expect(screen.getByText("1 of 3 explored")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<HotspotExplorer config={config} initialState={saved} />);
+    expect(screen.getByText("1 of 3 explored")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hotspot 1: KPI cards" })).toHaveAttribute(
+      "data-visited",
+      "true",
+    );
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<HotspotExplorer config={config} onStateChange={onStateChange} />);
+    const list = screen.getByRole("region", { name: "Hotspots" });
+    for (const item of within(list).getAllByRole("button")) await user.click(item);
+    expect(await screen.findByText("You explored everything!")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<HotspotExplorer config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("You explored everything!")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

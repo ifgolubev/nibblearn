@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SpotTheMistake } from "./SpotTheMistake";
 import { spotTheMistakeSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const base = {
   id: "stm",
@@ -188,5 +189,39 @@ describe("SpotTheMistake (submit)", () => {
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete.mock.calls[0]![0].score).toBeCloseTo(0.85);
+  });
+});
+
+describe("SpotTheMistake (saved state)", () => {
+  it("restores found mistakes and wrong picks", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<SpotTheMistake config={instantConfig} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: /^Select\s?Campaign name/ }));
+    await user.click(screen.getByRole("button", { name: /^Select\s?Currency/ }));
+    expect(await screen.findByText("1 of 2 found")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<SpotTheMistake config={instantConfig} initialState={saved} />);
+    expect(screen.getByText("1 of 2 found")).toBeInTheDocument();
+    expect(screen.getByText("1 wrong picks")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Select\s?Currency/ })).toBeDisabled();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<SpotTheMistake config={instantConfig} onStateChange={onStateChange} />);
+    await user.click(screen.getByRole("button", { name: /^Select\s?Currency/ }));
+    await user.click(screen.getByRole("button", { name: /^Select\s?End date/ }));
+    expect(await screen.findByText("You found all the mistakes!")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<SpotTheMistake config={instantConfig} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("You found all the mistakes!")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

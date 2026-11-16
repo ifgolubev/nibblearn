@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { imageCompareSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 import { ImageCompare } from "./ImageCompare";
 
 const base = {
@@ -188,5 +189,42 @@ describe("ImageCompare", () => {
     expect(slider()).toHaveAttribute("aria-valuenow", "100");
     rerender(<ImageCompare config={config} resetKey={2} />);
     await waitFor(() => expect(slider()).toHaveAttribute("aria-valuenow", "50"));
+  });
+
+  it("restores the divider and exploration progress", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ImageCompare config={config} onStateChange={onStateChange} />);
+    slider().focus();
+    await user.keyboard("{End}");
+    await user.keyboard("{Home}");
+    expect(await screen.findByText("Which change mattered most?")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<ImageCompare config={config} initialState={saved} />);
+    expect(slider()).toHaveAttribute("aria-valuenow", "0");
+    expect(screen.getByText("Which change mattered most?")).toBeInTheDocument();
+  });
+
+  it("restores a finished module without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<ImageCompare config={config} onStateChange={onStateChange} />);
+    slider().focus();
+    await user.keyboard("{End}");
+    await user.keyboard("{Home}");
+    await user.click(await screen.findByRole("radio", { name: /Shorter form/ }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    expect(screen.getByText("Remove friction first.")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<ImageCompare config={config} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("Remove friction first.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Restart" })).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

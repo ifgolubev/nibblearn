@@ -1,7 +1,7 @@
 # Release workflow using Changesets and npm trusted publishing (OIDC).
 #
 # Manual setup required once (see docs/release.md):
-#  1. On npmjs.com, for each package (@nibblearn/core, @nibblearn/react) configure
+#  1. On npmjs.com, for each package (@nibblearn/core, react, editor, embed) configure
 #     "Trusted publisher" → GitHub Actions with this repository and workflow file name `release.yml`.
 #  2. The very first publish of a new package may need to be done manually.
 #  3. No NPM_TOKEN secret is required when trusted publishing is configured.
@@ -33,6 +33,8 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      # Trusted publishing (OIDC) needs npm 11.5.1 or newer; Node 22 ships npm 10.
+      - run: npm install -g npm@11
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm check:package

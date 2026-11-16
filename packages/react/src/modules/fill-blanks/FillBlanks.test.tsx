@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FillBlanks } from "./FillBlanks";
 import { fillBlanksSchema } from "@nibblearn/core";
+import { latestState } from "../../../test/state-helpers";
 
 const base = {
   id: "fb",
@@ -195,5 +196,44 @@ describe("FillBlanks rich text", () => {
     expect(container.querySelector("strong")?.textContent).toBe("ROAS");
     expect(screen.queryByText(/\*\*ROAS\*\*/)).not.toBeInTheDocument();
     expect(container.querySelector("b")).toBeNull();
+  });
+
+  it("restores placed words and a checked attempt", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<FillBlanks config={bankConfig} onStateChange={onStateChange} />);
+    const bank = screen.getByRole("group", { name: "Word bank" });
+    await user.click(within(bank).getByRole("button", { name: "clicks" }));
+    await user.click(within(bank).getByRole("button", { name: "impressions" }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText("1 of 2 blanks correct")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    render(<FillBlanks config={bankConfig} initialState={saved} />);
+    expect(screen.getByText("1 of 2 blanks correct")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Blank 2/ })).toHaveAttribute(
+      "data-state",
+      "correct",
+    );
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("restores a completed session without completing again", async () => {
+    const user = userEvent.setup();
+    const onStateChange = vi.fn();
+    const first = render(<FillBlanks config={bankConfig} onStateChange={onStateChange} />);
+    const bank = screen.getByRole("group", { name: "Word bank" });
+    await user.click(within(bank).getByRole("button", { name: "revenue" }));
+    await user.click(within(bank).getByRole("button", { name: "impressions" }));
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    expect(await screen.findByText("All blanks filled correctly!")).toBeInTheDocument();
+    const saved = await latestState(onStateChange);
+    first.unmount();
+
+    const onComplete = vi.fn();
+    render(<FillBlanks config={bankConfig} initialState={saved} onComplete={onComplete} />);
+    expect(screen.getByText("All blanks filled correctly!")).toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
   });
 });

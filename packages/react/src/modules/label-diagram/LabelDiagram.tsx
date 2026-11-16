@@ -32,6 +32,9 @@ import clsx from "clsx";
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -52,14 +55,7 @@ const zoneDropId = (targetId: string) => `zone:${targetId}`;
 type ZoneState = "empty" | "filled" | "locked" | "correct" | "incorrect";
 type Translator = ReturnType<typeof useNibblearn>["t"];
 
-export function LabelDiagram({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: LabelDiagramProps) {
+export function LabelDiagram({ config: rawConfig, ...rest }: LabelDiagramProps) {
   const parsed = useMemo(() => labelDiagramSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -69,29 +65,25 @@ export function LabelDiagram({
       />
     );
   }
-  return (
-    <LabelDiagramInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <LabelDiagramInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts LabelDiagramRun with fresh state (keyed by runId). */
 function LabelDiagramInner(props: LabelDiagramProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "label-diagram",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <LabelDiagramRun key={life.runId} {...props} life={life} />;
+  return <LabelDiagramRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 /** Prefer the zone under the pointer; fall back to overlap for touch and keyboard-free drops. */
@@ -122,14 +114,44 @@ function LabelDiagramRun({
     [chips, behavior.shuffle, seed],
   );
 
-  const [placements, setPlacements] = useState<Record<string, string | undefined>>({});
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const targetIds = targets.map((tg) => tg.id);
+  const placementsGuard = G.recordOf(
+    G.oneOf(chips.map((c) => c.id)),
+    G.oneOf(targetIds),
+    targetIds.length,
+  );
+  const [placements, setPlacements] = usePersistedState<Record<string, string | undefined>>(
+    life,
+    "placements",
+    {},
+    placementsGuard,
+  );
   const [selected, setSelected] = useState<string | null>(null);
-  const [evaluation, setEvaluation] = useState<LabelDiagramEvaluation | null>(null);
-  const [lockedIds, setLockedIds] = useState<string[]>([]);
-  const [attempts, setAttempts] = useState(0);
-  const [firstFraction, setFirstFraction] = useState<number | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [finished, setFinished] = useState(false);
+  // The placements as they were when the learner pressed Check (null = not checked).
+  const [checkedWith, setCheckedWith] = usePersistedState<Record<
+    string,
+    string | undefined
+  > | null>(life, "checkedWith", null, G.nullable(placementsGuard));
+  const evaluation = useMemo<LabelDiagramEvaluation | null>(
+    () => (checkedWith ? evaluateLabelDiagram(targets, checkedWith) : null),
+    [checkedWith, targets],
+  );
+  const [lockedIds, setLockedIds] = usePersistedState<string[]>(
+    life,
+    "lockedIds",
+    [],
+    G.arrayOf(G.oneOf(targetIds), targetIds.length),
+  );
+  const [attempts, setAttempts] = usePersistedState(life, "attempts", 0, G.int(0, 100_000));
+  const [firstFraction, setFirstFraction] = usePersistedState<number | null>(
+    life,
+    "firstFraction",
+    null,
+    G.nullable(G.range(0, 1)),
+  );
+  const [revealed, setRevealed] = usePersistedState(life, "revealed", false, G.bool);
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [wide, setWide] = useState(false);
   const [naturalRatio, setNaturalRatio] = useState<number | null>(null);
@@ -195,7 +217,18 @@ function LabelDiagramRun({
       life.emit("module:interact", { action: "place", label: chip.text, targetId });
       announce(t("label.placed", { label: chip.text, index: targetIndex.get(targetId) ?? 0 }));
     },
-    [chipById, chipMovable, zoneMovable, zoneOf, life, announce, t, targetIndex],
+    [
+      chipById,
+      chipMovable,
+      zoneMovable,
+      zoneOf,
+      life,
+      announce,
+      t,
+      targetIndex,
+      setPlacements,
+      setSelected,
+    ],
   );
 
   const returnChip = useCallback(
@@ -208,7 +241,7 @@ function LabelDiagramRun({
       life.emit("module:interact", { action: "return", label: chip.text, targetId: from });
       announce(t("label.returned", { label: chip.text }));
     },
-    [chipById, zoneOf, zoneMovable, life, announce, t],
+    [chipById, zoneOf, zoneMovable, life, announce, t, setPlacements, setSelected],
   );
 
   const toggleSelect = useCallback(
@@ -221,7 +254,7 @@ function LabelDiagramRun({
         return chipId;
       });
     },
-    [chipMovable, chipById, announce, t],
+    [chipMovable, chipById, announce, t, setSelected],
   );
 
   const activateZone = useCallback(
@@ -234,10 +267,13 @@ function LabelDiagramRun({
     [zoneMovable, placements, selected, place, returnChip],
   );
 
-  const onDragStart = useCallback((e: DragStartEvent) => {
-    setActiveId(String(e.active.id));
-    setSelected(null);
-  }, []);
+  const onDragStart = useCallback(
+    (e: DragStartEvent) => {
+      setActiveId(String(e.active.id));
+      setSelected(null);
+    },
+    [setSelected],
+  );
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {
       setActiveId(null);
@@ -256,17 +292,19 @@ function LabelDiagramRun({
     const n = attempts + 1;
     setAttempts(n);
     life.attempt();
-    setEvaluation(ev);
+    setCheckedWith(placements);
     setSelected(null);
     if (firstFraction === null) setFirstFraction(ev.score);
     const willReveal =
       !ev.correct &&
       (!behavior.allowRetry || (behavior.maxAttempts > 0 && n >= behavior.maxAttempts));
     if (willReveal) setRevealed(true);
+    const placed = Object.fromEntries(
+      targets.map((tg) => [tg.id, chipById.get(placements[tg.id] ?? "")?.text ?? null]),
+    );
     life.emit("module:answer", {
-      placements: Object.fromEntries(
-        targets.map((tg) => [tg.id, chipById.get(placements[tg.id] ?? "")?.text ?? null]),
-      ),
+      placements: placed,
+      response: placed,
       correct: ev.correct,
       correctCount: ev.correctCount,
       attempts: n,
@@ -289,6 +327,11 @@ function LabelDiagramRun({
     announce,
     t,
     total,
+    setAttempts,
+    setCheckedWith,
+    setSelected,
+    setFirstFraction,
+    setRevealed,
   ]);
 
   const retry = useCallback(() => {
@@ -300,15 +343,15 @@ function LabelDiagramRun({
         targets.map((tg) => [tg.id, ok.includes(tg.id) ? prev[tg.id] : undefined]),
       ),
     );
-    setEvaluation(null);
+    setCheckedWith(null);
     life.emit("module:interact", { action: "retry" });
-  }, [evaluation, targets, life]);
+  }, [evaluation, targets, life, setLockedIds, setPlacements, setCheckedWith]);
 
   const reveal = useCallback(() => {
     setRevealed(true);
     life.emit("module:interact", { action: "reveal" });
     announce(t("common.showAnswer"));
-  }, [life, announce, t]);
+  }, [life, announce, t, setRevealed]);
 
   const score = evaluation
     ? labelDiagramScore(attempts, evaluation.correct, firstFraction ?? 0)
@@ -324,7 +367,7 @@ function LabelDiagramRun({
       details: { attempts, revealed, firstFraction },
     });
     announce(t("a11y.moduleComplete"));
-  }, [evaluation, score, life, total, attempts, revealed, firstFraction, announce, t]);
+  }, [evaluation, score, life, total, attempts, revealed, firstFraction, announce, t, setFinished]);
 
   const zoneState = (targetId: string): ZoneState => {
     if (evaluation) return evaluation.targets[targetId] ? "correct" : "incorrect";
@@ -573,7 +616,7 @@ function LabelDiagramRun({
             </Button>
           ) : (
             done && (
-              <Button variant="primary" onClick={finish} autoFocus>
+              <Button variant="primary" onClick={finish} autoFocus={life.autoFocus}>
                 {t("common.finish")}
               </Button>
             )

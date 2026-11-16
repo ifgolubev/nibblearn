@@ -25,6 +25,92 @@ export function TrainingPanel({ lesson, onDone }) {
 
 Use `framed={false}` inside your own card or modal, `header` for a close button, and `theme` or the `.dark` ancestor convention to match the host theme ([Theming](./theming.md)).
 
+### Images from private storage
+
+When lesson files live in a private bucket, store a file key in the content and resolve it to a (temporary) URL at render time:
+
+```json
+{ "image": { "src": "asset:courses/42/funnel.png", "alt": "Marketing funnel" } }
+```
+
+```tsx
+import { NibblearnProvider } from "@nibblearn/react";
+
+<NibblearnProvider
+  resolveAsset={async (src, { reason }) => {
+    if (!src.startsWith("asset:")) return undefined; // keep ordinary URLs
+    const res = await fetch(`/api/files/sign?key=${encodeURIComponent(src.slice(6))}`);
+    return res.ok ? (await res.json()).url : null;
+  }}
+>
+  <LessonPlayer lesson={lesson} />
+</NibblearnProvider>;
+```
+
+- The resolver runs for every image inside the provider. Return `null` or `undefined` to keep the original value.
+- `asset:` images show a placeholder until resolved. Results are cached per provider, and one key is only requested once at a time.
+- An inline resolver function is fine: a new function on every render keeps the cache. To drop the cache (for example, after switching to another storage backend), remount the provider with a new `key`.
+- When an image fails to load (for example, an expired signed link), the resolver is called once more with `reason: "retry"`. A second failure shows the "Image unavailable" placeholder.
+- Returned URLs are checked like content URLs: only `http(s)`, relative, `blob:` and `data:image/*` are used.
+- `asset:` keys may contain letters, digits and `. _ ~ / % : @ + = -` (up to 512 characters).
+
+### Save and restore a single module
+
+When modules sit inside your own pages (not in `LessonPlayer`), save each module's session and pass it back on the next visit, so a returning learner sees a finished quiz as finished and an unfinished one where they left it:
+
+```tsx
+import { ModuleRenderer } from "@nibblearn/react";
+import type { ModuleState } from "@nibblearn/core";
+
+function Block({ config, saved }: { config: { id: string; type: string }; saved?: ModuleState }) {
+  return (
+    <ModuleRenderer
+      config={config}
+      initialState={saved}
+      onStateChange={(state) => api.saveBlockState(config.id, state)} // debounce if you like
+    />
+  );
+}
+```
+
+- `onStateChange` receives a JSON-serialisable `ModuleState` after every meaningful change (an answer, a move, a completed module). Identical snapshots are not sent twice.
+- `initialState` is read once, on mount. It is ignored when it belongs to another module, or when the module's structure changed since it was saved: items added, removed or reordered, ids or links changed, or answers changed (the state carries `configHash`, a structural fingerprint). Editing wording and updating Nibblearn keep saved sessions.
+- A restored completed module shows its result and does not call `onComplete` again or emit `module:start`.
+- Saved state is treated as untrusted input: every restored value is checked, and anything unexpected falls back to the start.
+- `LessonPlayer` does this for you: module sessions are stored in `LessonProgress.moduleStates` through your `storage` adapter.
+
+What is restored: every built-in module restores its progress and its result. A few transient moments start over instead: an unanswered question in image-compare, the guess you were still adjusting in estimate, the short pause after an answer in true-false when explanations are off, and conversations driven by a custom `provider` (only the built-in scripted provider can be replayed).
+
+### Blocks inside HTML (no React on the page)
+
+When lesson text is stored as HTML with blocks inside it, mark each block and let `@nibblearn/embed` bring them to life. Keep a text fallback inside the element for search engines and readers without JavaScript; `moduleToText()` produces one on the server:
+
+```ts
+import { moduleToText } from "@nibblearn/core";
+
+const html = `<nibblearn-module>
+  <p>${escapeHtml(moduleToText(block))}</p>
+  <script type="application/json">${JSON.stringify(block).replace(/</g, "\\u003c")}</script>
+</nibblearn-module>`;
+```
+
+```ts
+import "@nibblearn/embed/styles.css";
+import { hydrate } from "@nibblearn/embed";
+
+const { unmount } = hydrate(document.querySelector("article")!, {
+  provider: { theme: "light", resolveAsset },
+  getInitialState: (moduleId) => savedStates[moduleId],
+  onStateChange: (state) => saveBlockState(state),
+});
+```
+
+- `hydrate(root)` mounts every `<nibblearn-module>` and `[data-nibblearn-module]` under `root` and skips elements it already mounted. The config comes from a child `<script type="application/json">` or a `config` attribute; there is no loading by URL.
+- `defineNibblearnElement()` registers `<nibblearn-module>` as a custom element instead (the standalone script does this for you). It accepts a `config` property, re-renders when it changes, and unmounts when the element is removed.
+- Both dispatch `nibblearn:event`, `nibblearn:complete` and `nibblearn:statechange` DOM events from the element.
+- Invalid JSON, a missing config or an unknown type show an inline error instead of throwing.
+- Escape `<` as `\u003c` when you write JSON into a `<script>` element, so content cannot close the script tag.
+
 ## 2. Build a standalone lesson page
 
 The showcase ships an `/embed/:id` route that is exactly this: a page with no site chrome that renders one lesson and relays events to the parent window. Copy the pattern into your own app.

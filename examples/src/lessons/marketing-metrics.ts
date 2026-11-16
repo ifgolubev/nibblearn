@@ -1,9 +1,9 @@
 import type { LessonInput } from "@nibblearn/core";
-import { flashcardsDemo } from "../modules/flashcards";
-import { matchPairsDemo } from "../modules/match-pairs";
-import { fillBlanksDemo } from "../modules/fill-blanks";
-import { whatIfSimulatorDemo } from "../modules/what-if-simulator";
-import { trueFalseDemo } from "../modules/true-false";
+import { flashcardsDemo } from "../modules";
+import { matchPairsDemo } from "../modules";
+import { fillBlanksDemo } from "../modules";
+import { whatIfSimulatorDemo } from "../modules";
+import { trueFalseDemo } from "../modules";
 
 /** Example D — Understanding Marketing Metrics. */
 export const marketingMetricsLesson = {

@@ -28,10 +28,12 @@ import {
   type LessonScore,
   type ModuleConfig,
   type ModuleResult,
+  type ModuleState,
   type ProgressStorage,
   type ValidationIssue,
 } from "@nibblearn/core";
 import { NibblearnProvider, useNibblearn, type ThemeMode } from "../context/NibblearnProvider";
+import { useRootProps } from "../hooks/useRootProps";
 import type { ModuleRegistry } from "../registry";
 import { ModuleRenderer } from "../ModuleRenderer";
 import { defaultRegistry } from "../defaultRegistry";
@@ -82,6 +84,19 @@ export interface LessonPlayerProps {
 
 type Phase = "loading" | "intro" | "module" | "summary";
 
+/** `durationMs` since the attempt started, when the start time is known. */
+function lessonDuration(startedAt: string): { durationMs?: number } {
+  const ms = Date.now() - Date.parse(startedAt);
+  return Number.isFinite(ms) && ms >= 0 ? { durationMs: ms } : {};
+}
+
+/** The module sessions stored with a progress record (untrusted; each is checked on use). */
+function savedModuleStates(saved: LessonProgress): Record<string, ModuleState> {
+  return saved.moduleStates && typeof saved.moduleStates === "object"
+    ? { ...saved.moduleStates }
+    : {};
+}
+
 /** Shows a complete lesson: intro, modules, navigation, persistence and summary. */
 export function LessonPlayer(props: LessonPlayerProps) {
   const outer = useNibblearn();
@@ -118,6 +133,11 @@ export function LessonPlayer(props: LessonPlayerProps) {
       fontFamily={lesson.theme.fontFamily}
       reducedMotion={outer.reducedMotion}
       onEvent={forward}
+      // Keep what the host's provider set: image resolver, translated strings and theme
+      // variables (the lesson's own accent, radius and font win).
+      resolveAsset={outer.resolveAsset}
+      messages={outer.messages}
+      inheritThemeVars={outer.themeVars}
       className="nb-player-root"
     >
       <LessonPlayerInner {...props} lesson={lesson} registry={registry} />
@@ -187,6 +207,8 @@ function LessonPlayerInner({
         return;
       }
       if (saved?.completedAt) {
+        // Keep the module sessions: review shows them, and the next save must not drop them.
+        moduleStatesRef.current = savedModuleStates(saved);
         setProgress(saved);
         completedRef.current = true;
         setPhase("summary");
@@ -201,15 +223,56 @@ function LessonPlayerInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lesson.id]);
 
+  // Module sessions (initialState / onStateChange) live in a ref and are written with the
+  // progress; snapshots between navigation steps are saved at most every 500 ms.
+  const moduleStatesRef = useRef<Record<string, ModuleState>>({});
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+  const stateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const storageRef = useRef(storage);
+  storageRef.current = storage;
+  // On unmount, write a pending snapshot now instead of dropping it.
+  useEffect(
+    () => () => {
+      if (!stateTimer.current) return;
+      clearTimeout(stateTimer.current);
+      stateTimer.current = null;
+      void storageRef.current?.save({
+        ...progressRef.current,
+        moduleStates: { ...moduleStatesRef.current },
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    [],
+  );
+
   const persist = useCallback(
     (p: LessonProgress) => {
-      setProgress(p);
-      if (storage) void storage.save(p);
+      const next = { ...p, moduleStates: { ...moduleStatesRef.current } };
+      setProgress(next);
+      if (storage) void storage.save(next);
+    },
+    [storage],
+  );
+
+  const handleModuleState = useCallback(
+    (state: ModuleState) => {
+      moduleStatesRef.current = { ...moduleStatesRef.current, [state.moduleId]: state };
+      if (!storage || stateTimer.current) return;
+      stateTimer.current = setTimeout(() => {
+        stateTimer.current = null;
+        void storage.save({
+          ...progressRef.current,
+          moduleStates: { ...moduleStatesRef.current },
+          updatedAt: new Date().toISOString(),
+        });
+      }, 500);
     },
     [storage],
   );
 
   const start = useCallback(() => {
+    moduleStatesRef.current = {};
     const p = { ...createProgress(lesson.id), currentIndex: 0 };
     completedRef.current = false;
     persist(p);
@@ -224,6 +287,7 @@ function LessonPlayerInner({
   const resume = useCallback(
     (saved: LessonProgress) => {
       const idx = Math.max(0, Math.min(saved.currentIndex, modules.length - 1));
+      moduleStatesRef.current = savedModuleStates(saved);
       persist({ ...saved, currentIndex: idx, updatedAt: new Date().toISOString() });
       setResumable(null);
       setPhase("module");
@@ -265,7 +329,12 @@ function LessonPlayerInner({
       const s = computeLessonScore(lesson, p.results);
       emit("lesson:complete", {
         lessonId: lesson.id,
-        payload: { score: s.score, points: s.points, passed: s.passed },
+        payload: {
+          score: s.score,
+          points: s.points,
+          passed: s.passed,
+          ...lessonDuration(p.startedAt),
+        },
       });
       onComplete?.({ ...s, lessonId: lesson.id, progress: p });
       setAnnouncement(t("lesson.complete"));
@@ -302,18 +371,26 @@ function LessonPlayerInner({
     return s;
   }, [lesson.gamification.streaks, index, progress.results, modules]);
 
+  const rootProps = useRootProps();
   const rootClass = ["nb-root", "nb-player", framed && "nb-player--framed", className]
     .filter(Boolean)
     .join(" ");
 
   // ---------- Render ----------
   if (phase === "loading") {
-    return <div className={rootClass} aria-busy="true" style={{ minHeight: "12rem" }} />;
+    return (
+      <div
+        className={rootClass}
+        {...rootProps}
+        aria-busy="true"
+        style={{ ...rootProps.style, minHeight: "12rem" }}
+      />
+    );
   }
 
   if (phase === "intro") {
     return (
-      <div className={rootClass} data-nb-phase="intro">
+      <div className={rootClass} {...rootProps} data-nb-phase="intro">
         {header}
         <LessonIntro lesson={lesson} onStart={start} resumable={resumable} onResume={resume} />
         <LiveRegion message={announcement} />
@@ -323,7 +400,7 @@ function LessonPlayerInner({
 
   if (phase === "summary" && !reviewing) {
     return (
-      <div className={rootClass} data-nb-phase="summary">
+      <div className={rootClass} {...rootProps} data-nb-phase="summary">
         {header}
         {lesson.gamification.celebration && score.passed && <Confetti />}
         <LessonSummary
@@ -344,7 +421,7 @@ function LessonPlayerInner({
   }
 
   return (
-    <div className={rootClass} data-nb-phase="module">
+    <div className={rootClass} {...rootProps} data-nb-phase="module">
       {header}
       <div className="nb-player__bar">
         <ProgressBar
@@ -405,6 +482,12 @@ function LessonPlayerInner({
                 registry={registry}
                 onComplete={handleModuleComplete}
                 resetKey={runId}
+                initialState={
+                  Object.prototype.hasOwnProperty.call(moduleStatesRef.current, current.id)
+                    ? moduleStatesRef.current[current.id]
+                    : undefined
+                }
+                onStateChange={handleModuleState}
               />
             )}
           </motion.div>

@@ -1,0 +1,33 @@
+{
+  "id": "launch-faq",
+  "type": "accordion",
+  "title": "Launch-week questions",
+  "instructions": "Open the questions new account managers ask most.",
+  "content": {
+    "items": [
+      {
+        "id": "who-approves",
+        "title": "Who signs off a campaign before launch?",
+        "text": "The account lead approves budget and targeting; the client approves creative. Both approvals are recorded in Orbit CRM before anything goes live."
+      },
+      {
+        "id": "budget-change",
+        "title": "Can I change a live budget?",
+        "text": "Yes, within ±20% per day without asking the client. Larger changes need a written OK:\n\n- Note the reason in Orbit CRM\n- Tell the client the same day\n- Check pacing again after 24 hours"
+      },
+      {
+        "id": "tracking-broken",
+        "title": "What if tracking breaks?",
+        "text": "Pause conversion-optimised campaigns first, then open a tracking ticket. Spend without tracking teaches the bidding algorithm the wrong lesson."
+      },
+      {
+        "id": "reporting",
+        "title": "When do clients get reports?",
+        "text": "Every Monday by 10:00 local time. Northwind Outdoor also gets a short mid-week note during launches (illustrative schedule)."
+      }
+    ]
+  },
+  "behavior": {
+    "completeOn": "all-items"
+  }
+}

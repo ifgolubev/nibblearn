@@ -4,7 +4,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from "motion/react";
@@ -13,6 +12,10 @@ import { trueFalseSchema, shuffle, type Statement, type TrueFalseConfig } from "
 import type { ModuleProps } from "../types";
 import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
+import { runKey } from "../runKey";
+import { usePersistedState } from "../../hooks/usePersistedState";
+import { useFocusSync } from "../../hooks/useFocusSync";
+import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
 import { Button } from "../../primitives/Button";
@@ -20,7 +23,7 @@ import { Badge } from "../../primitives/Badge";
 import { ProgressBar } from "../../primitives/ProgressBar";
 import { AnimatedFeedback } from "../../primitives/Feedback";
 import { SafeImage } from "../../primitives/SafeImage";
-import { RichText } from "../../primitives/RichText";
+import { NoLinks, RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
 import "./true-false.css";
@@ -35,14 +38,7 @@ interface Answer {
 const SWIPE_THRESHOLD = 100;
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
-export function TrueFalse({
-  config: rawConfig,
-  onComplete,
-  onEvent,
-  resetKey,
-  hideHeader,
-  className,
-}: TrueFalseProps) {
+export function TrueFalse({ config: rawConfig, ...rest }: TrueFalseProps) {
   const parsed = useMemo(() => trueFalseSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success) {
     return (
@@ -52,29 +48,25 @@ export function TrueFalse({
       />
     );
   }
-  return (
-    <TrueFalseInner
-      config={parsed.data}
-      onComplete={onComplete}
-      onEvent={onEvent}
-      resetKey={resetKey}
-      hideHeader={hideHeader}
-      className={className}
-    />
-  );
+  return <TrueFalseInner config={parsed.data} {...rest} />;
 }
 
 /** Owns the lifecycle; every reset remounts TrueFalseRun with fresh state (keyed by runId). */
 function TrueFalseInner(props: TrueFalseProps) {
-  const { config, onComplete, onEvent, resetKey } = props;
+  const { config, onComplete, onEvent, resetKey, initialState, onStateChange, mode, focus } = props;
   const life = useModuleLifecycle({
     moduleId: config.id,
     moduleType: "true-false",
     onComplete,
     onEvent,
     resetKey,
+    config,
+    initialState,
+    onStateChange,
+    mode,
+    focus,
   });
-  return <TrueFalseRun key={life.runId} {...props} life={life} />;
+  return <TrueFalseRun key={runKey(life, config)} {...props} life={life} />;
 }
 
 function TrueFalseRun({
@@ -95,11 +87,30 @@ function TrueFalseRun({
     return behavior.shuffle ? shuffle(ids, life.runId * 53 + 11) : ids;
   }, [statements, behavior.shuffle, life.runId]);
 
-  const [pos, setPos] = useState(0);
-  const [answer, setAnswer] = useState<Answer | null>(null);
+  // Progress is saved in the state snapshot (initialState / onStateChange).
+  const answerGuard = G.shape<Answer>({ choice: G.bool, correct: G.bool });
+  const [pos, setPos] = usePersistedState(life, "pos", 0, G.int(0, total - 1));
+  // Without explanations the module advances on a timer, which cannot be resumed: an answer
+  // restored mid-pause is dropped and the statement is asked again.
+  const [answer, setAnswer] = usePersistedState<Answer | null>(
+    life,
+    "answer",
+    null,
+    behavior.showExplanation ? G.nullable(answerGuard) : () => undefined,
+  );
   /** Keyed by statement index. */
-  const [records, setRecords] = useState<Record<number, Answer>>({});
-  const [finished, setFinished] = useState(false);
+  const [records, setRecords] = usePersistedState<Record<number, Answer>>(
+    life,
+    "records",
+    {},
+    G.recordOf(answerGuard, G.indexKey(total)),
+  );
+  const [finished, setFinished] = usePersistedState(life, "finished", false, G.bool);
+  useFocusSync(life, ["content", "statements"], total, (i) => {
+    setPos(Math.max(0, order.indexOf(i)));
+    setAnswer(null);
+    setFinished(false);
+  });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef(false);
@@ -141,7 +152,7 @@ function TrueFalseRun({
       setAnswer(null);
       pendingFocus.current = true;
     },
-    [pos, total, life, announce, t],
+    [pos, total, life, announce, t, setFinished, setPos, setAnswer],
   );
 
   const continueNext = useCallback(() => {
@@ -158,7 +169,14 @@ function TrueFalseRun({
       setAnswer(a);
       setRecords(nextRecords);
       life.attempt();
-      life.emit("module:answer", { statementIndex: stIndex, choice, correct, via });
+      life.emit("module:answer", {
+        statementIndex: stIndex,
+        itemIndex: stIndex,
+        choice,
+        response: choice,
+        correct,
+        via,
+      });
       announce(correct ? t("a11y.correctAnswer") : t("a11y.incorrectAnswer"));
       if (!behavior.showExplanation) {
         if (timer.current) clearTimeout(timer.current);
@@ -177,6 +195,8 @@ function TrueFalseRun({
       behavior.showExplanation,
       reduced,
       advance,
+      setAnswer,
+      setRecords,
     ],
   );
 
@@ -295,7 +315,10 @@ function TrueFalseRun({
                 {nextStatement.tag && <Badge>{nextStatement.tag}</Badge>}
               </div>
               <p className="nb-tf__text">
-                <RichText text={nextStatement.text} />
+                {/* aria-hidden preview: no focusable link inside. */}
+                <NoLinks>
+                  <RichText text={nextStatement.text} />
+                </NoLinks>
               </p>
             </div>
           )}
@@ -365,7 +388,7 @@ function TrueFalseRun({
                 variant="primary"
                 onClick={continueNext}
                 trailing={<ArrowRight aria-hidden />}
-                autoFocus
+                autoFocus={life.autoFocus}
               >
                 {pos + 1 >= total ? t("common.finish") : t("common.continue")}
               </Button>
