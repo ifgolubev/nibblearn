@@ -40,7 +40,7 @@
     "@nibblearn/core": "workspace:^",
     "@nibblearn/react": "workspace:^",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.70.0"
+    "lucide-react": "^1.74.0"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",
