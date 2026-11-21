@@ -62,6 +62,13 @@ export function SafeImage({
           alt={media.alt}
           width={media.width}
           height={media.height}
+          // The same ratio the browser derives from width/height, stated as a style so it
+          // survives stylesheets that reset attribute-based hints (styles.isolated.css).
+          style={
+            media.width && media.height
+              ? { aspectRatio: `auto ${media.width} / ${media.height}` }
+              : undefined
+          }
           loading="lazy"
           decoding="async"
           draggable={false}

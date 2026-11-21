@@ -123,3 +123,20 @@ describe("SafeImage with resolveAsset", () => {
     expect(imgs()[0]!.getAttribute("src")).toContain("v=1");
   });
 });
+
+describe("SafeImage dimensions", () => {
+  it("states the aspect ratio as a style when width and height are known", () => {
+    render(
+      <NibblearnProvider>
+        <SafeImage
+          media={{ src: "https://cdn.example/a.png", alt: "A", width: 800, height: 450 }}
+        />
+        <SafeImage media={{ src: "https://cdn.example/b.png", alt: "B" }} />
+      </NibblearnProvider>,
+    );
+    const [sized, plain] = [...imgs()];
+    expect(sized!.getAttribute("width")).toBe("800");
+    expect(sized!.style.aspectRatio).toBe("auto 800 / 450");
+    expect(plain!.getAttribute("style")).toBeNull();
+  });
+});

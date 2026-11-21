@@ -21,6 +21,26 @@ export function boostSelector(selector) {
   return tail ? s.slice(0, tail.index) + BOOST + tail[0] : s + BOOST;
 }
 
+// Whatever Nibblearn's own rules do not set falls back to the browser default instead of the
+// page's value: every rule below this one is more specific or comes later, so it still applies.
+// Left alone: the root itself (the host sizes and places it), elements with a class of their
+// own (custom modules, a host-rendered completion screen) and SVG, whose presentation
+// attributes (`fill`, `stroke`) `revert` would discard.
+// `:where()` keeps the rule at exactly the boost's specificity, below every class rule.
+const OWN =
+  ':where(.nb-root) :where(:is(:not([class]), [class^="nb-"], [class*=" nb-"]):not(svg, svg *))';
+const REVERT = `${OWN}${BOOST},
+${OWN}${BOOST}::before,
+${OWN}${BOOST}::after,
+${OWN}${BOOST}::marker {
+  all: revert;
+}
+/* \`revert\` also discards what the \`hidden\` attribute does. */
+:where(.nb-root) :where([hidden]:not([hidden="until-found"]))${BOOST} {
+  display: none;
+}
+`;
+
 export function isolateCss(css) {
   const root = postcss.parse(css);
   root.walkRules((rule) => {
@@ -43,6 +63,13 @@ export function isolateCss(css) {
     }
     rule.selectors = rule.selectors.map(boostSelector);
   });
+  // After `@charset` / `@import`, before everything else.
+  const first = root.nodes.find(
+    (n) => !(n.type === "atrule" && /^(charset|import)$/i.test(n.name)) && n.type !== "comment",
+  );
+  const revert = postcss.parse(REVERT);
+  if (first) first.before(revert.nodes);
+  else root.append(revert.nodes);
   return root.toString();
 }
 

@@ -1,5 +1,11 @@
 # @nibblearn/core
 
+## 0.4.1
+
+### Patch Changes
+
+- `styles.isolated.css`: properties Nibblearn does not set itself now fall back to browser defaults inside a block instead of taking the host page's value, so page rules on links, images, `code`, paragraphs and headings no longer show through. Wider base reset in both stylesheets.
+
 ## 0.4.0
 
 ### Minor Changes

@@ -32,10 +32,17 @@
   margin: 0;
 }
 :where(.nb-root) :where(h1, h2, h3, h4, h5, h6) {
+  position: static;
   font-family: inherit;
   line-height: inherit;
   letter-spacing: inherit;
   color: inherit;
+}
+:where(.nb-root) :where(p) {
+  line-height: inherit;
+}
+:where(.nb-root) :where(a) {
+  font-weight: inherit;
 }
 :where(.nb-root) :where(ul, ol) {
   padding: 0;
@@ -90,6 +97,7 @@
 :where(.nb-root) :where(img, video) {
   margin: 0;
   border-radius: 0;
+  object-fit: fill;
 }
 :where(.nb-root) :where(:focus) {
   outline: none;
@@ -106,6 +114,8 @@
   border-radius: 6px;
   background: var(--nb-surface-3);
   color: inherit;
+  border: 0;
+  line-height: inherit;
 }
 :where(.nb-root) :where(code)::before,
 :where(.nb-root) :where(code)::after {

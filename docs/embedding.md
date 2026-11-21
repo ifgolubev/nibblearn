@@ -189,11 +189,12 @@ Article and rich-text styles (`.prose p`, `.content h3`, `.article ul li`, a glo
 import "@nibblearn/embed/styles.isolated.css"; // or "@nibblearn/react/styles.isolated.css"
 ```
 
-It holds the same rules as `styles.css`, each raised by one id of specificity (`:not(#\#)`), so page rules written with element, class and attribute selectors no longer override them, whichever stylesheet is loaded first. Use one of the two files, not both.
+It holds the same rules as `styles.css`, each raised by one id of specificity (`:not(#\#)`), so page rules written with element, class and attribute selectors no longer override them, whichever stylesheet is loaded first. Properties Nibblearn does not set itself (a page's `img { object-fit: contain }`, `a { font-weight: 700 }`, `p { hyphens: auto }`) fall back to the browser default instead of the page's value. Use one of the two files, not both.
 
 - Theming is unchanged: tokens set on `.nb-root` or through `NibblearnProvider` work as before (token definitions keep their normal specificity).
 - To restyle a `.nb-*` class yourself, match the specificity: `.nb-btn:not(#\#) { … }`.
-- What still gets through: page rules with `!important`, rules that use an id selector on plain elements (`#content p`), and rules on generic `div` / `span` elements. Scope those to your own content, or exclude blocks with `:not(.nb-root *)`.
+- What still gets through: page rules with `!important` and rules that use an id selector (`#content p`). Scope those to your own content, or exclude blocks with `:not(.nb-root *)`.
+- The block's root element (`.nb-root`) stays yours to size and place. Inside it, elements with a class of your own (a custom module, a completion screen you render) keep your styles; your elements without a class get browser defaults, like the library's.
 
 ## 2. Build a standalone lesson page
 

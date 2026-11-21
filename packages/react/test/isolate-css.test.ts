@@ -31,7 +31,7 @@ describe("styles.isolated.css generator", () => {
     expect(out).toContain(".nb-root:not(#\\#) { color: var(--nb-fg) }");
 
     const mixed = isolate(".nb-root { --nb-bg: #fff; color-scheme: light; --nb-fg: #111 }");
-    expect(mixed.replace(/\s+/g, " ").replace(/ ?}/g, " }")).toBe(
+    expect(mixed.replace(/\s+/g, " ").replace(/ ?}/g, " }")).toContain(
       ".nb-root { --nb-bg: #fff; --nb-fg: #111 } .nb-root:not(#\\#) { color-scheme: light }",
     );
   });
@@ -51,5 +51,21 @@ describe("styles.isolated.css generator", () => {
     expect(out).toContain(
       "@keyframes nb-x { from { opacity: 0 } 50% { opacity: 0.5 } to { opacity: 1 } }",
     );
+  });
+
+  it("starts with a rule that sends unset properties back to browser defaults", () => {
+    const out = isolate(".nb-btn { color: red }");
+    const revert = out.indexOf("all: revert");
+    expect(revert).toBeGreaterThan(-1);
+    // Before the library's own rules, so every one of them still applies.
+    expect(revert).toBeLessThan(out.indexOf(".nb-btn:not(#\\#)"));
+    const selector = out.slice(0, out.indexOf("{"));
+    // Zero specificity apart from the boost: any class rule of the library is stronger.
+    expect(selector).toContain(":where(.nb-root) :where(");
+    // Host elements with their own classes and SVG presentation attributes are left alone.
+    expect(selector).toContain('[class^="nb-"]');
+    expect(selector).toContain(":not(svg, svg *)");
+    // The `hidden` attribute keeps working.
+    expect(out).toMatch(/\[hidden\][^{]*\{\s*display: none/);
   });
 });

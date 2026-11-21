@@ -1,6 +1,6 @@
 {
   "name": "@nibblearn/embed",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Embed Nibblearn modules in any HTML page: hydrate(container) or the <nibblearn-module> custom element, with a standalone script that bundles React.",
   "license": "MIT",
   "type": "module",
