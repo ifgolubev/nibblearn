@@ -335,6 +335,7 @@
 }
 .nb-process__meta {
   display: grid;
+  margin: 1em 0;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: var(--nb-space-2);
 }

@@ -547,7 +547,7 @@ function OptionalAdd({ label, onAdd }: { label: string; onAdd: () => void }) {
 const GROUP_ORDER = ["content", "behavior", "feedback", "appearance", "advanced"] as const;
 
 function ObjectField({ node, path, value, label, required, depth }: FieldProps) {
-  const { update } = useForm();
+  const { update, isHidden } = useForm();
   const t = useEditorT();
   if (node.kind !== "object") return null;
   const obj = isRecord(value) ? value : undefined;
@@ -555,7 +555,10 @@ function ObjectField({ node, path, value, label, required, depth }: FieldProps) 
     return <OptionalAdd label={label} onAdd={() => update(path, defaultFor(node))} />;
 
   const visible = node.fields.filter(
-    (f) => f.node.ui.widget !== "hidden" && f.node.kind !== "const",
+    (f) =>
+      f.node.ui.widget !== "hidden" &&
+      f.node.kind !== "const" &&
+      !isHidden([...path, f.key], f.node.ui.widget),
   );
   const ids = visible.filter((f) => f.node.ui.widget === "id");
   const rest = visible.filter((f) => f.node.ui.widget !== "id");
@@ -1042,11 +1045,15 @@ function ContainerErrors({ path }: { path: Path }) {
 
 /** An object's fields without a fieldset (inside an array item or a union variant). */
 function BareObject({ node, path, value, depth }: FieldProps) {
+  const { isHidden } = useForm();
   const t = useEditorT();
   if (node.kind !== "object") return null;
   const obj = isRecord(value) ? value : {};
   const visible = node.fields.filter(
-    (f) => f.node.ui.widget !== "hidden" && f.node.kind !== "const",
+    (f) =>
+      f.node.ui.widget !== "hidden" &&
+      f.node.kind !== "const" &&
+      !isHidden([...path, f.key], f.node.ui.widget),
   );
   const ids = visible.filter((f) => f.node.ui.widget === "id");
   const rest = visible.filter((f) => f.node.ui.widget !== "id");

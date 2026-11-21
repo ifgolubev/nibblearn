@@ -1,6 +1,6 @@
 {
   "name": "@nibblearn/embed",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Embed Nibblearn modules in any HTML page: hydrate(container) or the <nibblearn-module> custom element, with a standalone script that bundles React.",
   "license": "MIT",
   "type": "module",
@@ -23,6 +23,7 @@
       }
     },
     "./styles.css": "./dist/styles.css",
+    "./styles.isolated.css": "./dist/styles.isolated.css",
     "./global": "./dist/nibblearn.global.js",
     "./package.json": "./package.json"
   },
@@ -32,10 +33,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build && vite build --config vite.global.config.ts && node ../../scripts/dts-shim.mjs . core react && dts-bundle-generator src/index.tsx -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist",
+    "build": "vite build && vite build --config vite.global.config.ts && node ../../scripts/dts-shim.mjs . core react && dts-bundle-generator src/index.tsx -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist && node ../../scripts/isolate-css.mjs dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints styles.css global"
+    "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints styles.css styles.isolated.css global"
   },
   "dependencies": {
     "@nibblearn/core": "workspace:^",

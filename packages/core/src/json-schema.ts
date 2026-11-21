@@ -50,6 +50,7 @@ export function getModuleJsonSchema(
   const { $schema, ...rest } = annotateModuleJsonSchema(
     convert(def.schema, options.io ?? "input"),
     def.type,
+    def.unusedFields,
   );
   return {
     $schema,
@@ -67,6 +68,7 @@ function anyModuleSchema(registry: SchemaRegistry, io: "input" | "output"): Json
       const { $schema: _ignored, ...rest } = annotateModuleJsonSchema(
         convert(def.schema, io),
         def.type,
+        def.unusedFields,
       );
       return { title: def.name, ...rest };
     }),

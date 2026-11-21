@@ -19,6 +19,8 @@ export interface FormContextValue {
   onFocusPath?: (path: (string | number)[]) => void;
   onPickImage?: () => Promise<PickedImage | null>;
   announce: (message: string) => void;
+  /** True for fields the host asked not to show (`hideFields`, `hideIds`). */
+  isHidden: (path: Path, widget: string | undefined) => boolean;
 }
 
 export const FormContext = createContext<FormContextValue | null>(null);
@@ -27,6 +29,19 @@ export function useForm(): FormContextValue {
   const ctx = useContext(FormContext);
   if (!ctx) throw new Error("Form fields must be rendered inside ModuleForm");
   return ctx;
+}
+
+/**
+ * Matches a field path against patterns like `"appearance"` or `"content.items.*.id"`.
+ * `*` stands for exactly one segment (a key or a list index).
+ */
+export function matchesPath(path: Path, patterns: readonly string[]): boolean {
+  return patterns.some((pattern) => {
+    const parts = pattern.split(".");
+    return (
+      parts.length === path.length && parts.every((p, i) => p === "*" || p === String(path[i]))
+    );
+  });
 }
 
 /** DOM id for the control at `path`. */

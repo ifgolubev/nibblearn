@@ -1,5 +1,17 @@
 # @nibblearn/embed
 
+## 0.4.0
+
+### Minor Changes
+
+- Embedding in pages with their own typography: new `styles.isolated.css` in `@nibblearn/react` and `@nibblearn/embed` (the same rules with higher specificity, so article styles of the host page no longer override them), and a wider base reset (inherited typography, tables, definition lists, images). Editor: `ModuleForm` gains `hideFields` and `hideIds`; content blocks no longer show Feedback and Scoring settings (`unusedFields` in a module definition).
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @nibblearn/core@0.4.0
+  - @nibblearn/react@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

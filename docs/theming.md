@@ -271,6 +271,10 @@ If your toggle uses `theme="system"`, add a matching block under `@media (prefer
 - `NibblearnProvider reducedMotion` forces the same behaviour and sets `data-nb-motion="reduced"` on the root, which you can target in your own CSS.
 - Confetti and card-flip animations are replaced by instant state changes; nothing in the experience depends on animation.
 
+## Inside pages with their own typography
+
+`styles.css` keeps specificity low so your overrides stay simple. Inside an article or rich-text container the page's own rules (`.prose h3`, `.content ul li`) can then override Nibblearn's. For that case import `@nibblearn/react/styles.isolated.css` instead of `styles.css`: the same rules with higher specificity. Tokens and provider props work the same; class overrides need `:not(#\#)` appended. See [Embedding](./embedding.md#when-the-pages-own-styles-get-in-the-way).
+
 ## Layout notes
 
 - `.nb-root` is a CSS container named `nb`; modules switch to wider layouts with `@container nb (min-width: 640px)`, so a module in a narrow sidebar renders its mobile layout even on a desktop viewport.

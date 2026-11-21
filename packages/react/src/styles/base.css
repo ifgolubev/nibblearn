@@ -11,18 +11,60 @@
   box-sizing: border-box;
   container-type: inline-size;
   container-name: nb;
+  /* Typography the host page may set on an ancestor (article styles) must not leak in. */
+  font-style: normal;
+  font-weight: var(--nb-weight-normal);
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: start;
+  text-indent: 0;
+  text-transform: none;
+  text-shadow: none;
+  white-space: normal;
 }
 :where(.nb-root) *,
 :where(.nb-root) *::before,
 :where(.nb-root) *::after {
   box-sizing: inherit;
 }
-:where(.nb-root) :where(h1, h2, h3, h4, p, ul, ol, figure) {
+:where(.nb-root)
+  :where(h1, h2, h3, h4, h5, h6, p, ul, ol, li, dl, dt, dd, figure, blockquote, label, table) {
   margin: 0;
+}
+:where(.nb-root) :where(h1, h2, h3, h4, h5, h6) {
+  font-family: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
 :where(.nb-root) :where(ul, ol) {
   padding: 0;
   list-style: none;
+}
+:where(.nb-root) :where(li, dd) {
+  padding: 0;
+}
+:where(.nb-root) :where(table) {
+  width: auto;
+  border-collapse: separate;
+  font-size: inherit;
+  line-height: inherit;
+}
+:where(.nb-root) :where(th, td) {
+  padding: 1px;
+  border: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+:where(.nb-root) :where(th) {
+  text-align: center;
+}
+:where(.nb-root) :where(td) {
+  text-align: inherit;
+}
+:where(.nb-root) :where(input[type="range"]) {
+  border: 0;
+  border-radius: 0;
 }
 :where(.nb-root) :where(button, input, select, textarea) {
   font: inherit;
@@ -32,6 +74,7 @@
   cursor: pointer;
   background: none;
   border: 0;
+  border-radius: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -42,6 +85,11 @@
 :where(.nb-root) :where(img, svg) {
   display: block;
   max-width: 100%;
+  vertical-align: baseline;
+}
+:where(.nb-root) :where(img, video) {
+  margin: 0;
+  border-radius: 0;
 }
 :where(.nb-root) :where(:focus) {
   outline: none;
@@ -57,6 +105,11 @@
   padding: 0.1em 0.35em;
   border-radius: 6px;
   background: var(--nb-surface-3);
+  color: inherit;
+}
+:where(.nb-root) :where(code)::before,
+:where(.nb-root) :where(code)::after {
+  content: none;
 }
 :where(.nb-root) ::selection {
   background: color-mix(in srgb, var(--nb-accent) 22%, transparent);
@@ -73,6 +126,8 @@
 }
 :where(.nb-root) :where(strong, b) {
   font-weight: var(--nb-weight-semibold);
+  color: inherit;
+  letter-spacing: inherit;
 }
 
 .nb-sr-only {

@@ -251,3 +251,26 @@ describe("patterns match the runtime checks", () => {
     expect(colorRe.test(value)).toBe(isSafeCssColor(value));
   });
 });
+
+describe("fields a module does not use", () => {
+  const widget = (type: string, key: string) =>
+    (getModuleJsonSchema(type)!.properties as Record<string, { "x-ui"?: { widget?: string } }>)[
+      key
+    ]?.["x-ui"]?.widget;
+
+  it.each(["callout", "accordion", "tabs", "carousel", "columns"])(
+    "%s: feedback and scoring are hidden in forms but still valid in JSON",
+    (type) => {
+      expect(widget(type, "feedback")).toBe("hidden");
+      expect(widget(type, "scoring")).toBe("hidden");
+      const schema = getModuleJsonSchema(type)!.properties as Record<string, unknown>;
+      expect(schema.feedback).toBeDefined();
+      expect(schema.scoring).toBeDefined();
+    },
+  );
+
+  it("activities keep them visible", () => {
+    expect(widget("choice-challenge", "feedback")).not.toBe("hidden");
+    expect(widget("flashcards", "scoring")).not.toBe("hidden");
+  });
+});

@@ -198,10 +198,18 @@ function annotateNode(
 export function annotateModuleJsonSchema<T extends Record<string, unknown>>(
   schema: T,
   type: string,
+  /** Top-level fields the module ignores: marked `widget: "hidden"` (see `unusedFields`). */
+  unusedFields: readonly string[] = [],
 ): T {
   const docs = Object.prototype.hasOwnProperty.call(fieldDocs.byType, type)
     ? fieldDocs.byType[type]!
     : {};
+  const props = (schema as JsonNode).properties ?? {};
+  for (const key of unusedFields) {
+    if (!Object.prototype.hasOwnProperty.call(props, key)) continue;
+    const node = props[key]!;
+    node["x-ui"] = { ...((node["x-ui"] as UiHint | undefined) ?? {}), widget: "hidden" };
+  }
   annotateNode(schema as JsonNode, null, docs, 0);
   return schema;
 }

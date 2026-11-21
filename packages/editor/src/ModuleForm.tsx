@@ -7,6 +7,7 @@ import {
   FormContext,
   fieldId,
   issueMap,
+  matchesPath,
   pathKey,
   type FormContextValue,
   type PickedImage,
@@ -29,6 +30,17 @@ export interface ModuleFormProps {
   onPickImage?: () => Promise<PickedImage | null>;
   /** Use this JSON Schema instead of the module type's (e.g. lesson settings). */
   schema?: JsonSchema;
+  /**
+   * Fields to leave out of the form, as dot paths: `"appearance"`, `"behavior.completeOn"`,
+   * `"content.items.*.image"` (`*` is any one key or list index). Hiding an object or a list
+   * hides everything inside it. Values already in `value` are kept as they are.
+   */
+  hideFields?: readonly string[];
+  /**
+   * Leave out every `id` field (the block's own and those of list items). New items still get
+   * generated ids. Use it when your application assigns ids itself.
+   */
+  hideIds?: boolean;
   className?: string;
 }
 
@@ -44,6 +56,8 @@ export function ModuleForm({
   onFocusPath,
   onPickImage,
   schema: schemaOverride,
+  hideFields,
+  hideIds = false,
   className,
 }: ModuleFormProps) {
   const t = useEditorT();
@@ -56,6 +70,14 @@ export function ModuleForm({
   const formId = `nbe${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const { message, announce } = useAnnounce();
   const issueIndex = useMemo(() => issueMap(issues), [issues]);
+  // By content, so an inline array literal does not rebuild the form context on every render.
+  const hiddenKey = (hideFields ?? []).join("\n");
+  const isHidden = useCallback(
+    (path: Path, widget: string | undefined) =>
+      (hideIds && widget === "id") ||
+      (hiddenKey !== "" && matchesPath(path, hiddenKey.split("\n"))),
+    [hiddenKey, hideIds],
+  );
 
   // Updates apply to the latest value, not the one captured by a handler: an async image
   // picker (or two updates before the host re-renders) must not undo other edits.
@@ -87,8 +109,9 @@ export function ModuleForm({
       onFocusPath,
       onPickImage,
       announce,
+      isHidden,
     }),
-    [formId, type, value, update, issueIndex, onFocusPath, onPickImage, announce],
+    [formId, type, value, update, issueIndex, onFocusPath, onPickImage, announce, isHidden],
   );
 
   if (!root) return null;

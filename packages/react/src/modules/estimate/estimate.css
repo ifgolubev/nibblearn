@@ -355,6 +355,7 @@
   height: calc(var(--nb-touch-target) - 2px);
   padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   font-weight: var(--nb-weight-semibold);
   font-variant-numeric: tabular-nums;

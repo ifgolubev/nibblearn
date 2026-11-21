@@ -1,6 +1,6 @@
 {
   "name": "@nibblearn/react",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Tiny interactions. Real learning. Beautiful, accessible, interactive learning modules and a Lesson Player for React — flashcards, matching, branching scenarios, simulations and more, driven by JSON or components.",
   "license": "MIT",
   "type": "module",
@@ -23,6 +23,7 @@
       }
     },
     "./styles.css": "./dist/styles.css",
+    "./styles.isolated.css": "./dist/styles.isolated.css",
     "./package.json": "./package.json"
   },
   "files": [
@@ -31,10 +32,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build && node ../../scripts/dts-shim.mjs . core && dts-bundle-generator src/index.ts -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist",
+    "build": "vite build && node ../../scripts/dts-shim.mjs . core && dts-bundle-generator src/index.ts -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent && node ../../scripts/finish-dts.mjs dist && node ../../scripts/isolate-css.mjs dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints styles.css"
+    "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints styles.css styles.isolated.css"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",

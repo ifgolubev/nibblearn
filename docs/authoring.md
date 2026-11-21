@@ -27,6 +27,20 @@ export function CourseEditor({ initial }: { initial: Record<string, unknown> }) 
 - While a block is invalid, the preview keeps showing the last valid version.
 - `onPickImage` adds a "Choose image" button to image fields; return `{ src, alt }` from your media library (an `asset:<key>` value works too, see [Embedding](./embedding.md#images-from-private-storage)).
 - Custom modules registered in your `ModuleRegistry` get a form too, from their Zod schema.
+- Content blocks (callout, accordion, tabs, carousel, columns) show no Feedback or Scoring settings: they are read, not answered. For your own module, list such fields in `unusedFields` of its definition.
+- `hideIds` leaves out every ID field when your application assigns ids itself; new list items still get generated ids. `hideFields` leaves out any other field by path, with `*` for one key or list index:
+
+```tsx
+<ModuleForm
+  value={block}
+  onChange={setBlock}
+  hideIds
+  hideFields={["appearance", "behavior.completeOn", "content.items.*.image"]}
+/>
+```
+
+Hidden fields keep the values they already have. A validation problem in a hidden field still appears in the summary above the form.
+
 - Labels can be overridden through `NibblearnProvider messages`: editor strings use `editor.*` keys (`editorMessages` lists them all), field labels use `field.<type>.<path>`, e.g. `field.flashcards.content.cards.front`.
 
 ## Field metadata for your own forms

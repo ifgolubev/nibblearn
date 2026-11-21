@@ -181,6 +181,20 @@ const { unmount } = hydrate(document.querySelector("article")!, {
 - Invalid JSON, a missing config or an unknown type show an inline error instead of throwing.
 - Escape `<` as `\u003c` when you write JSON into a `<script>` element, so content cannot close the script tag.
 
+### When the page's own styles get in the way
+
+Article and rich-text styles (`.prose p`, `.content h3`, `.article ul li`, a global `button` rule) are written for plain HTML and also match the elements inside a block. With the regular stylesheet they win over Nibblearn's rules: headings change font, lists get bullets back, buttons pick up borders. Load the isolated stylesheet instead; no Shadow DOM is needed:
+
+```ts
+import "@nibblearn/embed/styles.isolated.css"; // or "@nibblearn/react/styles.isolated.css"
+```
+
+It holds the same rules as `styles.css`, each raised by one id of specificity (`:not(#\#)`), so page rules written with element, class and attribute selectors no longer override them, whichever stylesheet is loaded first. Use one of the two files, not both.
+
+- Theming is unchanged: tokens set on `.nb-root` or through `NibblearnProvider` work as before (token definitions keep their normal specificity).
+- To restyle a `.nb-*` class yourself, match the specificity: `.nb-btn:not(#\#) { … }`.
+- What still gets through: page rules with `!important`, rules that use an id selector on plain elements (`#content p`), and rules on generic `div` / `span` elements. Scope those to your own content, or exclude blocks with `:not(.nb-root *)`.
+
 ## 2. Build a standalone lesson page
 
 The showcase ships an `/embed/:id` route that is exactly this: a page with no site chrome that renders one lesson and relays events to the parent window. Copy the pattern into your own app.

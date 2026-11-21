@@ -44,6 +44,12 @@ export interface ModuleSchemaDefinition<S extends z.ZodType = z.ZodType> {
   icon?: string;
   /** Zod schema validating the full module config (including `id` and `type`). */
   schema: S;
+  /**
+   * Top-level config fields this module does not use (e.g. `feedback` and `scoring` for a block
+   * that is never answered). They stay valid in JSON; generated forms do not show them
+   * (`x-ui.widget: "hidden"` in the module's JSON Schema).
+   */
+  unusedFields?: readonly string[];
   /** Current schema version of this module type. Default 1. */
   version?: number;
   /**
@@ -61,6 +67,9 @@ export interface ModuleSchemaDefinition<S extends z.ZodType = z.ZodType> {
 
 /** Upgrades a module config by one schema version. */
 export type ModuleMigration = (config: Record<string, unknown>) => Record<string, unknown>;
+
+/** Content blocks are read, not answered: they show no feedback and have no score. */
+const UNSCORED_BLOCK_FIELDS = ["feedback", "scoring"] as const;
 
 export const builtInModuleDefinitions = [
   {
@@ -247,6 +256,7 @@ export const builtInModuleDefinitions = [
     category: "present",
     icon: "message-square-warning",
     schema: calloutSchema,
+    unusedFields: UNSCORED_BLOCK_FIELDS,
   },
   {
     type: "accordion",
@@ -255,6 +265,7 @@ export const builtInModuleDefinitions = [
     category: "present",
     icon: "list-collapse",
     schema: accordionSchema,
+    unusedFields: UNSCORED_BLOCK_FIELDS,
   },
   {
     type: "tabs",
@@ -263,6 +274,7 @@ export const builtInModuleDefinitions = [
     category: "present",
     icon: "panel-top",
     schema: tabsSchema,
+    unusedFields: UNSCORED_BLOCK_FIELDS,
   },
   {
     type: "carousel",
@@ -271,6 +283,7 @@ export const builtInModuleDefinitions = [
     category: "present",
     icon: "gallery-horizontal",
     schema: carouselSchema,
+    unusedFields: UNSCORED_BLOCK_FIELDS,
   },
   {
     type: "columns",
@@ -279,6 +292,7 @@ export const builtInModuleDefinitions = [
     category: "present",
     icon: "columns-2",
     schema: columnsSchema,
+    unusedFields: UNSCORED_BLOCK_FIELDS,
   },
 ] as const satisfies readonly ModuleSchemaDefinition[];
 

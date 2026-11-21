@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added (embedding in styled pages, leaner forms)
+
+- `@nibblearn/react` and `@nibblearn/embed`: `styles.isolated.css`, the regular stylesheet with every rule raised by one id of specificity. Article and rich-text styles of the host page (`.prose p`, `.content h3`, global `button` rules) no longer override Nibblearn's; a Shadow DOM is not needed. Token definitions keep their specificity, so themes work unchanged.
+- Base reset: `.nb-root` resets inherited typography (letter spacing, text transform, alignment, indent, font style and weight), and tables, definition lists, list items, labels, images and videos get neutral defaults. The default look is unchanged.
+- `@nibblearn/editor`: `ModuleForm` / `ModuleEditor` props `hideFields` (dot paths, `*` for a list index) and `hideIds`.
+- `@nibblearn/core`: `unusedFields` in a module definition marks top-level fields the module ignores as hidden in generated forms. Callout, accordion, tabs, carousel and columns no longer show Feedback and Scoring.
+
 ### Added (host-graded quizzes)
 
 - `choice-challenge`: `behavior.evaluation: "external"` (no correct options in the config, answers collected and handed over once through `onSubmit` / `details.responses`), and a read-only `review` view of a graded attempt from host data. Locally checked quizzes now report `details.responses` and `records[].selected`.

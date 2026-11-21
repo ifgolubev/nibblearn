@@ -458,3 +458,81 @@ describe("review fixes", () => {
     expect(screen.getByRole("textbox", { name: /Title/ })).toHaveAttribute("aria-invalid", "true");
   });
 });
+
+describe("fields the author does not need", () => {
+  const groups = () =>
+    [...document.querySelectorAll(".nbe-section__title")].map((el) => el.textContent?.trim());
+
+  it.each(["callout", "accordion", "tabs", "carousel", "columns"] as const)(
+    "%s: content blocks have no feedback or scoring settings",
+    (type) => {
+      render(
+        <ModuleForm value={createExample(type) as Record<string, unknown>} onChange={() => {}} />,
+      );
+      expect(groups()).not.toContain("Feedback");
+      expect(screen.queryByText(/^Weight/)).toBeNull();
+      expect(screen.queryByText(/^Pass threshold/)).toBeNull();
+    },
+  );
+
+  it("activities keep feedback and scoring", () => {
+    render(
+      <ModuleForm
+        value={createExample("choice-challenge") as Record<string, unknown>}
+        onChange={() => {}}
+      />,
+    );
+    expect(groups()).toContain("Feedback");
+    expect(screen.getAllByText(/^Pass threshold/).length).toBeGreaterThan(0);
+  });
+
+  it("hideIds removes every id field and new items still get an id", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    function Host() {
+      const [value, setValue] = useState(createExample("accordion") as Record<string, unknown>);
+      return (
+        <ModuleForm
+          value={value}
+          hideIds
+          onChange={(v) => {
+            setValue(v);
+            onValue(v);
+          }}
+        />
+      );
+    }
+    render(<Host />);
+    expect(screen.queryByLabelText(/^ID/)).toBeNull();
+    // With feedback, scoring and the id gone, nothing is left for an "Advanced" section.
+    expect(groups()).not.toContain("Advanced");
+    expect(document.querySelector(".nbe-advanced")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: /add item/i }));
+    const items = (onValue.mock.calls.at(-1)![0] as { content: { items: { id: string }[] } })
+      .content.items;
+    expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
+    expect(items.at(-1)!.id).toMatch(/^[a-zA-Z0-9_-]+$/);
+    expect(validateModule(onValue.mock.calls.at(-1)![0]).success).toBe(true);
+  });
+
+  it("hideFields hides fields by path, with * for list items", () => {
+    const example = createExample("accordion") as Record<string, unknown>;
+    const { unmount } = render(<ModuleForm value={example} onChange={() => {}} />);
+    expect(groups()).toContain("Appearance");
+    expect(screen.getAllByRole("button", { name: "Add image" }).length).toBeGreaterThan(0);
+    unmount();
+
+    render(
+      <ModuleForm
+        value={example}
+        onChange={() => {}}
+        hideFields={["appearance", "content.items.*.image"]}
+      />,
+    );
+    expect(groups()).not.toContain("Appearance");
+    expect(screen.queryByRole("button", { name: "Add image" })).toBeNull();
+    // Untouched fields are still there.
+    expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
+  });
+});
