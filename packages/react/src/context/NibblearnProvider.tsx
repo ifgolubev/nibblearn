@@ -65,9 +65,31 @@ export interface NibblearnConfig {
   themeVars: Readonly<Record<string, string>>;
   /** Image resolver from the provider, if any. */
   resolveAsset?: AssetResolver;
+  /** How modules show their end state. See `CompletionMode`. */
+  completion?: CompletionMode;
   /** @internal */
   assetCache: AssetCache;
 }
+
+/** What a module would show on its completion card. */
+export interface CompletionInfo {
+  title: string;
+  /** May contain inline markup. */
+  text?: string;
+  /** 0–1, when the module is scored. */
+  score?: number;
+  /** False only when the module is scored and the score is below its pass threshold. */
+  passed: boolean;
+  stats: { label: string; value: ReactNode }[];
+  /** Starts the module again, when it can be retried. */
+  onRetry?: () => void;
+}
+
+/**
+ * "card" (default) shows the built-in completion card. "hidden" shows nothing, for hosts that
+ * present results themselves (use `onComplete`). A function renders your own end state.
+ */
+export type CompletionMode = "card" | "hidden" | ((info: CompletionInfo) => ReactNode);
 
 const defaultConfig: NibblearnConfig = {
   locale: "en",
@@ -106,6 +128,11 @@ export interface NibblearnProviderProps {
   /** Resolve image `src` values (for example `asset:<key>`) to URLs. See `AssetResolver`. */
   resolveAsset?: AssetResolver;
   /**
+   * Replace or hide the completion card of every module inside. Inherited from an outer
+   * provider when omitted. Pass a stable function (not an inline arrow) to avoid re-renders.
+   */
+  completion?: CompletionMode;
+  /**
    * Render a wrapper element (default true). The wrapper only carries design tokens and theme
    * attributes; it does not restyle your content. With `false` the provider adds no DOM at all,
    * and `className` / `style` are ignored.
@@ -136,6 +163,7 @@ export function NibblearnProvider({
   reducedMotion = false,
   onEvent,
   resolveAsset,
+  completion: completionProp,
   wrapper = true,
   className,
   style,
@@ -181,6 +209,8 @@ export function NibblearnProvider({
     [hasResolver],
   );
   const assetCache = useMemo(() => createAssetCache(), []);
+  const inheritedCompletion = useContext(NibblearnContext).completion;
+  const completion = completionProp ?? inheritedCompletion;
 
   const value = useMemo<NibblearnConfig>(() => {
     const messages = resolveMessages(locale, overrides);
@@ -196,6 +226,7 @@ export function NibblearnProvider({
       },
       themeVars,
       resolveAsset: stableResolveAsset,
+      completion,
       assetCache,
     };
   }, [
@@ -207,6 +238,7 @@ export function NibblearnProvider({
     onEvent,
     themeVars,
     stableResolveAsset,
+    completion,
     assetCache,
   ]);
 

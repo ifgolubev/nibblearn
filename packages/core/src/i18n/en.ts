@@ -53,6 +53,8 @@ export const en = {
   "embed.unreadable": "The module config could not be read",
   "embed.noType": "The module config needs a type",
   "common.imageUnavailable": "Image unavailable",
+  "common.video": "Video",
+  "common.videoUnavailable": "Video unavailable",
   "common.learnMore": "Learn more",
   "common.showLess": "Show less",
   "common.selected": "Selected",
@@ -145,6 +147,12 @@ export const en = {
   "choice.youMissed": "You missed: {items}",
   "choice.allCorrect": "All answers correct!",
   "choice.summary": "{correct} of {total} questions correct",
+  "choice.submit": "Submit answers",
+  "choice.submitted": "Answers submitted",
+  "choice.submittedText": "Your answers were sent for checking.",
+  "choice.yourAnswer": "Your answer",
+  "choice.correctAnswer": "Correct answer",
+  "choice.notAnswered": "Not answered",
 
   // true/false
   "tf.swipeHint": "Swipe or use the buttons",

@@ -7,6 +7,8 @@ export const flashcardSchema = z.object({
   back: textSchema,
   frontImage: mediaSchema.optional(),
   backImage: mediaSchema.optional(),
+  /** Extra explanation shown under the answer on the back side. */
+  explanation: textSchema.optional(),
   /** Optional hint shown on demand on the front side. */
   hint: textSchema.optional(),
   /** Small label, e.g. "Metric". */

@@ -69,7 +69,7 @@ describe("Flashcards", () => {
     expect(result.score).toBeCloseTo(2 / 3);
     expect(result.correct).toBe(2);
     expect(result.total).toBe(3);
-    expect(result.details).toEqual({ firstPassMastered: 2, rounds: 2, mastered: 3 });
+    expect(result.details).toMatchObject({ firstPassMastered: 2, rounds: 2, mastered: 3 });
     expect(await screen.findByText("All cards mastered")).toBeInTheDocument();
     expect(screen.getByText("You mastered 2 of 3 cards on the first pass.")).toBeInTheDocument();
     expect(onEvent.mock.calls.map((c) => c[0].type)).toContain("module:answer");
@@ -180,5 +180,44 @@ describe("Flashcards", () => {
     render(<Flashcards config={config} initialState={saved} onComplete={again} />);
     expect(await screen.findByText("All cards mastered")).toBeInTheDocument();
     expect(again).not.toHaveBeenCalled();
+  });
+});
+
+describe("Flashcards explanation and reviewed cards", () => {
+  const deck = flashcardsSchema.parse({
+    id: "deck-x",
+    type: "flashcards",
+    title: "Deck",
+    content: {
+      cards: [
+        {
+          id: "cpm",
+          front: "CPM",
+          back: "Cost per mille",
+          explanation: "Mille means **thousand**.",
+        },
+        { front: "CTR", back: "Click-through rate" },
+      ],
+    },
+    behavior: { requireMastery: false },
+  });
+
+  it("shows the explanation on the back and reports reviewed cards on completion", async () => {
+    const user = userEvent.setup();
+    const onComplete = vi.fn();
+    render(<Flashcards config={deck} onComplete={onComplete} />);
+    const back = document.querySelector(".nb-flash__face--back")!;
+    expect(back.querySelector(".nb-flash__explanation")).toHaveTextContent("Mille means thousand.");
+    expect(document.querySelector(".nb-flash__face--front .nb-flash__explanation")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: /^Flip card/ }));
+    await user.click(screen.getByRole("button", { name: "Got it" }));
+    await user.click(await screen.findByRole("button", { name: /^Flip card/ }));
+    await user.click(screen.getByRole("button", { name: "Practice again" }));
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(onComplete.mock.calls[0]![0].details).toMatchObject({
+      reviewedCards: ["cpm", "card-1"],
+      masteredCards: ["cpm"],
+    });
   });
 });

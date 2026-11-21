@@ -1,4 +1,5 @@
 import type { StoryCardsInput } from "../../schema/modules";
+import { analyticsDashboardDataUri } from "../assets/analytics-dashboard";
 
 export const storyCardsDemo = {
   id: "agency-welcome",
@@ -17,6 +18,14 @@ export const storyCardsDemo = {
         eyebrow: "Who we are",
         title: "Three teams, one scoreboard",
         body: "**Strategy** shapes the plan and owns the client relationship.\n\n**Creative** turns the plan into ads, landing pages and copy that earn attention.\n\n**Performance** runs the media, reads the numbers and decides what to scale next.",
+        image: {
+          src: analyticsDashboardDataUri,
+          alt: "The shared Pulse Analytics dashboard the three leads review every Monday (illustrative)",
+          width: 1200,
+          height: 760,
+        },
+        mediaPosition: "right",
+        imageFit: "contain",
         expandable: {
           label: "How the teams hand off",
           body: "A brief starts in Strategy, moves to Creative for production, and lands in Performance for launch. Every Monday the three leads review one shared dashboard. Nobody owns a metric alone, which is why the handoff notes matter more than the org chart.",
@@ -25,6 +34,7 @@ export const storyCardsDemo = {
       {
         eyebrow: "By the numbers",
         layout: "stat",
+        align: "center",
         stat: { value: "3.4×", label: "median ROAS across retained accounts last quarter" },
         body: "That figure is why clients stay. It is also why we treat every euro of ad spend as if it were our own.",
       },
@@ -57,6 +67,7 @@ export const storyCardsDemo = {
           label: "Your first-week checklist",
           body: "Day 1: accounts and tools access.\n\nDay 2: shadow the Monday dashboard review.\n\nDay 3: pair with Performance on one live account.\n\nDay 5: present one observation from the account to your lead. One sentence, one metric.",
         },
+        action: { label: "Open the team handbook", href: "https://brightline.example/handbook" },
       },
     ],
   },

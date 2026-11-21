@@ -6,7 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Quote } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ExternalLink, Quote } from "lucide-react";
 import {
   storyCardsSchema,
   splitParagraphs,
@@ -27,6 +27,7 @@ import { StepDots } from "../../primitives/ProgressBar";
 import { OptionCard, type OptionState } from "../../primitives/OptionCard";
 import { AnimatedFeedback } from "../../primitives/Feedback";
 import { SafeImage } from "../../primitives/SafeImage";
+import { SafeVideo } from "../../primitives/SafeVideo";
 import { RichText } from "../../primitives/RichText";
 import { CompletionCard } from "../../primitives/CompletionCard";
 import { ModuleShell, InvalidModule } from "../../primitives/ModuleShell";
@@ -35,6 +36,15 @@ import "./story-cards.css";
 export type StoryCardsProps = ModuleProps<StoryCardsConfig>;
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+type MediaPosition = NonNullable<StoryCard["mediaPosition"]>;
+
+/** Where the card's image or video sits; null when the card has none (or the cover shows it). */
+function mediaPositionOf(card: StoryCard): MediaPosition | null {
+  if (card.layout === "cover") return null;
+  if (!card.video && !card.image) return null;
+  return card.mediaPosition ?? "top";
+}
 
 export function StoryCards({ config: rawConfig, ...rest }: StoryCardsProps) {
   const parsed = useMemo(() => storyCardsSchema.safeParse(rawConfig), [rawConfig]);
@@ -99,6 +109,8 @@ function StoryCardsRun({
   const cardRef = useRef<HTMLElement | null>(null);
 
   const card = cards[index]!;
+  const mediaPosition = mediaPositionOf(card);
+  const wide = mediaPosition === "left" || mediaPosition === "right";
   const isLast = index + 1 >= cards.length;
   const answered = answers[index] !== undefined;
   const checkTotal = useMemo(() => cards.filter((c) => c.check).length, [cards]);
@@ -268,6 +280,8 @@ function StoryCardsRun({
             ref={cardRef}
             className="nb-story__card"
             data-layout={card.layout}
+            data-align={card.align}
+            data-media={mediaPosition ?? undefined}
             tabIndex={-1}
             onAnimationComplete={(def) => {
               if (def === "center" && focusCard.current) {
@@ -291,12 +305,13 @@ function StoryCardsRun({
               chosen={answers[index]}
               onAnswer={answer}
               onExpand={() => life.emit("module:interact", { action: "expand", cardIndex: index })}
+              onInteract={(action) => life.emit("module:interact", { action, cardIndex: index })}
             />
           </motion.article>
         </AnimatePresence>
       </div>
 
-      <div className="nb-story__nav">
+      <div className="nb-story__nav" data-wide={wide || undefined}>
         {behavior.allowBack ? (
           <Button
             variant="ghost"
@@ -333,6 +348,7 @@ interface StoryCardBodyProps {
   chosen: number | undefined;
   onAnswer: (optionIndex: number) => void;
   onExpand: () => void;
+  onInteract: (action: "play-video" | "open-link") => void;
 }
 
 function StoryCardBody({
@@ -342,6 +358,7 @@ function StoryCardBody({
   chosen,
   onAnswer,
   onExpand,
+  onInteract,
 }: StoryCardBodyProps) {
   const { t } = useNibblearn();
   const reduced = useReducedMotion();
@@ -351,6 +368,25 @@ function StoryCardBody({
   const paragraphs = useMemo(() => (card.body ? splitParagraphs(card.body) : []), [card.body]);
   const baseDelay = card.layout === "cover" ? 0.18 : 0.08;
   const layout = card.layout;
+  const mediaPosition = mediaPositionOf(card);
+  const externalAction = card.action ? /^https?:/i.test(card.action.href) : false;
+
+  const video = card.video && (
+    <SafeVideo
+      video={card.video}
+      className="nb-story__video"
+      onPlay={() => onInteract("play-video")}
+    />
+  );
+  // A video takes the media area; in the cover layout the image stays in the hero.
+  const media =
+    layout === "cover" ? null : card.video ? (
+      <div className="nb-story__media">{video}</div>
+    ) : card.image ? (
+      <div className="nb-story__media">
+        <SafeImage media={card.image} className="nb-story__image" data-fit={card.imageFit} />
+      </div>
+    ) : null;
 
   const para = (text: string, i: number, className?: string) => (
     <motion.p
@@ -379,6 +415,7 @@ function StoryCardBody({
             <SafeImage
               media={card.image}
               className="nb-story__hero-image"
+              data-fit={card.imageFit}
               rounded={false}
               showCaption={false}
             />
@@ -388,12 +425,11 @@ function StoryCardBody({
           <div className="nb-story__hero-overlay">{header}</div>
         </div>
       )}
-      {layout !== "cover" && card.image && (
-        <SafeImage media={card.image} className="nb-story__image" />
-      )}
+      {mediaPosition !== "bottom" && media}
 
       <div className="nb-story__content">
         {layout !== "cover" && layout !== "quote" && header}
+        {layout === "cover" && video}
 
         {layout === "stat" && card.stat && (
           <motion.div
@@ -467,6 +503,22 @@ function StoryCardBody({
           </div>
         )}
 
+        {card.action && (
+          <a
+            className="nb-btn nb-btn--secondary nb-story__action"
+            href={card.action.href}
+            rel="noopener noreferrer"
+            target={externalAction ? "_blank" : undefined}
+            onClick={() => onInteract("open-link")}
+          >
+            <span>
+              {card.action.label}
+              {externalAction && <span className="nb-sr-only"> {t("common.opensInNewTab")}</span>}
+            </span>
+            {externalAction && <ExternalLink aria-hidden />}
+          </a>
+        )}
+
         {card.check && (
           <StoryCheck
             check={card.check}
@@ -477,6 +529,8 @@ function StoryCardBody({
           />
         )}
       </div>
+
+      {mediaPosition === "bottom" && media}
     </>
   );
 }

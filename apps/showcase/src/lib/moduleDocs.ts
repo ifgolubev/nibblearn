@@ -90,7 +90,7 @@ export const moduleDocs: ModuleDoc[] = [
     category: "learn",
     icon: "BookOpen",
     description:
-      "A card-based micro-learning format inspired by mobile stories. Each card carries one idea — a title, a short body revealed paragraph by paragraph, an optional image, a stat or a quote — and can embed a quick knowledge check. Perfect for welcomes, policies and concept introductions.",
+      "A card-based micro-learning format inspired by mobile stories. Each card carries one idea — a title, a short body revealed paragraph by paragraph, an optional image or video placed above, below or beside the text, a stat or a quote — and can embed a quick knowledge check. Perfect for welcomes, policies and concept introductions.",
     useCases: [
       "Welcome and onboarding sequences",
       "Explaining a policy in five cards",
@@ -101,6 +101,7 @@ export const moduleDocs: ModuleDoc[] = [
       "Next / Back buttons and ← → keys",
       "Progressive paragraph reveal",
       "Expandable “Learn more” section",
+      "Optional video with native controls and a link button",
       "Embedded knowledge check with instant feedback",
       "Completion state at the end",
     ],
@@ -108,6 +109,7 @@ export const moduleDocs: ModuleDoc[] = [
       "Cards are regions with headings; progress is announced",
       "Checks use radio semantics with visible focus",
       "Reveal animations are disabled with reduced motion",
+      "Video never autoplays and supports a captions track",
       "All navigation is keyboard reachable",
     ],
     options: [
@@ -129,6 +131,34 @@ export const moduleDocs: ModuleDoc[] = [
         description: "Paragraphs separated by blank lines.",
       },
       { path: "content.cards[].image", type: "Media", description: "Optional image { src, alt }." },
+      {
+        path: "content.cards[].video",
+        type: "{ src, poster?, title?, captions? }",
+        description: "Optional self-hosted video, shown instead of the image. Never autoplays.",
+      },
+      {
+        path: "content.cards[].mediaPosition",
+        type: '"top" | "bottom" | "left" | "right"',
+        default: '"top"',
+        description: "Where the image or video sits. Side positions stack on small screens.",
+      },
+      {
+        path: "content.cards[].imageFit",
+        type: '"cover" | "contain"',
+        default: '"cover"',
+        description: "Crop the image to fill its area, or show all of it.",
+      },
+      {
+        path: "content.cards[].align",
+        type: '"left" | "center" | "right"',
+        default: '"left"',
+        description: "Text alignment of the card.",
+      },
+      {
+        path: "content.cards[].action",
+        type: "{ label, href }",
+        description: "Optional link button. External links open in a new tab.",
+      },
       {
         path: "content.cards[].expandable",
         type: "{ label, body }",
@@ -189,7 +219,7 @@ export const moduleDocs: ModuleDoc[] = [
       ...base,
       {
         path: "content.cards[]",
-        type: "{ front, back, frontImage?, backImage?, hint?, tag? }[]",
+        type: "{ front, back, explanation?, frontImage?, backImage?, hint?, tag? }[]",
         description: "Cards (1–200).",
       },
       {
@@ -269,6 +299,13 @@ export const moduleDocs: ModuleDoc[] = [
         type: "boolean",
         default: "false",
         description: "Shuffle answer order.",
+      },
+      {
+        path: "behavior.evaluation",
+        type: '"local" | "external"',
+        default: '"local"',
+        description:
+          "external: the config has no correct options; answers are collected and handed to the host for grading.",
       },
       {
         path: "behavior.partialCredit",

@@ -131,17 +131,25 @@ function FlashcardsRun({
   const toReview = total - mastered.length;
 
   const finish = useCallback(
-    (fpm: number, rounds: number, masteredCount: number) => {
+    (fpm: number, rounds: number, masteredCards: number[]) => {
       setFinished(true);
+      const cardId = (i: number) => cards[i]?.id ?? `card-${i}`;
       life.complete({
         score: fpm / total,
         correct: fpm,
         total,
-        details: { firstPassMastered: fpm, rounds, mastered: masteredCount },
+        details: {
+          firstPassMastered: fpm,
+          rounds,
+          mastered: masteredCards.length,
+          // Every card is rated at least once before the deck can finish.
+          reviewedCards: cards.map((_, i) => cardId(i)),
+          masteredCards: masteredCards.map(cardId),
+        },
       });
       announce(t("a11y.moduleComplete"));
     },
-    [setFinished, life, total, announce, t],
+    [setFinished, life, total, cards, announce, t],
   );
 
   const rate = useCallback(
@@ -176,7 +184,7 @@ function FlashcardsRun({
         setInterstitial(true);
         return;
       }
-      finish(nextFpm, round, nextMastered.length);
+      finish(nextFpm, round, nextMastered);
     },
     [
       card,
@@ -425,6 +433,7 @@ function FlashcardsRun({
                           id={flipped ? faceId : undefined}
                           hidden={!flipped}
                           text={card.back}
+                          explanation={card.explanation}
                           image={card.backImage}
                           tag={card.tag}
                           caption={t("flash.showQuestion")}
@@ -516,6 +525,7 @@ function FlashFace({
   id,
   hidden,
   text,
+  explanation,
   image,
   tag,
   caption,
@@ -525,6 +535,7 @@ function FlashFace({
   id?: string;
   hidden: boolean;
   text: string;
+  explanation?: string;
   image?: Flashcard["frontImage"];
   tag?: string;
   caption: string;
@@ -550,6 +561,11 @@ function FlashFace({
         <div className="nb-flash__text" data-long={text.length > 120 ? "true" : "false"}>
           <RichText text={text} paragraphs />
         </div>
+        {explanation && (
+          <div className="nb-flash__explanation">
+            <RichText text={explanation} paragraphs />
+          </div>
+        )}
       </div>
       <div className="nb-flash__caption">{caption}</div>
     </motion.div>

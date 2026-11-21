@@ -35,6 +35,17 @@ Used wherever a field is typed "media".
 | `width`, `height` | number > 0 | —        | Intrinsic size, reserves space to avoid layout shift. |
 | `caption`         | string     | —        | Rendered under the image.                             |
 
+### Video
+
+Used wherever a field is typed "video". A self-hosted file played with the browser's native controls. It never autoplays, and no third-party player is loaded.
+
+| Path       | Type                     | Default  | Description                                                                                                    |
+| ---------- | ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `src`      | string                   | required | mp4 or webm file: `http(s)`, relative or `blob:` URL, or `asset:<key>`. `data:` URIs are rejected.             |
+| `poster`   | string                   | —        | Image shown before playback (same rules as a media `src`).                                                     |
+| `title`    | string ≤ 200             | —        | Short name announced by screen readers.                                                                        |
+| `captions` | `{ src, lang?, label? }` | —        | WebVTT captions file (same URL rules as `src`; same-origin or CORS). Provide it whenever the video has speech. |
+
 ### Retry behaviour (shared by several practice modules)
 
 | Path                       | Type        | Default | Description                                              |
@@ -57,25 +68,30 @@ Every module accepts an optional `schemaVersion` (integer ≥ 1, default 1). Sto
 
 Card-based micro lesson with progressive reveal and optional embedded checks.
 
-| Path                                | Type                                        | Default   | Description                                           |
-| ----------------------------------- | ------------------------------------------- | --------- | ----------------------------------------------------- |
-| `content.cards[]`                   | 1–60                                        | required  |                                                       |
-| `content.cards[].id`                | id                                          | —         |                                                       |
-| `content.cards[].eyebrow`           | string ≤ 60                                 | —         | Small label above the title.                          |
-| `content.cards[].title`             | string ≤ 200                                | —         |                                                       |
-| `content.cards[].body`              | text                                        | —         | Blank lines separate paragraphs, revealed one by one. |
-| `content.cards[].image`             | media                                       | —         |                                                       |
-| `content.cards[].layout`            | `default` \| `cover` \| `quote` \| `stat`   | `default` | Visual treatment.                                     |
-| `content.cards[].stat`              | `{ value ≤ 24, label ≤ 80 }`                | —         | Big figure for the `stat` layout.                     |
-| `content.cards[].expandable`        | `{ label ≤ 80 = "Learn more", body: text }` | —         | Collapsible extra section.                            |
-| `content.cards[].check`             | object                                      | —         | Embedded quick check.                                 |
-| `content.cards[].check.question`    | text                                        | required  |                                                       |
-| `content.cards[].check.options[]`   | 2–6 of `{ text, correct = false }`          | required  |                                                       |
-| `content.cards[].check.explanation` | text                                        | —         |                                                       |
-| `behavior.progressiveReveal`        | boolean                                     | `true`    | Stagger paragraph reveal.                             |
-| `behavior.allowBack`                | boolean                                     | `true`    |                                                       |
-| `behavior.showProgress`             | boolean                                     | `true`    |                                                       |
-| `behavior.requireChecks`            | boolean                                     | `true`    | Checks must be answered before moving on.             |
+| Path                                | Type                                        | Default   | Description                                                                                                    |
+| ----------------------------------- | ------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
+| `content.cards[]`                   | 1–60                                        | required  |                                                                                                                |
+| `content.cards[].id`                | id                                          | —         |                                                                                                                |
+| `content.cards[].eyebrow`           | string ≤ 60                                 | —         | Small label above the title.                                                                                   |
+| `content.cards[].title`             | string ≤ 200                                | —         |                                                                                                                |
+| `content.cards[].body`              | text                                        | —         | Blank lines separate paragraphs, revealed one by one.                                                          |
+| `content.cards[].image`             | media                                       | —         |                                                                                                                |
+| `content.cards[].video`             | video                                       | —         | Shown in the media area instead of the image. In the `cover` layout it sits under the hero.                    |
+| `content.cards[].mediaPosition`     | `top` \| `bottom` \| `left` \| `right`      | `top`     | Where the image or video sits. `left` / `right` widen the card and stack on small screens. Ignored by `cover`. |
+| `content.cards[].imageFit`          | `cover` \| `contain`                        | `cover`   | Crop the image to fill its area, or show all of it.                                                            |
+| `content.cards[].align`             | `left` \| `center` \| `right`               | `left`    | Text alignment of the card.                                                                                    |
+| `content.cards[].layout`            | `default` \| `cover` \| `quote` \| `stat`   | `default` | Visual treatment.                                                                                              |
+| `content.cards[].stat`              | `{ value ≤ 24, label ≤ 80 }`                | —         | Big figure for the `stat` layout.                                                                              |
+| `content.cards[].expandable`        | `{ label ≤ 80 = "Learn more", body: text }` | —         | Collapsible extra section.                                                                                     |
+| `content.cards[].action`            | `{ label ≤ 80, href }`                      | —         | Link button. `href` follows the link rules of inline markup; external links open in a new tab.                 |
+| `content.cards[].check`             | object                                      | —         | Embedded quick check.                                                                                          |
+| `content.cards[].check.question`    | text                                        | required  |                                                                                                                |
+| `content.cards[].check.options[]`   | 2–6 of `{ text, correct = false }`          | required  |                                                                                                                |
+| `content.cards[].check.explanation` | text                                        | —         |                                                                                                                |
+| `behavior.progressiveReveal`        | boolean                                     | `true`    | Stagger paragraph reveal.                                                                                      |
+| `behavior.allowBack`                | boolean                                     | `true`    |                                                                                                                |
+| `behavior.showProgress`             | boolean                                     | `true`    |                                                                                                                |
+| `behavior.requireChecks`            | boolean                                     | `true`    | Checks must be answered before moving on.                                                                      |
 
 ```json
 {
@@ -108,6 +124,20 @@ Card-based micro lesson with progressive reveal and optional embedded checks.
 }
 ```
 
+A centred card with an image beside the text and a link button:
+
+```json
+{
+  "title": "Three teams, one scoreboard",
+  "body": "Strategy, Creative and Performance review one shared dashboard every Monday.",
+  "image": { "src": "/img/dashboard.png", "alt": "Pulse Analytics overview dashboard" },
+  "mediaPosition": "right",
+  "imageFit": "contain",
+  "align": "center",
+  "action": { "label": "Open the team handbook", "href": "https://brightline.example/handbook" }
+}
+```
+
 Score: fraction of checks answered correctly on the first try; unscored when no card has a check.
 
 ## flashcards
@@ -119,6 +149,7 @@ Score: fraction of checks answered correctly on the first try; unscored when no 
 | `content.cards[].front`                   | text        | required |                                                          |
 | `content.cards[].back`                    | text        | required |                                                          |
 | `content.cards[].frontImage`, `backImage` | media       | —        |                                                          |
+| `content.cards[].explanation`             | text        | —        | Shown under the answer on the back.                      |
 | `content.cards[].hint`                    | text        | —        | Revealed on demand on the front.                         |
 | `content.cards[].tag`                     | string ≤ 40 | —        | Small label.                                             |
 | `behavior.shuffle`                        | boolean     | `false`  | Shuffle on start.                                        |
@@ -149,26 +180,27 @@ Score: cards marked "got it" on the first pass ÷ total.
 
 ## choice-challenge
 
-| Path                                                    | Type                   | Default  | Description                                         |
-| ------------------------------------------------------- | ---------------------- | -------- | --------------------------------------------------- |
-| `content.questions[]`                                   | 1–50                   | required |                                                     |
-| `content.questions[].id`                                | id                     | —        |                                                     |
-| `content.questions[].prompt`                            | text                   | required |                                                     |
-| `content.questions[].context`                           | text                   | —        | Secondary line under the prompt.                    |
-| `content.questions[].image`                             | media                  | —        |                                                     |
-| `content.questions[].mode`                              | `single` \| `multiple` | inferred | Inferred from the number of correct options.        |
-| `content.questions[].options[]`                         | 2–8                    | required | At least one must be `correct`.                     |
-| `content.questions[].options[].id`                      | id                     | —        |                                                     |
-| `content.questions[].options[].text`                    | text                   | required |                                                     |
-| `content.questions[].options[].image`                   | media                  | —        |                                                     |
-| `content.questions[].options[].correct`                 | boolean                | `false`  |                                                     |
-| `content.questions[].options[].explanation`             | text                   | —        | Per-option explanation after checking.              |
-| `content.questions[].explanation`                       | text                   | —        | General explanation after checking.                 |
-| `content.questions[].hint`                              | text                   | —        |                                                     |
-| `behavior.allowRetry`, `maxAttempts`, `showExplanation` | retry behaviour        |          |                                                     |
-| `behavior.shuffleOptions`                               | boolean                | `false`  |                                                     |
-| `behavior.partialCredit`                                | boolean                | `true`   | Partial credit for partly correct multiple answers. |
-| `behavior.showCounter`                                  | boolean                | `true`   | "Question 2 of 5".                                  |
+| Path                                                    | Type                   | Default  | Description                                                                                                                                |
+| ------------------------------------------------------- | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `content.questions[]`                                   | 1–50                   | required |                                                                                                                                            |
+| `content.questions[].id`                                | id                     | —        |                                                                                                                                            |
+| `content.questions[].prompt`                            | text                   | required |                                                                                                                                            |
+| `content.questions[].context`                           | text                   | —        | Secondary line under the prompt.                                                                                                           |
+| `content.questions[].image`                             | media                  | —        |                                                                                                                                            |
+| `content.questions[].mode`                              | `single` \| `multiple` | inferred | Inferred from the number of correct options.                                                                                               |
+| `content.questions[].options[]`                         | 2–8                    | required | At least one must be `correct`.                                                                                                            |
+| `content.questions[].options[].id`                      | id                     | —        |                                                                                                                                            |
+| `content.questions[].options[].text`                    | text                   | required |                                                                                                                                            |
+| `content.questions[].options[].image`                   | media                  | —        |                                                                                                                                            |
+| `content.questions[].options[].correct`                 | boolean                | `false`  |                                                                                                                                            |
+| `content.questions[].options[].explanation`             | text                   | —        | Per-option explanation after checking.                                                                                                     |
+| `content.questions[].explanation`                       | text                   | —        | General explanation after checking.                                                                                                        |
+| `content.questions[].hint`                              | text                   | —        |                                                                                                                                            |
+| `behavior.allowRetry`, `maxAttempts`, `showExplanation` | retry behaviour        |          |                                                                                                                                            |
+| `behavior.shuffleOptions`                               | boolean                | `false`  |                                                                                                                                            |
+| `behavior.partialCredit`                                | boolean                | `true`   | Partial credit for partly correct multiple answers.                                                                                        |
+| `behavior.showCounter`                                  | boolean                | `true`   | "Question 2 of 5".                                                                                                                         |
+| `behavior.evaluation`                                   | `local` \| `external`  | `local`  | `external`: no correct options in the config; the host grades the answers (see [Embedding](./embedding.md#quizzes-graded-by-your-server)). |
 
 ```json
 {

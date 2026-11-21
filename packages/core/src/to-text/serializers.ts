@@ -46,9 +46,11 @@ const storyCards = (c: StoryCardsConfig, o: O): TextNode[] =>
     ...paragraph(card.stat ? labelled(card.stat.value, card.stat.label) : undefined),
     ...paragraph(card.body),
     ...image(card.image),
+    ...paragraph(card.video?.title),
     ...(card.expandable
       ? [...paragraph(labelled(card.expandable.label, card.expandable.body))]
       : []),
+    ...paragraph(card.action ? `[${card.action.label}](${card.action.href})` : undefined),
     ...(card.check
       ? [
           {
@@ -69,6 +71,7 @@ const flashcards = (c: FlashcardsConfig, o: O): TextNode[] =>
     ...heading(3, labelled(card.tag, card.front)),
     ...image(card.frontImage),
     ...paragraph(card.back),
+    ...feedback(o, "Explanation", card.explanation),
     ...image(card.backImage),
     ...feedback(o, "Hint", card.hint),
   ]);

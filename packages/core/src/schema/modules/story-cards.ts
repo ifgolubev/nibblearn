@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { idSchema, mediaSchema, moduleBaseShape, textSchema } from "../common";
+import {
+  idSchema,
+  linkHrefSchema,
+  mediaSchema,
+  moduleBaseShape,
+  textSchema,
+  videoSchema,
+} from "../common";
 
 export const storyCardCheckSchema = z.object({
   question: textSchema,
@@ -23,6 +30,17 @@ export const storyCardSchema = z.object({
   /** Body text. Separate paragraphs with blank lines; they are revealed progressively. */
   body: textSchema.optional(),
   image: mediaSchema.optional(),
+  /** Video shown in the card's media area instead of the image. */
+  video: videoSchema.optional(),
+  /**
+   * Where the image or video sits: above the text (default), below it, or beside it.
+   * "left" and "right" widen the card and stack on small screens. Ignored by the "cover" layout.
+   */
+  mediaPosition: z.enum(["top", "bottom", "left", "right"]).optional(),
+  /** "cover" crops the image to fill its area (default); "contain" shows all of it. */
+  imageFit: z.enum(["cover", "contain"]).optional(),
+  /** Text alignment of the card. Left when omitted. */
+  align: z.enum(["left", "center", "right"]).optional(),
   /** Visual treatment of the card. */
   layout: z.enum(["default", "cover", "quote", "stat"]).default("default"),
   /** Big number/figure for the "stat" layout. */
@@ -30,6 +48,15 @@ export const storyCardSchema = z.object({
   /** Optional "Learn more" section the learner can expand. */
   expandable: z
     .object({ label: z.string().max(80).default("Learn more"), body: textSchema })
+    .optional(),
+  /** Optional link button, e.g. to a document or a longer read. */
+  action: z
+    .object({
+      /** Button text. */
+      label: z.string().min(1).max(80),
+      /** Where the button leads. External links open in a new tab. */
+      href: linkHrefSchema,
+    })
     .optional(),
   /** Optional quick knowledge check embedded in the card. */
   check: storyCardCheckSchema.optional(),

@@ -5,12 +5,16 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import {
   SAFE_CSS_COLOR,
   SAFE_IMAGE_SRC_PATTERN,
+  SAFE_LINK_HREF_PATTERN,
+  SAFE_VIDEO_SRC_PATTERN,
   builtInModuleTypes,
   getAnyModuleJsonSchema,
   getLessonJsonSchema,
   getModuleJsonSchema,
   isSafeCssColor,
   isSafeImageSrc,
+  isSafeLinkHref,
+  isSafeVideoSrc,
 } from "../src";
 import * as examples from "../../../examples/src";
 
@@ -186,6 +190,50 @@ describe("patterns match the runtime checks", () => {
     expect(imageRe.test(` https://cdn.example/a b.png \t`)).toBe(
       isSafeImageSrc(` https://cdn.example/a b.png \t`),
     );
+  });
+
+  const videoRe = new RegExp(SAFE_VIDEO_SRC_PATTERN);
+  it.each(imageCases)("video src %j", (value) => {
+    expect(videoRe.test(value)).toBe(isSafeVideoSrc(value));
+  });
+  it("never accepts data: URIs as a video src", () => {
+    for (const value of ["data:video/mp4;base64,AAAA", "data:image/png;base64,AAAA", " DATA:x"]) {
+      expect(isSafeVideoSrc(value), value).toBe(false);
+      expect(videoRe.test(value), value).toBe(false);
+    }
+    expect(isSafeVideoSrc("https://cdn.example/intro.mp4")).toBe(true);
+    expect(isSafeVideoSrc("/media/intro.webm")).toBe(true);
+    expect(isSafeVideoSrc("asset:intro-video")).toBe(true);
+  });
+
+  const linkRe = new RegExp(SAFE_LINK_HREF_PATTERN);
+  it.each([
+    "https://example.com/a?b=c#d",
+    "HTTP://example.com",
+    "http://",
+    "https:///x",
+    "https://a b",
+    "mailto:team@example.com",
+    "mailto:",
+    "tel:+3511234",
+    "tel:abc",
+    "#section",
+    "#",
+    "/docs/intro",
+    "/",
+    "//evil.example",
+    "/\\evil.example",
+    "javascript:alert(1)",
+    "data:text/html,x",
+    "relative/path",
+    " https://example.com",
+    "https://example.com ",
+    "https://example.com\n",
+    "https://exa\u0001mple.com",
+    "https://example.com/\u007f",
+    "",
+  ])("link href %j", (value) => {
+    expect(linkRe.test(value)).toBe(isSafeLinkHref(value));
   });
 
   const colorRe = new RegExp(SAFE_CSS_COLOR.source);

@@ -1,5 +1,18 @@
 # @nibblearn/react
 
+## 0.3.0
+
+### Minor Changes
+
+- Choice challenge: `behavior.evaluation: "external"` for quizzes graded by the host (`onSubmit`, `details.responses`), and a read-only `review` view of a graded attempt. Flashcards: optional `explanation` on the back, `reviewedCards` / `masteredCards` in the result. `NibblearnProvider` gains `completion` to hide or replace the completion card. All additions are optional; existing lesson JSON keeps working unchanged.
+
+- Story cards: optional per-card `video`, `mediaPosition`, `imageFit`, `align` and an `action` link button. New `videoSchema` / `linkHrefSchema` in core and a `SafeVideo` primitive in react. All additions are optional; existing lesson JSON keeps working unchanged.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @nibblearn/core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added (host-graded quizzes)
+
+- `choice-challenge`: `behavior.evaluation: "external"` (no correct options in the config, answers collected and handed over once through `onSubmit` / `details.responses`), and a read-only `review` view of a graded attempt from host data. Locally checked quizzes now report `details.responses` and `records[].selected`.
+- `flashcards`: optional `explanation` on the back of a card; `details.reviewedCards` and `details.masteredCards` on completion.
+- `NibblearnProvider`: `completion` (`"card"`, `"hidden"` or a render function) hides or replaces the completion card of every module.
+
+### Added (story cards)
+
+- `story-cards`: optional per-card `video` (self-hosted, native controls, captions track), `mediaPosition` (`top`, `bottom`, `left`, `right`), `imageFit`, `align` (`left`, `center`, `right`) and an `action` link button. All fields are optional; existing lesson JSON is unchanged.
+- `@nibblearn/core`: `videoSchema`, `videoSrcSchema`, `linkHrefSchema`, `isSafeVideoSrc` and JSON Schema patterns for both. `@nibblearn/react`: `SafeVideo` primitive.
+
 ### Added
 
 - `@nibblearn/core`: Zod schemas for 22 module types and the lesson schema, `defineLesson` / `validateLesson` with human-readable errors, evaluation logic, safe formula parser, progress scoring, SSR-safe localStorage adapter, English UI messages with override/translation support.

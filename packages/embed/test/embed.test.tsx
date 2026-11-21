@@ -200,3 +200,51 @@ describe("custom element options and config precedence", () => {
     expect(early.querySelector("[data-nb-module='estimate']")).not.toBeNull();
   });
 });
+
+describe("content blocks stored in lesson HTML", () => {
+  /** Attribute-safe JSON, as a server would write it into `data-config="…"`. */
+  const attr = (v: unknown) =>
+    JSON.stringify(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+  it("hydrates a div with data-config, drops the text fallback and resolves asset: images", async () => {
+    const columns = {
+      id: "cols-1",
+      type: "columns",
+      content: {
+        columns: [
+          {
+            id: "a",
+            title: "Before",
+            text: "Old **flow**",
+            image: { src: "asset:files/42", alt: "Old flow diagram" },
+          },
+          { id: "b", title: "After", text: "New flow" },
+        ],
+      },
+    };
+    const callout = createExample("callout", { id: "tip-1" });
+    document.body.innerHTML = `
+      <p>Lesson text</p>
+      <div id="c" data-nibblearn-module data-config="${attr(columns)}">Before: Old flow. After: New flow.</div>
+      <div id="t" data-nibblearn-module data-config="${attr(callout)}">Tip fallback</div>`;
+    const resolveAsset = vi.fn(
+      async (src: string) => `https://files.example/${src.slice(6)}?sig=1`,
+    );
+    await act(async () => {
+      hydrate(document, { provider: { resolveAsset } });
+    });
+    expect(document.querySelector("#c [data-nb-module='columns']")).not.toBeNull();
+    expect(document.querySelector("#t [data-nb-module='callout']")).not.toBeNull();
+    expect(screen.queryByText("Before: Old flow. After: New flow.")).toBeNull();
+    expect(screen.queryByText("Tip fallback")).toBeNull();
+    expect(screen.getByText("Lesson text")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("img", { name: "Old flow diagram" })).toHaveAttribute(
+        "src",
+        "https://files.example/files/42?sig=1",
+      ),
+    );
+    expect(resolveAsset).toHaveBeenCalledWith("asset:files/42", { reason: "initial" });
+    expect(document.body.innerHTML).not.toContain('src="asset:');
+  });
+});

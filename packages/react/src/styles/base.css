@@ -200,6 +200,20 @@
 .nb-root[data-nb-motion="reduced"] .nb-image--loading {
   animation: none;
 }
+/* Video with fallback */
+.nb-video {
+  position: relative;
+  border-radius: var(--nb-radius-md);
+  overflow: hidden;
+  background: var(--nb-surface-2);
+}
+.nb-video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  background: #000000;
+}
 .nb-image__caption {
   font-size: var(--nb-text-xs);
   color: var(--nb-fg-muted);

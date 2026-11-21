@@ -1,6 +1,6 @@
 {
   "name": "@nibblearn/editor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Authoring UI for Nibblearn: schema-driven forms, live preview, a block picker and a lesson editor for all built-in modules.",
   "license": "MIT",
   "type": "module",

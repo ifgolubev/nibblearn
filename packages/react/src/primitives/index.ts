@@ -4,6 +4,7 @@ export * from "./ProgressBar";
 export * from "./Feedback";
 export * from "./RichText";
 export * from "./SafeImage";
+export * from "./SafeVideo";
 export * from "./Hint";
 export * from "./Explanation";
 export * from "./LiveRegion";

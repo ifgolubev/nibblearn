@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isSafeLinkHref } from "../text";
 
 /** A short identifier. Letters, numbers, dashes and underscores. */
 export const idSchema = z
@@ -110,6 +111,84 @@ export const mediaSchema = z.object({
   caption: z.string().optional(),
 });
 export type Media = z.infer<typeof mediaSchema>;
+
+/**
+ * Video and caption-file URLs: http(s), protocol-relative, relative paths, `blob:` and
+ * `asset:<key>` references. `data:` URIs and script-capable schemes are rejected.
+ */
+export function isSafeVideoSrc(value: string): boolean {
+  return isSafeImageSrc(value) && !/^\s*data:/i.test(value);
+}
+
+/** A regular expression (as a string) equivalent to `isSafeVideoSrc()`, for JSON Schema validators. */
+export const SAFE_VIDEO_SRC_PATTERN = [
+  "^\\s*(?=\\S)(?:(?:",
+  "(?![a-zA-Z][a-zA-Z0-9+.-]*:)",
+  "|[Hh][Tt][Tt][Pp][Ss]?:",
+  "|[Bb][Ll][Oo][Bb]:",
+  ")(?=([^\\u0000-\\u001f]*))\\1",
+  "|[Aa][Ss][Ss][Ee][Tt]:[A-Za-z0-9._~/%:@+=-]{1,512}",
+  ")\\s*$",
+].join("");
+
+const videoSrc = (title: string) =>
+  z
+    .string()
+    .min(1)
+    .max(2048)
+    .refine(isSafeVideoSrc, {
+      message: "must be an http(s), relative, blob: or asset:<key> URL",
+    })
+    .meta({ pattern: SAFE_VIDEO_SRC_PATTERN, title });
+
+export const videoSrcSchema = videoSrc("Video URL");
+
+/** A regular expression (as a string) equivalent to `isSafeLinkHref()`, for JSON Schema validators. */
+export const SAFE_LINK_HREF_PATTERN = [
+  "^(?!\\s)(?![\\s\\S]*\\s$)(?:",
+  "#",
+  "|/(?![/\\\\])",
+  "|[Hh][Tt][Tt][Pp][Ss]?://[^\\s/]",
+  "|[Mm][Aa][Ii][Ll][Tt][Oo]:\\S",
+  "|[Tt][Ee][Ll]:[+\\d]",
+  ")[^\\u0000-\\u001f\\u007f]*$",
+].join("");
+
+/** A link target content may use: http(s), `mailto:`, `tel:`, or a same-site path (`/…`, `#…`). */
+export const linkHrefSchema = z
+  .string()
+  .min(1)
+  .max(2048)
+  .refine(isSafeLinkHref, {
+    message: "link must be an http(s), mailto:, tel: or same-site (/path, #anchor) URL",
+  })
+  .meta({ pattern: SAFE_LINK_HREF_PATTERN, title: "Link URL" });
+
+/** A self-hosted video file played with the browser's native controls. It never autoplays. */
+export const videoSchema = z.object({
+  /** Video file URL (mp4 or webm; absolute, relative or an asset: reference). */
+  src: videoSrcSchema,
+  /** Image shown before playback starts. */
+  poster: imageSrcSchema.optional(),
+  /** Short name of the video, announced by screen readers. */
+  title: z.string().max(200).optional(),
+  /** Captions file in WebVTT format. Provide it whenever the video has speech. */
+  captions: z
+    .object({
+      /** WebVTT file URL. Must be same-origin or served with CORS headers. */
+      src: videoSrc("Captions file URL"),
+      /** Language code of the captions, e.g. "en". */
+      lang: z
+        .string()
+        .max(35)
+        .regex(/^[a-zA-Z0-9-]+$/)
+        .optional(),
+      /** Name shown in the player's captions menu. */
+      label: z.string().max(80).optional(),
+    })
+    .optional(),
+});
+export type Video = z.infer<typeof videoSchema>;
 
 export const feedbackSchema = z
   .object({

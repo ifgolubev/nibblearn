@@ -4,7 +4,7 @@ import { Check, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "./Button";
 import { RichText } from "./RichText";
-import { useTranslator } from "../context/NibblearnProvider";
+import { useNibblearn } from "../context/NibblearnProvider";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 
 export interface CompletionCardProps {
@@ -37,7 +37,7 @@ export function CompletionCard({
   className,
   children,
 }: CompletionCardProps) {
-  const t = useTranslator();
+  const { t, completion } = useNibblearn();
   const reduced = useReducedMotion();
   const hasScore = typeof score === "number";
   const pct = hasScore ? Math.round(Math.max(0, Math.min(1, score)) * 100) : 100;
@@ -51,6 +51,22 @@ export function CompletionCard({
   const c = 2 * Math.PI * r;
 
   const heading = title ?? (pass ? t("common.wellDone") : t("common.keepGoing"));
+
+  // The host shows results itself (NibblearnProvider `completion`).
+  if (completion === "hidden") return null;
+  if (typeof completion === "function")
+    return (
+      <>
+        {completion({
+          title: heading,
+          text,
+          score: hasScore ? score : undefined,
+          passed: pass,
+          stats: stats ?? [],
+          onRetry,
+        })}
+      </>
+    );
 
   return (
     <motion.div

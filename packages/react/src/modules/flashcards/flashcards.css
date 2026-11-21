@@ -203,6 +203,15 @@
 .nb-flash__face--front .nb-flash__text[data-long="true"] {
   font-size: var(--nb-text-lg);
 }
+.nb-flash__explanation {
+  padding-top: var(--nb-space-3);
+  border-top: 1px solid var(--nb-border);
+  font-size: var(--nb-text-sm);
+  font-weight: var(--nb-weight-normal);
+  line-height: 1.5;
+  color: var(--nb-fg-muted);
+  text-wrap: pretty;
+}
 .nb-flash__caption {
   text-align: center;
   font-size: var(--nb-text-xs);

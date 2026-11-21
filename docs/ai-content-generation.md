@@ -35,8 +35,8 @@ LESSON
 
 Every module: { "id", "type", "title"?, "instructions"?, "content": {...}, "behavior": {...}?, "feedback": { "correct"?, "incorrect"?, "complete"? }?, "scoring": { "weight": 1 }? }
 
-story-cards            content.cards[1-60]: { "title"?, "body"? (blank lines = paragraphs), "eyebrow"?, "layout": "default"|"cover"|"quote"|"stat", "stat": {"value","label"}?, "expandable": {"label","body"}?, "check": { "question", "options": [{"text","correct"}], "explanation"? }? }
-flashcards             content.cards[1-200]: { "front", "back", "hint"?, "tag"? }
+story-cards            content.cards[1-60]: { "title"?, "body"? (blank lines = paragraphs), "eyebrow"?, "layout": "default"|"cover"|"quote"|"stat", "image": {"src","alt"}?, "video": {"src","title"?,"poster"?,"captions": {"src","lang"?}?}?, "mediaPosition": "top"|"bottom"|"left"|"right"?, "imageFit": "cover"|"contain"?, "align": "left"|"center"|"right"?, "action": {"label","href"}?, "stat": {"value","label"}?, "expandable": {"label","body"}?, "check": { "question", "options": [{"text","correct"}], "explanation"? }? }
+flashcards             content.cards[1-200]: { "front", "back", "explanation"?, "hint"?, "tag"? }
 choice-challenge       content.questions[1-50]: { "prompt", "context"?, "options"[2-8]: [{ "text", "correct"?, "explanation"? }], "explanation"?, "hint"? }   (≥1 correct; >1 correct = multiple select)
 true-false             content.statements[1-100]: { "text", "isTrue", "explanation"?, "tag"? }
 match-pairs            content.pairs[2-30]: [{ "left", "right", "explanation"? }], "leftLabel"?, "rightLabel"?
@@ -89,7 +89,7 @@ OUTPUT RULES
 
 SCHEMA CHEAT SHEET (minimal required shape per module type; "?" = optional but recommended)
 Every module: { "id", "type", "title"?, "instructions"?, "content": {...}, "behavior": {...}?, "feedback": { "correct"?, "incorrect"?, "complete"? }? }
-story-cards:            content.cards[1-60]: { "title"?, "body"? (blank lines = paragraphs), "eyebrow"?, "layout": "default"|"cover"|"quote"|"stat", "stat": {"value","label"}?, "check": { "question", "options": [{"text","correct"}], "explanation"? }? }
+story-cards:            content.cards[1-60]: { "title"?, "body"? (blank lines = paragraphs), "eyebrow"?, "layout": "default"|"cover"|"quote"|"stat", "image": {"src","alt"}?, "video": {"src","title"?,"poster"?,"captions": {"src","lang"?}?}?, "mediaPosition": "top"|"bottom"|"left"|"right"?, "imageFit": "cover"|"contain"?, "align": "left"|"center"|"right"?, "action": {"label","href"}?, "stat": {"value","label"}?, "check": { "question", "options": [{"text","correct"}], "explanation"? }? }
 flashcards:             content.cards[1-200]: { "front", "back", "hint"?, "tag"? }
 choice-challenge:       content.questions[1-50]: { "prompt", "context"?, "options"[2-8]: [{ "text", "correct"?, "explanation"? }], "explanation"?, "hint"? }  (at least one correct option; more than one correct = multiple select)
 true-false:             content.statements[1-100]: { "text", "isTrue": true|false, "explanation"?, "tag"? }

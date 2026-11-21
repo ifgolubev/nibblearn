@@ -81,6 +81,76 @@ function Block({ config, saved }: { config: { id: string; type: string }; saved?
 
 What is restored: every built-in module restores its progress and its result. A few transient moments start over instead: an unanswered question in image-compare, the guess you were still adjusting in estimate, the short pause after an answer in true-false when explanations are off, and conversations driven by a custom `provider` (only the built-in scripted provider can be replayed).
 
+### Quizzes graded by your server
+
+When your backend is the only grader, keep the correct answers out of the page. Set `behavior.evaluation: "external"` on a `choice-challenge`: the config needs no `correct` flags, nothing is checked in the browser, the learner can move back and forth between questions, and the answers are handed over once.
+
+```tsx
+import { ChoiceChallenge, NibblearnProvider, defineModule } from "@nibblearn/react";
+
+const quiz = defineModule({
+  id: "quiz-42",
+  type: "choice-challenge",
+  title: "Metric check",
+  content: {
+    questions: [
+      {
+        prompt: "ROAS compares revenue to…",
+        mode: "single", // set it: it cannot be inferred without correct options
+        options: [
+          { id: "spend", text: "Ad spend" },
+          { id: "clicks", text: "Clicks" },
+        ],
+      },
+    ],
+  },
+  behavior: { evaluation: "external" },
+});
+
+<NibblearnProvider completion="hidden">
+  <ChoiceChallenge config={quiz} onSubmit={(responses) => api.submitAttempt(responses)} />
+</NibblearnProvider>;
+```
+
+- `onSubmit(responses)` is called once with a `string[][]`: the selected option ids of every question, in config order (`[]` is impossible for a submitted question; the learner must pick something). Give options your own `id`s; without them ids are `q<question>-opt<option>`. The same data arrives in `onComplete` as `details.responses`, with no `score`.
+- Each answer is also emitted as `module:answer` with `response` (the selected ids) and no `correct`.
+- Single choice, multiple choice and true/false are all questions of this one module; set `mode` on every question.
+- To show a graded attempt, pass `review`. The module then renders every question read-only, with the learner's choice, the correct options and explanations from your data, and emits nothing:
+
+```tsx
+<ChoiceChallenge
+  config={quiz}
+  review={{
+    items: [
+      {
+        selected: ["clicks"],
+        correct: ["spend"], // omit to show only what was chosen
+        isCorrect: false, // optional; derived from selected/correct when omitted
+        explanation: "ROAS is revenue divided by ad spend.",
+        optionExplanations: { clicks: "Clicks feed CTR and CPC." },
+      },
+    ],
+  }}
+/>
+```
+
+`review` also works with an ordinary (locally checked) config; missing `correct` and explanations then come from the config. In a locally checked quiz, `onComplete` reports `details.responses` and `details.records[].selected` as well.
+
+### Your own completion screen
+
+Every module ends with a built-in completion card. `NibblearnProvider` can hide or replace it for all modules inside (an outer provider's setting is inherited):
+
+```tsx
+<NibblearnProvider completion="hidden">…</NibblearnProvider>;
+
+const Result = (info: CompletionInfo) => <MyResult passed={info.passed} onRetry={info.onRetry} />;
+<NibblearnProvider completion={Result}>…</NibblearnProvider>;
+```
+
+`CompletionInfo` carries `title`, `text`, `score` (0–1 when scored), `passed`, `stats` and `onRetry`. With `"hidden"`, act on `onComplete` and render your own result. Pass a stable function, not an inline arrow. In `@nibblearn/embed`, set it through `hydrate(root, { provider: { completion: "hidden" } })`.
+
+Flashcards report which cards were seen: `details.reviewedCards` and `details.masteredCards` hold card ids (`card-<index>` for cards without an `id`).
+
 ### Blocks inside HTML (no React on the page)
 
 When lesson text is stored as HTML with blocks inside it, mark each block and let `@nibblearn/embed` bring them to life. Keep a text fallback inside the element for search engines and readers without JavaScript; `moduleToText()` produces one on the server:
