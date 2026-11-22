@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - `styles.isolated.css` now also covers properties Nibblearn does not set itself: inside a block they fall back to the browser default instead of the page's value (`all: revert` at the lowest specificity of the stylesheet). Page rules such as `.reader a { font-weight: 700 }`, `.reader img { object-fit: contain }` or `.editor code { border: … }` no longer show through. The block root, elements with a class of your own and SVG are left alone.
 - Base reset (both stylesheets): links inherit font weight, paragraphs and `code` inherit line height, `code` has no border, images use `object-fit: fill`, headings are `position: static`.
 - Images with `width` and `height` state their aspect ratio as a style too, so the reserved space survives stylesheets that reset attribute hints.
+- `styles.isolated.css`: `draggable` keeps working after the reset, so images cannot be dragged out of a module (Chromium and Safari apply that attribute through a style, which `all: revert` discarded).
 
 ### Added (embedding in styled pages, leaner forms)
 

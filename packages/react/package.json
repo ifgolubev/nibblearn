@@ -1,6 +1,6 @@
 {
   "name": "@nibblearn/react",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Tiny interactions. Real learning. Beautiful, accessible, interactive learning modules and a Lesson Player for React — flashcards, matching, branching scenarios, simulations and more, driven by JSON or components.",
   "license": "MIT",
   "type": "module",

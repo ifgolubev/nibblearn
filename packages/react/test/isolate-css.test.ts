@@ -67,5 +67,8 @@ describe("styles.isolated.css generator", () => {
     expect(selector).toContain(":not(svg, svg *)");
     // The `hidden` attribute keeps working.
     expect(out).toMatch(/\[hidden\][^{]*\{\s*display: none/);
+    // So does `draggable`, which Chromium and Safari apply through a style.
+    expect(out).toMatch(/\[draggable="false"\][^{]*\{\s*-webkit-user-drag: none/);
+    expect(out).toMatch(/\[draggable="true"\][^{]*\{\s*-webkit-user-drag: element/);
   });
 });

@@ -1,5 +1,11 @@
 # @nibblearn/core
 
+## 0.4.2
+
+### Patch Changes
+
+- `styles.isolated.css`: images can no longer be dragged out of a module. The `all: revert` rule added in 0.4.1 also discarded what the `draggable` attribute does in Chromium and Safari, so dragging a carousel slide by its image picked the image up instead.
+
 ## 0.4.1
 
 ### Patch Changes

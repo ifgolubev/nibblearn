@@ -39,6 +39,14 @@ ${OWN}${BOOST}::marker {
 :where(.nb-root) :where([hidden]:not([hidden="until-found"]))${BOOST} {
   display: none;
 }
+/* …and what \`draggable\` does: Chromium and Safari apply that attribute through a style. */
+:where(.nb-root) :where([draggable="false"])${BOOST} {
+  -webkit-user-drag: none;
+}
+:where(.nb-root) :where([draggable="true"])${BOOST} {
+  -webkit-user-drag: element;
+  user-select: none;
+}
 `;
 
 export function isolateCss(css) {
