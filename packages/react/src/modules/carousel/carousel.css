@@ -8,6 +8,11 @@
   background: var(--nb-surface);
   touch-action: pan-y;
 }
+@media (hover: hover) and (pointer: fine) {
+  .nb-carousel__slide[data-draggable] .nb-carousel__image {
+    cursor: grab;
+  }
+}
 .nb-carousel__title {
   font-family: var(--nb-font-display);
   font-size: var(--nb-text-lg);

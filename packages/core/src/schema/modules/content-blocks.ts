@@ -30,7 +30,7 @@ export const calloutSchema = z.object({
     /** Visual tone and icon. */
     variant: z.enum(["info", "tip", "warning", "success", "note"]).default("info"),
     /** Short heading inside the box. */
-    title: z.string().max(200).optional(),
+    title: z.string().max(200).optional().meta({ title: "Heading" }),
     /** The callout text. Supports **bold**, *italic*, `code`, [links](https://…) and lists. */
     text: longTextSchema,
   }),

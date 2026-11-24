@@ -1,3 +1,4 @@
+import type { ModuleResponse } from "./grade";
 /** Result produced when a module completes. Scores are normalised to 0–1. */
 export interface ModuleResult {
   moduleId: string;
@@ -15,6 +16,11 @@ export interface ModuleResult {
   durationMs: number;
   /** Module-specific details (serialisable). */
   details?: Record<string, unknown>;
+  /**
+   * What the learner submitted, in order and without verdicts. Send it to your server and
+   * score it there with `gradeModule()` when the result has to be trusted.
+   */
+  response?: ModuleResponse;
   completedAt: string;
 }
 

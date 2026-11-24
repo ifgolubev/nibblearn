@@ -18,6 +18,7 @@ import {
 import { humanizeKey, stripMarkup } from "@nibblearn/react";
 import { SafeImage } from "@nibblearn/react";
 import { useEditorT } from "../messages";
+import { AreaPicker } from "./AreaPicker";
 import { fieldId, pathKey, useForm } from "./context";
 import { defaultFor, uniqueId } from "./defaults";
 import { getAt, insertAt, moveItem, removeAt, type Path } from "./path";
@@ -325,8 +326,80 @@ function SelectField({ node, path, value, label, required }: FieldProps) {
   const id = fieldId(formId, path);
   const errors = issuesAt(path);
   const options = node.kind === "string" ? (node.enum ?? []) : [];
+  // A choice with a default always has a value: it is not "optional" and has no empty option.
+  const hasDefault = typeof node.default === "string" && options.includes(node.default);
   const current =
     typeof value === "string" ? value : typeof node.default === "string" ? node.default : "";
+  return (
+    <FieldFrame
+      id={id}
+      label={label}
+      description={node.description}
+      errors={errors}
+      required={required || hasDefault}
+    >
+      <select
+        id={id}
+        className="nbe-input"
+        value={current}
+        aria-invalid={errors.length > 0 || undefined}
+        aria-describedby={describedBy(id, node.description, errors)}
+        onChange={(e) => update(path, e.target.value === "" ? undefined : e.target.value)}
+      >
+        {!required && !hasDefault && <option value="">—</option>}
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {humanizeKey(o)}
+          </option>
+        ))}
+      </select>
+    </FieldFrame>
+  );
+}
+
+const REF_LABEL_KEYS = ["title", "label", "name", "text", "message", "prompt", "subject"];
+
+/** Items of the block an id field may point at: the first list found under one of `names`. */
+function referenceOptions(
+  root: unknown,
+  names: readonly string[],
+): { id: string; label: string }[] {
+  const find = (value: unknown, depth: number): unknown[] | null => {
+    if (!isRecord(value) || depth > 4) return null;
+    for (const name of names) {
+      const list = Object.prototype.hasOwnProperty.call(value, name) ? value[name] : undefined;
+      if (Array.isArray(list) && list.some((it) => isRecord(it) && typeof it.id === "string"))
+        return list;
+    }
+    for (const child of Object.values(value)) {
+      const found = find(child, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  };
+  const list = find(isRecord(root) ? root.content : undefined, 0) ?? [];
+  return list.flatMap((it) => {
+    if (!isRecord(it) || typeof it.id !== "string" || it.id === "") return [];
+    const key = REF_LABEL_KEYS.find((k) => typeof it[k] === "string" && it[k] !== "");
+    const text = key ? stripMarkup(it[key] as string) : "";
+    return [
+      { id: it.id, label: text ? (text.length > 60 ? `${text.slice(0, 59)}…` : text) : it.id },
+    ];
+  });
+}
+
+/** An id that points at another item of the block, chosen by that item's title. */
+function RefField(props: FieldProps) {
+  const { node, path, value, label, required } = props;
+  const { formId, update, issuesAt, root } = useForm();
+  const t = useEditorT();
+  const options = referenceOptions(root, node.ui.ref ?? []);
+  // Nothing to choose from (a custom schema, a list that is still empty): plain text.
+  if (options.length === 0) return <TextField {...props} />;
+  const id = fieldId(formId, path);
+  const errors = issuesAt(path);
+  const current = typeof value === "string" ? value : "";
+  const known = options.some((o) => o.id === current);
   return (
     <FieldFrame
       id={id}
@@ -341,12 +414,18 @@ function SelectField({ node, path, value, label, required }: FieldProps) {
         value={current}
         aria-invalid={errors.length > 0 || undefined}
         aria-describedby={describedBy(id, node.description, errors)}
-        onChange={(e) => update(path, e.target.value === "" ? undefined : e.target.value)}
+        onChange={(e) =>
+          update(path, e.target.value === "" && !required ? undefined : e.target.value)
+        }
       >
-        {!required && <option value="">—</option>}
+        {(!required || current === "") && <option value="">—</option>}
+        {/* An id that matches nothing stays selectable, so opening the form changes nothing. */}
+        {current !== "" && !known && (
+          <option value={current}>{t("editor.ref.missing", { id: current })}</option>
+        )}
         {options.map((o) => (
-          <option key={o} value={o}>
-            {humanizeKey(o)}
+          <option key={o.id} value={o.id}>
+            {o.label}
           </option>
         ))}
       </select>
@@ -433,7 +512,7 @@ function JsonField({ node, path, value, label, required }: FieldProps) {
 // ---- composite ------------------------------------------------------------------------------
 
 function ImageField({ node, path, value, label, required }: FieldProps) {
-  const { formId, update, issuesAt, onPickImage } = useForm();
+  const { formId, update, issuesAt, onPickImage, showHelp } = useForm();
   const t = useEditorT();
   const media = isRecord(value) ? value : undefined;
   const src = typeof media?.src === "string" ? media.src : "";
@@ -491,7 +570,7 @@ function ImageField({ node, path, value, label, required }: FieldProps) {
           <FieldFrame
             id={altId}
             label={t("editor.image.alt")}
-            description={t("editor.image.decorative")}
+            description={showHelp ? t("editor.image.decorative") : undefined}
             errors={issuesAt([...path, "alt"])}
             required={false}
           >
@@ -499,7 +578,7 @@ function ImageField({ node, path, value, label, required }: FieldProps) {
               id={altId}
               className="nbe-input"
               value={typeof media?.alt === "string" ? media.alt : ""}
-              aria-describedby={`${altId}-help`}
+              aria-describedby={showHelp ? `${altId}-help` : undefined}
               onChange={(e) => set("alt", e.target.value)}
             />
           </FieldFrame>
@@ -616,6 +695,7 @@ function ObjectField({ node, path, value, label, required, depth }: FieldProps) 
     <fieldset className="nbe-group">
       <legend className="nbe-group__legend">{label}</legend>
       {node.description && <p className="nbe-field__help">{node.description}</p>}
+      {obj && <AreaPicker fields={rest} path={path} value={obj} />}
       {rest.map(render)}
       {ids.length > 0 && (
         <details className="nbe-advanced">
@@ -724,7 +804,10 @@ function ArrayField({ node, path, value, label, required, depth }: FieldProps) {
     <section className="nbe-array" aria-labelledby={headingId}>
       <div className="nbe-array__head">
         <h4 className="nbe-array__title" id={headingId}>
-          {label} <span className="nbe-array__count">{list.length}</span>
+          {label}{" "}
+          <span className="nbe-array__count">
+            {Number.isFinite(max) ? t("editor.count", { count: list.length, max }) : list.length}
+          </span>
           {!required && <span className="nbe-field__optional"> ({t("editor.optional")})</span>}
         </h4>
       </div>
@@ -836,11 +919,17 @@ function ArrayField({ node, path, value, label, required, depth }: FieldProps) {
         type="button"
         className="nbe-btn nbe-btn--dashed"
         disabled={list.length >= max}
+        aria-describedby={list.length >= max ? `${headingId}-limit` : undefined}
         onClick={add}
       >
         <Plus aria-hidden size={14} />
         {t("editor.add", { item: itemName })}
       </button>
+      {list.length >= max && (
+        <p className="nbe-field__help" id={`${headingId}-limit`}>
+          {t("editor.limitReached", { max })}
+        </p>
+      )}
     </section>
   );
 }
@@ -984,6 +1073,7 @@ export function Field({
   switch (node.kind) {
     case "string":
       if (node.enum || w === "select") return <SelectField {...props} />;
+      if (node.ui.ref && w !== "id") return <RefField {...props} />;
       if (w === "color") return <ColorField {...props} />;
       if (w === "richtext" || w === "richtext-block") return <RichTextField {...props} />;
       return <TextField {...props} />;
@@ -1068,6 +1158,7 @@ function BareObject({ node, path, value, depth }: FieldProps) {
   );
   return (
     <>
+      <AreaPicker fields={rest} path={path} value={obj} />
       {rest.map(render)}
       {ids.length > 0 && (
         <details className="nbe-advanced">

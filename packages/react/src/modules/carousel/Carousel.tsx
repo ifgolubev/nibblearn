@@ -23,8 +23,10 @@ import "./carousel.css";
 export type CarouselProps = ModuleProps<CarouselConfig>;
 
 const SWIPE_PX = 40;
+/** Where a mouse press keeps its usual meaning instead of starting a drag. */
+const MOUSE_KEEPS = ".nb-rich, .nb-carousel__title, a, button, video, figcaption";
 
-/** Slides with text and images, moved by buttons, dots, arrow keys or swipe. Never auto-advances. */
+/** Slides with text and images, moved by buttons, dots, arrow keys, swipe or mouse drag. Never auto-advances. */
 export function Carousel({ config: rawConfig, ...rest }: CarouselProps) {
   const parsed = useMemo(() => carouselSchema.safeParse(rawConfig), [rawConfig]);
   if (!parsed.success)
@@ -101,7 +103,15 @@ function CarouselRun({
     }
   };
   const onPointerDown = (e: ReactPointerEvent) => {
-    if (e.pointerType !== "mouse") startX.current = e.clientX;
+    if (e.pointerType === "mouse") {
+      // A mouse drags the slide by its image or background. Over text it selects the text,
+      // and links and buttons keep their click.
+      if (e.button !== 0 || total < 2) return;
+      if ((e.target as Element).closest?.(MOUSE_KEEPS)) return;
+      // Later moves and the release reach the slide even when the pointer leaves it.
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    }
+    startX.current = e.clientX;
   };
   const onPointerUp = (e: ReactPointerEvent) => {
     if (startX.current === null) return;
@@ -136,7 +146,12 @@ function CarouselRun({
           role="group"
           aria-roledescription="slide"
           aria-label={slideLabel}
+          data-draggable={total > 1 ? "" : undefined}
           onPointerDown={onPointerDown}
+          // Dragging from the image or the background must not start a text selection.
+          onMouseDown={(e) => {
+            if (total > 1 && !(e.target as Element).closest?.(MOUSE_KEEPS)) e.preventDefault();
+          }}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (startX.current = null)}
         >

@@ -112,3 +112,56 @@ export function getLessonJsonSchema(options: JsonSchemaOptions = {}): JsonSchema
     },
   };
 }
+
+/** How many items a list in a module config may hold. */
+export interface ListLimit {
+  min?: number;
+  max?: number;
+}
+
+type LimitNode = {
+  properties?: Record<string, LimitNode>;
+  items?: LimitNode;
+  oneOf?: LimitNode[];
+  anyOf?: LimitNode[];
+  minItems?: number;
+  maxItems?: number;
+};
+
+function collectLimits(
+  node: LimitNode,
+  path: string,
+  out: Record<string, ListLimit>,
+  depth: number,
+) {
+  if (depth > 40) return;
+  for (const variant of [...(node.oneOf ?? []), ...(node.anyOf ?? [])])
+    collectLimits(variant, path, out, depth + 1);
+  if (node.items) {
+    if (path && (node.minItems !== undefined || node.maxItems !== undefined) && !out[path])
+      out[path] = {
+        ...(node.minItems !== undefined ? { min: node.minItems } : {}),
+        ...(node.maxItems !== undefined ? { max: node.maxItems } : {}),
+      };
+    collectLimits(node.items, path ? `${path}.*` : "*", out, depth + 1);
+  }
+  for (const [key, child] of Object.entries(node.properties ?? {}))
+    collectLimits(child, path ? `${path}.${key}` : key, out, depth + 1);
+}
+
+/**
+ * List size limits of a module type, keyed by field path (`*` stands for a list item):
+ * `getModuleLimits("choice-challenge")["content.questions"]` is `{ min: 1, max: 50 }`.
+ * Use it to stop authors at the limit instead of failing validation afterwards.
+ * Returns `undefined` for an unknown type.
+ */
+export function getModuleLimits(
+  type: string,
+  options: Pick<JsonSchemaOptions, "registry"> = {},
+): Record<string, ListLimit> | undefined {
+  const def = (options.registry ?? defaultSchemaRegistry).get(type);
+  if (!def) return undefined;
+  const out: Record<string, ListLimit> = {};
+  collectLimits(convert(def.schema, "input") as LimitNode, "", out, 0);
+  return out;
+}

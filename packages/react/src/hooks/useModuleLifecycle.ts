@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  MAX_RESPONSE_ANSWERS,
   stateFingerprint,
   isModuleState,
+  type ModuleAnswer,
   type ModuleResult,
   type ModuleState,
   type NibblearnEvent,
@@ -73,6 +75,29 @@ export interface ModuleLifecycle {
 
 const hasOwn = (obj: object, key: PropertyKey) => Object.prototype.hasOwnProperty.call(obj, key);
 
+/** Where a session keeps the answers given so far. ":" keeps it apart from module keys. */
+const ANSWERS_KEY = "nb:answers";
+
+/**
+ * The answer log of a saved session: a list, `null` when the session has none (it was saved
+ * by a version that kept no log), or `undefined` when what is stored is not a log.
+ */
+function savedAnswers(data: Record<string, unknown>): ModuleAnswer[] | null | undefined {
+  if (!hasOwn(data, ANSWERS_KEY)) return null;
+  const raw = data[ANSWERS_KEY];
+  if (!Array.isArray(raw) || raw.length > MAX_RESPONSE_ANSWERS) return undefined;
+  const ok = raw.every((a) => typeof a === "object" && a !== null && !Array.isArray(a));
+  return ok ? (raw as ModuleAnswer[]) : undefined;
+}
+
+/** One entry of the answer log, taken from a `module:answer` payload. */
+function answerOf(payload: Record<string, unknown>): ModuleAnswer {
+  const answer: ModuleAnswer = { response: payload.response };
+  if (typeof payload.itemId === "string") answer.itemId = payload.itemId;
+  if (typeof payload.itemIndex === "number") answer.itemIndex = payload.itemIndex;
+  return answer;
+}
+
 /** JSON round trip of saved data; anything that cannot be serialised is dropped. */
 function jsonClone(data: Record<string, unknown>): Record<string, unknown> {
   try {
@@ -112,7 +137,9 @@ export function useModuleLifecycle({
     isModuleState(initialState) &&
     initialState.moduleId === moduleId &&
     initialState.moduleType === moduleType &&
-    initialState.configHash === configHash
+    initialState.configHash === configHash &&
+    // A session is restored whole or not at all, its answer log included.
+    savedAnswers(initialState.data) !== undefined
       ? initialState
       : null,
   );
@@ -127,7 +154,14 @@ export function useModuleLifecycle({
   const resultRef = useRef<ModuleResult | null>(restored?.result ?? null);
   const [runId, setRunId] = useState(restored?.run ?? 0);
   const runIdRef = useRef(restored?.run ?? 0);
-  const dataRef = useRef<Record<string, unknown>>(restored ? { ...restored.data } : {});
+  const dataRef = useRef<Record<string, unknown>>(
+    restored ? { ...restored.data } : { [ANSWERS_KEY]: [] },
+  );
+  // Everything the learner submitted in this run, for `ModuleResult.response`. `null` when a
+  // restored session has no log: a response that starts halfway would grade as incomplete.
+  const answersRef = useRef<ModuleAnswer[] | null>(
+    restored ? (savedAnswers(restored.data) ?? null) : [],
+  );
   const [acted, setActed] = useState(restored === null);
   // Effects compare with the last handled value instead of a "first run" flag, so running an
   // effect twice (StrictMode, <Activity> hide/show) neither resets nor re-starts a module.
@@ -207,11 +241,23 @@ export function useModuleLifecycle({
     (type: NibblearnEventType, payload?: Record<string, unknown>) => {
       if (previewRef.current) return;
       if (type !== "module:start" && type !== "module:reset") setActed(true);
+      if (
+        type === "module:answer" &&
+        payload &&
+        hasOwn(payload, "response") &&
+        !resultRef.current &&
+        answersRef.current &&
+        answersRef.current.length < MAX_RESPONSE_ANSWERS
+      ) {
+        answersRef.current = [...answersRef.current, answerOf(payload)];
+        dataRef.current[ANSWERS_KEY] = answersRef.current;
+        scheduleNotify();
+      }
       const data = { moduleId, moduleType, payload };
       ctx.emit(type, data);
       onEventRef.current?.({ type, timestamp: new Date().toISOString(), ...data });
     },
-    [ctx, moduleId, moduleType],
+    [ctx, moduleId, moduleType, scheduleNotify],
   );
 
   const reset = useCallback(() => {
@@ -220,7 +266,8 @@ export function useModuleLifecycle({
     attemptsRef.current = 0;
     resultRef.current = null;
     runIdRef.current += 1;
-    dataRef.current = {};
+    dataRef.current = { [ANSWERS_KEY]: [] };
+    answersRef.current = [];
     setAttempts(0);
     setResult(null);
     setRunId(runIdRef.current);
@@ -268,6 +315,9 @@ export function useModuleLifecycle({
         attempts: Math.max(attemptsRef.current, partial.attempts ?? 0),
         durationMs: Date.now() - startedAt.current,
         completedAt: new Date().toISOString(),
+        ...(answersRef.current && answersRef.current.length > 0
+          ? { response: { answers: answersRef.current } }
+          : {}),
         ...partial,
       };
       resultRef.current = res;

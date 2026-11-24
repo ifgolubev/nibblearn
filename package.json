@@ -24,7 +24,7 @@
     "test:e2e:ui": "playwright test --ui",
     "check:package": "pnpm --filter './packages/*' check:package",
     "changeset": "changeset",
-    "version-packages": "changeset version",
+    "version-packages": "changeset version && node scripts/sync-version.mjs",
     "release": "pnpm build && changeset publish",
     "storybook": "pnpm --filter @nibblearn/storybook dev",
     "build:storybook": "pnpm --filter @nibblearn/storybook build",

@@ -7,6 +7,7 @@ export { LessonEditor, type LessonEditorProps } from "./LessonEditor";
 export { editorMessages, useEditorT, type EditorMessageKey } from "./messages";
 export {
   toFormNode,
+  withoutDescriptions,
   type FormNode,
   type FormNodeWithMeta,
   type FormField,

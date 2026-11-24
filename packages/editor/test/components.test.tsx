@@ -536,3 +536,160 @@ describe("fields the author does not need", () => {
     expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
   });
 });
+
+describe("form wording", () => {
+  it("callout: one Heading field, no module title or instructions", () => {
+    render(
+      <ModuleForm
+        value={createExample("callout") as Record<string, unknown>}
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByLabelText(/^Heading/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Title/)).toBeNull();
+    expect(screen.queryByLabelText(/^Instructions/)).toBeNull();
+  });
+
+  it("a choice with a default is not marked optional and has no empty option", () => {
+    render(
+      <ModuleForm
+        value={createExample("callout") as Record<string, unknown>}
+        onChange={() => {}}
+      />,
+    );
+    const variant = screen.getByLabelText("Variant") as HTMLSelectElement;
+    expect([...variant.options].map((o) => o.value)).not.toContain("");
+  });
+
+  it("help text shows no schema names", () => {
+    for (const type of builtInModuleTypes) {
+      const { unmount } = render(
+        <ModuleForm value={createExample(type) as Record<string, unknown>} onChange={() => {}} />,
+      );
+      for (const el of document.querySelectorAll(".nbe-field__help"))
+        expect(el.textContent).not.toMatch(/Schema\b/);
+      unmount();
+    }
+  });
+
+  it("hideDescriptions removes help text and its aria references", () => {
+    const value = createExample("accordion") as Record<string, unknown>;
+    const { rerender } = render(<ModuleForm value={value} onChange={() => {}} />);
+    expect(document.querySelectorAll(".nbe-field__help").length).toBeGreaterThan(0);
+    rerender(<ModuleForm value={value} onChange={() => {}} hideDescriptions />);
+    expect(document.querySelectorAll(".nbe-field__help")).toHaveLength(0);
+    for (const el of document.querySelectorAll("[aria-describedby]"))
+      expect(
+        document.getElementById(el.getAttribute("aria-describedby")!.split(" ")[0]!),
+      ).not.toBeNull();
+  });
+
+  it("a full list shows its limit and disables Add", () => {
+    const value = createExample("tabs") as { content: { tabs: Record<string, unknown>[] } };
+    const tabs = Array.from({ length: 8 }, (_, i) => ({
+      ...value.content.tabs[0]!,
+      id: `tab-${i}`,
+    }));
+    render(
+      <ModuleForm
+        value={{ ...value, content: { tabs } } as Record<string, unknown>}
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByText("8 of 8")).toBeInTheDocument();
+    const add = screen.getByRole("button", { name: "Add tab" });
+    expect(add).toBeDisabled();
+    expect(add).toHaveAccessibleDescription("This list is full: 8 is the maximum.");
+  });
+});
+
+describe("links between items and positions on images", () => {
+  it("offers the items an id may point at by their title", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    const initial = createExample("category-sort") as {
+      content: { categories: { id: string; label: string }[]; items: { categoryId: string }[] };
+    };
+    render(<Controlled initial={initial as Record<string, unknown>} onValue={onValue} />);
+    const select = screen.getAllByLabelText("Category")[0] as HTMLSelectElement;
+    expect(select.tagName).toBe("SELECT");
+    const [first, second] = initial.content.categories;
+    expect([...select.options].map((o) => o.textContent)).toEqual(
+      initial.content.categories.map((c) => c.label),
+    );
+    expect(select.value).toBe(initial.content.items[0]!.categoryId);
+    const other = select.value === first!.id ? second! : first!;
+    await user.selectOptions(select, other.label);
+    const next = onValue.mock.lastCall![0] as typeof initial;
+    expect(next.content.items[0]!.categoryId).toBe(other.id);
+  });
+
+  it("keeps an id that matches nothing, and lists of ids get the same choice", () => {
+    const value = createExample("process-explorer") as {
+      content: { stages: { id: string; dependsOn?: string[] }[] };
+    };
+    const stages = value.content.stages.map((s, i) =>
+      i === 0 ? { ...s, dependsOn: [value.content.stages[1]!.id, "gone"] } : s,
+    );
+    render(
+      <ModuleForm
+        value={{ ...value, content: { ...value.content, stages } } as Record<string, unknown>}
+        onChange={() => {}}
+      />,
+    );
+    const missing = screen.getByRole("option", { name: "gone (not found)" }) as HTMLOptionElement;
+    expect(missing.selected).toBe(true);
+  });
+
+  it("falls back to text when there is nothing to choose from", () => {
+    const value = createExample("category-sort") as { content: Record<string, unknown> };
+    render(
+      <ModuleForm
+        value={{ ...value, content: { ...value.content, categories: [] } }}
+        onChange={() => {}}
+      />,
+    );
+    expect((screen.getAllByLabelText("Category")[0] as HTMLElement).tagName).toBe("INPUT");
+  });
+
+  it("moves a hotspot on its image with the arrow keys", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    const initial = createExample("hotspot-explorer") as {
+      content: { hotspots: { x: number; y: number }[] };
+    };
+    render(<Controlled initial={initial as Record<string, unknown>} onValue={onValue} />);
+    const marker = screen.getAllByRole("button", { name: /^Position on the image/ })[0]!;
+    const { x, y } = initial.content.hotspots[0]!;
+    marker.focus();
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Shift>}{ArrowDown}{/Shift}");
+    const next = onValue.mock.lastCall![0] as typeof initial;
+    expect(next.content.hotspots[0]).toMatchObject({
+      x: Math.min(100, x + 1),
+      y: Math.min(100, y + 10),
+    });
+    // The number fields stay: they are the precise way to edit the same values.
+    expect(screen.getAllByLabelText("Horizontal position (%)").length).toBeGreaterThan(0);
+  });
+
+  it("shows an area for regions and no picker without an image", () => {
+    const spot = createExample("spot-the-mistake") as {
+      content: { canvas: { kind: string } };
+    };
+    const { unmount } = render(
+      <ModuleForm value={spot as Record<string, unknown>} onChange={() => {}} />,
+    );
+    const regions = screen.queryAllByRole("button", { name: /^Area on the image/ });
+    expect(regions.length > 0).toBe(spot.content.canvas.kind === "image");
+    unmount();
+    const hotspots = createExample("hotspot-explorer") as { content: Record<string, unknown> };
+    render(
+      <ModuleForm
+        value={{ ...hotspots, content: { ...hotspots.content, image: { src: "", alt: "" } } }}
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /^Position on the image/ })).toBeNull();
+  });
+});

@@ -24,6 +24,11 @@ export interface UiHint {
   /** For arrays: singular noun for buttons ("Add card"). */
   itemName?: string;
   order?: number;
+  /**
+   * For an id that points at another item of the same block: names of the lists the item may
+   * be in (`["nodes"]`, `["regions", "rows"]`). Forms offer those items by title.
+   */
+  ref?: string[];
 }
 
 type JsonNode = Record<string, unknown> & {
@@ -98,6 +103,17 @@ const ITEM_LABEL_KEYS = [
   "id",
 ];
 
+/** Fields holding the id of another item, and the lists that item lives in. */
+const REFERENCES: Record<string, string[]> = {
+  categoryId: ["categories"],
+  quadrantId: ["quadrants"],
+  next: ["nodes"],
+  start: ["nodes"],
+  to: ["stages"],
+  dependsOn: ["stages"],
+  targetId: ["regions", "rows", "targets"],
+};
+
 const GROUPS: Record<string, UiHint["group"]> = {
   title: "content",
   instructions: "content",
@@ -136,6 +152,35 @@ function isMedia(n: JsonNode): boolean {
   return hasType(n, "object") && !!n.properties?.src && !!n.properties?.alt;
 }
 
+function isVideo(n: JsonNode): boolean {
+  return (
+    hasType(n, "object") && !!n.properties?.src && !!(n.properties.poster ?? n.properties.captions)
+  );
+}
+
+type Docs = Readonly<Record<string, string>>;
+const NO_DOCS: Docs = {};
+const sharedDocs = (name: string): Docs =>
+  Object.prototype.hasOwnProperty.call(fieldDocs.shared, name) ? fieldDocs.shared[name]! : NO_DOCS;
+
+/**
+ * Docs of the shared schema the children of `node` belong to. Names like `title` or `label`
+ * mean different things in an image, a video and a module, so shared docs apply by place.
+ */
+function docsInside(node: JsonNode, key: string | null, depth: number): Docs {
+  if (depth === 0) return sharedDocs("moduleBase");
+  if (isVideo(node)) return sharedDocs("video");
+  if (key === "captions") {
+    // The captions file has its own `src`; the video's description of `src` is not about it.
+    const { src: _videoSrc, ...captions } = sharedDocs("video");
+    return captions;
+  }
+  if (isMedia(node)) return sharedDocs("media");
+  if (depth === 1 && (key === "feedback" || key === "scoring" || key === "appearance"))
+    return sharedDocs(key);
+  return NO_DOCS;
+}
+
 function widgetFor(key: string, n: JsonNode): UiHint["widget"] | undefined {
   if (key === "meta" || key === "schemaVersion") return "hidden";
   if (key === "id") return "id";
@@ -160,23 +205,30 @@ function widgetFor(key: string, n: JsonNode): UiHint["widget"] | undefined {
 function annotateNode(
   node: JsonNode,
   key: string | null,
-  docs: Readonly<Record<string, string>>,
+  docs: Docs,
   depth: number,
+  /** Docs of the shared schema this node is a field of, if any. */
+  place: Docs = NO_DOCS,
 ) {
   if (depth > 40) return;
   for (const variant of [...(node.oneOf ?? []), ...(node.anyOf ?? [])])
-    annotateNode(variant, key, docs, depth + 1);
+    annotateNode(variant, key, docs, depth + 1, place);
   if (key !== null) {
     if (node.title === undefined) node.title = humanizeKey(key);
-    const own = Object.prototype.hasOwnProperty.call(docs, key) ? docs[key] : undefined;
-    const global = Object.prototype.hasOwnProperty.call(fieldDocs.global, key)
-      ? fieldDocs.global[key]
-      : undefined;
-    if (node.description === undefined && (own ?? global)) node.description = own ?? global;
+    // Inside a shared schema its own docs win: a video's `title` is not the module's.
+    const text = [place, docs].find((d) => Object.prototype.hasOwnProperty.call(d, key))?.[key];
+    if (node.description === undefined && text) node.description = text;
     const ui: UiHint = { ...((node["x-ui"] as UiHint | undefined) ?? {}) };
     const widget = widgetFor(key, node);
     if (widget && !ui.widget) ui.widget = widget;
     if (depth <= 2 && GROUPS[key] && !ui.group) ui.group = GROUPS[key];
+    if (Object.prototype.hasOwnProperty.call(REFERENCES, key) && !ui.ref) {
+      const lists = REFERENCES[key]!;
+      if (hasType(node, "string")) ui.ref = lists;
+      // A list of ids: each entry is a reference.
+      else if (hasType(node, "array") && node.items && hasType(node.items, "string"))
+        node.items["x-ui"] = { ...((node.items["x-ui"] as UiHint | undefined) ?? {}), ref: lists };
+    }
     if (hasType(node, "array") && node.items) {
       ui.itemName ??= singular(humanizeKey(key).toLowerCase());
       const props = node.items.properties;
@@ -185,9 +237,18 @@ function annotateNode(
     }
     if (Object.keys(ui).length) node["x-ui"] = ui;
   }
-  if (node.properties)
+  if (node.properties) {
+    const inside = docsInside(node, key, depth);
     for (const [k, child] of Object.entries(node.properties))
-      annotateNode(child, k, docs, depth + 1);
+      // Retry settings are shared by many modules; a module's own wording for them wins.
+      annotateNode(
+        child,
+        k,
+        k === "behavior" && depth === 0 ? { ...sharedDocs("retryBehavior"), ...docs } : docs,
+        depth + 1,
+        inside,
+      );
+  }
   if (node.items) annotateNode(node.items, null, docs, depth + 1);
 }
 
@@ -218,6 +279,6 @@ export function annotateModuleJsonSchema<T extends Record<string, unknown>>(
 export function annotateLessonJsonSchema<T extends Record<string, unknown>>(schema: T): T {
   const node = schema as JsonNode;
   for (const [k, child] of Object.entries(node.properties ?? {}))
-    if (k !== "modules") annotateNode(child, k, {}, 1);
+    if (k !== "modules") annotateNode(child, k, fieldDocs.global, 1);
   return schema;
 }

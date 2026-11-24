@@ -41,6 +41,18 @@ export function CourseEditor({ initial }: { initial: Record<string, unknown> }) 
 
 Hidden fields keep the values they already have. A validation problem in a hidden field still appears in the summary above the form.
 
+- `hideDescriptions` leaves out the help text under fields. Labels, "optional" marks and validation messages stay.
+- An id that points at another item of the block (a sort item's category, the next node of a scenario, the stage a step depends on) is chosen from a list of those items by title, so it works with `hideIds` too. An id that matches nothing stays selected and is marked "not found".
+- Coordinates on an image (hotspots, diagram targets, walkthrough targets, regions of spot the mistake, annotations of before / after) can be set on the image itself: click to place a point, drag to draw an area, or move it with the arrow keys (Shift for bigger steps). The number fields remain for exact values.
+- A list shows how full it is ("3 of 8") and its Add button is disabled at the limit. To enforce the same limits outside the form, read them with `getModuleLimits(type)`:
+
+```ts
+import { getModuleLimits } from "@nibblearn/core";
+
+getModuleLimits("choice-challenge")?.["content.questions"]; // { min: 1, max: 50 }
+getModuleLimits("choice-challenge")?.["content.questions.*.options"]; // per question
+```
+
 - Labels can be overridden through `NibblearnProvider messages`: editor strings use `editor.*` keys (`editorMessages` lists them all), field labels use `field.<type>.<path>`, e.g. `field.flashcards.content.cards.front`.
 
 ## Field metadata for your own forms
@@ -57,7 +69,7 @@ If you build forms with another stack, read the same metadata the editor uses. E
 }
 ```
 
-`x-ui.widget` is one of `text`, `textarea`, `richtext`, `richtext-block` (paragraphs and lists), `image`, `color`, `select`, `slider`, `number`, `switch`, `icon`, `id` and `hidden`. Lists carry `itemName` ("card") and `itemLabel` (the property that names an item), and top-level groups carry `group` (`content`, `behavior`, `feedback`, `appearance`, `advanced`). The module schema itself has `x-icon`, a Lucide icon name; `ModuleIcon` renders it in React.
+`x-ui.widget` is one of `text`, `textarea`, `richtext`, `richtext-block` (paragraphs and lists), `image`, `color`, `select`, `slider`, `number`, `switch`, `icon`, `id` and `hidden`. An id that refers to another item of the block carries `ref`, the names of the lists that item may be in (`["categories"]`, `["regions", "rows", "targets"]`). Lists carry `itemName` ("card") and `itemLabel` (the property that names an item), and top-level groups carry `group` (`content`, `behavior`, `feedback`, `appearance`, `advanced`). The module schema itself has `x-icon`, a Lucide icon name; `ModuleIcon` renders it in React.
 
 ## Starter content
 

@@ -25,6 +25,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -98,6 +99,7 @@ type SlotState = "empty" | "filled" | "selected" | "correct" | "incorrect";
 
 function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { content, behavior } = config;
@@ -382,7 +384,7 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
     const state = slotState(id);
     const text = answers[id] ?? "";
     const invalid = state === "incorrect";
-    const showAnswer = locked && invalid;
+    const showAnswer = locked && invalid && showAnswers;
     const hintOpen = openHints.includes(id);
     const chipId = placed[id];
     return (
@@ -569,7 +571,9 @@ function FillBlanksBody({ config, life, hideHeader, className }: BodyProps) {
 
       <AnimatedFeedback show={checked} tone={tone} title={feedbackTitle} text={feedbackText} />
 
-      {locked && behavior.showExplanation && <Explanation text={content.explanation} />}
+      {locked && behavior.showExplanation && (showAnswers || evaluation?.correct) && (
+        <Explanation text={content.explanation} />
+      )}
 
       {!locked && (
         <div className="nb-fill__footer">

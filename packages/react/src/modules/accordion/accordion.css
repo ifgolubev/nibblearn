@@ -41,7 +41,7 @@
   outline-offset: -2px;
 }
 .nb-acc__panel {
-  padding: 0 var(--nb-space-4) var(--nb-space-4);
+  padding: var(--nb-space-2) var(--nb-space-4) var(--nb-space-4);
   color: var(--nb-fg-muted);
 }
 .nb-acc__image {

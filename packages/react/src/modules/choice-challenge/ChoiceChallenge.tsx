@@ -21,6 +21,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import { useFocusSync } from "../../hooks/useFocusSync";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
@@ -131,6 +132,7 @@ function ChoiceChallengeRun({
   className,
 }: ChoiceChallengeProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { questions } = config.content;
@@ -327,7 +329,7 @@ function ChoiceChallengeRun({
     if (!checked) return isSelected ? "selected" : "idle";
     if (locked) {
       if (o.correct && isSelected) return "correct";
-      if (o.correct && !isSelected) return "missed";
+      if (o.correct && !isSelected) return showAnswers ? "missed" : "idle";
       if (!o.correct && isSelected) return "incorrect";
       return "idle";
     }
@@ -470,7 +472,9 @@ function ChoiceChallengeRun({
                 shortcut={LETTERS[i]}
                 multiple={mode === "multiple"}
                 state={stateFor(o)}
-                explanation={locked ? o.explanation : undefined}
+                explanation={
+                  locked && (showAnswers || selected.includes(o.id)) ? o.explanation : undefined
+                }
                 disabled={locked}
                 onClick={() => toggle(o.id)}
                 className={hasImages ? "nb-option--image-grid" : undefined}
@@ -488,6 +492,7 @@ function ChoiceChallengeRun({
           <AnimatedFeedback show={checked} tone={tone} title={feedbackTitle} text={feedbackText}>
             {evaluation &&
               locked &&
+              showAnswers &&
               !evaluation.correct &&
               evaluation.missedIds.length > 0 &&
               mode === "multiple" && (
@@ -502,7 +507,10 @@ function ChoiceChallengeRun({
               )}
           </AnimatedFeedback>
 
-          {locked && behavior.showExplanation && <Explanation text={question.explanation} />}
+          {/* The explanation of a question gives its answer away. */}
+          {locked && behavior.showExplanation && (showAnswers || evaluation?.correct) && (
+            <Explanation text={question.explanation} />
+          )}
 
           <div className="nb-choice__footer">
             <span className="nb-muted nb-text-sm">

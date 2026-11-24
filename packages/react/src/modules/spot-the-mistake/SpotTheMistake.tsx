@@ -13,6 +13,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -96,6 +97,7 @@ const MONO_RE = /^(https?:\/\/|[A-Z0-9_-]{3,}$|[\d\s.,:/+%€$£¥-]+$|[\d]{2,})
 
 function SpotBody({ config, life, hideHeader, className }: BodyProps) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { canvas, mistakes, summary } = config.content;
@@ -261,7 +263,7 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
 
   const stateFor = (id: string): TargetState => {
     if (found.includes(id)) return "found";
-    if (revealed && mistakeByTarget.has(id)) return "missed";
+    if (revealed && showAnswers && mistakeByTarget.has(id)) return "missed";
     if (wrong.includes(id)) return "wrong";
     if (selected.includes(id)) return "selected";
     return "idle";
@@ -474,10 +476,10 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                leading={<Eye aria-hidden />}
+                leading={showAnswers ? <Eye aria-hidden /> : undefined}
                 onClick={() => finish(found, wrong, true)}
               >
-                {t("spot.revealRemaining")}
+                {showAnswers ? t("spot.revealRemaining") : t("common.giveUp")}
               </Button>
             )}
           </div>
@@ -525,6 +527,8 @@ function SpotBody({ config, life, hideHeader, className }: BodyProps) {
             <ol className="nb-spot__list-items">
               {mistakes.map((m, i) => {
                 const ok = found.includes(m.targetId);
+                // A mistake the learner did not find stays unnamed.
+                if (!ok && !showAnswers) return null;
                 return (
                   <li
                     key={m.targetId}

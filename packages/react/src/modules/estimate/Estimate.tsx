@@ -28,6 +28,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import { useFocusSync } from "../../hooks/useFocusSync";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
@@ -217,6 +218,8 @@ function RevealScale({
  * -------------------------------------------------------------------------- */
 
 interface QuestionViewProps {
+  /** Whether the true value may be shown (`scoring.revealAnswers`). */
+  showAnswers: boolean;
   moduleId: string;
   question: EstimateQuestion;
   index: number;
@@ -233,6 +236,7 @@ interface QuestionViewProps {
 }
 
 function QuestionView({
+  showAnswers,
   moduleId,
   question,
   index,
@@ -362,7 +366,11 @@ function QuestionView({
         </div>
 
         {result ? (
-          <RevealScale question={question} guess={guess} band={result.band} format={format} />
+          showAnswers ? (
+            <RevealScale question={question} guess={guess} band={result.band} format={format} />
+          ) : (
+            <p className="nb-est__delta">{t("estimate.yourGuessWas", { guess: format(guess) })}</p>
+          )
         ) : (
           <div className="nb-est__scale">
             <div className="nb-est__control">
@@ -481,14 +489,18 @@ function QuestionView({
                 {t("estimate.accuracy")}: <strong>{Math.round(result.score * 100)}%</strong>
               </span>
             </div>
-            <p className="nb-est__delta">
-              {deltaText} {t("estimate.answerIs", { value: format(question.answer) })}
-            </p>
+            {showAnswers && (
+              <p className="nb-est__delta">
+                {deltaText} {t("estimate.answerIs", { value: format(question.answer) })}
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {result && <Explanation text={question.explanation} />}
+      {result && (showAnswers || result.band === "bullseye") && (
+        <Explanation text={question.explanation} />
+      )}
 
       <div className="nb-est__footer">
         {!result && <span className="nb-est__kbd nb-muted">{t("estimate.keyboardHint")}</span>}
@@ -525,6 +537,7 @@ function EstimateRun({
   className,
 }: EstimateProps & { life: ModuleLifecycle }) {
   const { t, locale } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { questions, currency } = config.content;
@@ -580,9 +593,13 @@ function EstimateRun({
         response: guess,
       });
       const value = formatEstimate(question, question.answer, { currency, locale });
-      announce(`${t(`estimate.${acc.band}`)} ${t("estimate.answerIs", { value })}`);
+      announce(
+        showAnswers
+          ? `${t(`estimate.${acc.band}`)} ${t("estimate.answerIs", { value })}`
+          : t(`estimate.${acc.band}`),
+      );
     },
-    [life, question, index, currency, locale, announce, t, setGuesses],
+    [life, question, index, currency, locale, announce, t, setGuesses, showAnswers],
   );
 
   const onNext = useCallback(() => {
@@ -653,7 +670,12 @@ function EstimateRun({
                       <RichText text={q.prompt} />
                     </span>
                     <span className="nb-est__summary-meta">
-                      {t("estimate.guessVsAnswer", { guess: fmt(r.guess), answer: fmt(r.answer) })}
+                      {showAnswers
+                        ? t("estimate.guessVsAnswer", {
+                            guess: fmt(r.guess),
+                            answer: fmt(r.answer),
+                          })
+                        : t("estimate.yourGuessWas", { guess: fmt(r.guess) })}
                     </span>
                   </span>
                   <span className="nb-est__summary-score">{Math.round(r.score * 100)}%</span>
@@ -702,6 +724,7 @@ function EstimateRun({
           transition={{ duration: reduced ? 0 : 0.24, ease: [0.2, 0.8, 0.2, 1] }}
         >
           <QuestionView
+            showAnswers={showAnswers}
             moduleId={config.id}
             question={question}
             index={index}

@@ -33,6 +33,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -399,6 +400,8 @@ function Quadrant({
  * Module
  * -------------------------------------------------------------------------- */
 
+const NO_QUADRANTS = new Map<string, MatrixQuadrant>();
+
 function PriorityMatrixRun({
   life,
   config,
@@ -406,6 +409,7 @@ function PriorityMatrixRun({
   className,
 }: PriorityMatrixProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { behavior } = config;
@@ -549,7 +553,7 @@ function PriorityMatrixRun({
       (!behavior.allowRetry || (behavior.maxAttempts > 0 && n >= behavior.maxAttempts));
     if (willReveal) {
       setRevealed(true);
-      setAssignments(Object.fromEntries(items.map((i) => [i.id, i.quadrantId])));
+      if (showAnswers) setAssignments(Object.fromEntries(items.map((i) => [i.id, i.quadrantId])));
     }
     life.emit("module:answer", {
       assignments,
@@ -581,6 +585,7 @@ function PriorityMatrixRun({
     setFirstFraction,
     setRevealed,
     setAssignments,
+    showAnswers,
   ]);
 
   const retry = useCallback(() => {
@@ -595,10 +600,12 @@ function PriorityMatrixRun({
 
   const reveal = useCallback(() => {
     setRevealed(true);
-    setAssignments(Object.fromEntries(items.map((i) => [i.id, i.quadrantId])));
+    if (showAnswers) {
+      setAssignments(Object.fromEntries(items.map((i) => [i.id, i.quadrantId])));
+      announce(t("matrix.expert"));
+    }
     life.emit("module:interact", { action: "reveal" });
-    announce(t("matrix.expert"));
-  }, [items, life, announce, t, setRevealed, setAssignments]);
+  }, [items, life, announce, t, setRevealed, setAssignments, showAnswers]);
 
   const score = evaluation
     ? priorityMatrixScore({
@@ -634,7 +641,7 @@ function PriorityMatrixRun({
   ]);
 
   const chipState = (itemId: string): ChipState => {
-    if (revealed && evaluation && !evaluation.items[itemId]) return "revealed";
+    if (revealed && showAnswers && evaluation && !evaluation.items[itemId]) return "revealed";
     if (evaluation) return evaluation.items[itemId] ? "correct" : "incorrect";
     if (lockedIds.includes(itemId)) return "locked";
     if (selected === itemId) return "selected";
@@ -671,22 +678,24 @@ function PriorityMatrixRun({
             life.emit("module:reset");
           }}
         >
-          <div className="nb-matrix__summary" role="group" aria-label={t("matrix.expert")}>
-            {quadrants.map((q) => (
-              <div key={q.id} className="nb-matrix__summary-cell" style={quadrantStyle(q)}>
-                <span className="nb-matrix__summary-label">{q.label}</span>
-                <ul className="nb-matrix__summary-items">
-                  {items
-                    .filter((i) => i.quadrantId === q.id)
-                    .map((i) => (
-                      <li key={i.id}>
-                        <RichText text={i.text} />
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          {showAnswers && (
+            <div className="nb-matrix__summary" role="group" aria-label={t("matrix.expert")}>
+              {quadrants.map((q) => (
+                <div key={q.id} className="nb-matrix__summary-cell" style={quadrantStyle(q)}>
+                  <span className="nb-matrix__summary-label">{q.label}</span>
+                  <ul className="nb-matrix__summary-items">
+                    {items
+                      .filter((i) => i.quadrantId === q.id)
+                      .map((i) => (
+                        <li key={i.id}>
+                          <RichText text={i.text} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
         </CompletionCard>
       </ModuleShell>
     );
@@ -763,7 +772,7 @@ function PriorityMatrixRun({
                   isMovable={isMovable}
                   selectedItem={selectedItem}
                   showExplanation={checked && behavior.showExplanation}
-                  quadrantById={quadrantById}
+                  quadrantById={showAnswers ? quadrantById : NO_QUADRANTS}
                   onSelect={toggleSelect}
                   onPlace={(id) => place(id, q.id)}
                   reduced={reduced}
@@ -790,7 +799,8 @@ function PriorityMatrixRun({
       {checked && behavior.showExplanation && (
         <ul className="nb-matrix__review" aria-label={t("common.review")}>
           {order
-            .filter((i) => i.explanation)
+            // An item's explanation says where it belongs.
+            .filter((i) => i.explanation && (showAnswers || chipState(i.id) === "correct"))
             .map((i) => {
               const state = chipState(i.id);
               const belongs = quadrantById.get(i.quadrantId);
@@ -842,7 +852,9 @@ function PriorityMatrixRun({
         }
       />
 
-      {locked && behavior.showExplanation && <Explanation text={config.content.explanation} />}
+      {locked && behavior.showExplanation && (showAnswers || evaluation?.correct) && (
+        <Explanation text={config.content.explanation} />
+      )}
 
       <div className="nb-matrix__footer">
         <span className="nb-muted nb-text-sm">
@@ -850,8 +862,12 @@ function PriorityMatrixRun({
         </span>
         <div className="nb-module__actions">
           {canReveal && (
-            <Button variant="ghost" onClick={reveal} leading={<Eye aria-hidden />}>
-              {t("common.showAnswer")}
+            <Button
+              variant="ghost"
+              onClick={reveal}
+              leading={showAnswers ? <Eye aria-hidden /> : undefined}
+            >
+              {showAnswers ? t("common.showAnswer") : t("common.giveUp")}
             </Button>
           )}
           {canRetry && (

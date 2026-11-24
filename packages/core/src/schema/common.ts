@@ -206,15 +206,21 @@ export const scoringSchema = z
   .object({
     /** Relative weight of this module in the lesson score. Default 1. */
     weight: z.number().min(0).default(1),
-    /** Minimum score (0–1) to consider the module passed. Default 0 (any completion passes). */
+    /** Minimum score (0–1) to consider the module passed. 0 (the default) means 0.7. */
     passThreshold: z.number().min(0).max(1).default(0),
+    /**
+     * When the correct answers may be shown. "always": as soon as an answer is checked.
+     * "after-pass": only once the module is completed with a score that reaches the pass
+     * threshold (0.7 when none is set). "never": not at all. The learner always sees which of their answers are wrong.
+     */
+    revealAnswers: z.enum(["always", "after-pass", "never"]).default("always"),
   })
-  .default({ weight: 1, passThreshold: 0 });
+  .default({ weight: 1, passThreshold: 0, revealAnswers: "always" });
 export type Scoring = z.infer<typeof scoringSchema>;
 
 export const appearanceSchema = z
   .object({
-    /** Override the accent color for this module only (a plain CSS color, see `cssColorSchema`). */
+    /** Accent color for this block only, e.g. `#3b5bdb` or `teal`. */
     accent: cssColorSchema.optional(),
     /** Denser layout for embedding in constrained spaces. */
     compact: z.boolean().default(false),

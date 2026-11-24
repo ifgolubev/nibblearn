@@ -17,6 +17,21 @@ describe("Callout and Columns", () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
+  it("is a note inside the text: no block header, and the accent recolours any variant", () => {
+    const parse = (extra: object) => calloutSchema.parse({ ...createExample("callout"), ...extra });
+    const { container, rerender } = render(
+      <Callout config={parse({ title: "Block title", instructions: "Read this." })} />,
+    );
+    expect(screen.queryByText("Block title")).toBeNull();
+    expect(screen.queryByText("Read this.")).toBeNull();
+    expect(container.querySelector(".nb-module__header")).toBeNull();
+    expect(screen.getByRole("note")).not.toHaveAttribute("data-accented");
+    rerender(<Callout config={parse({ appearance: { accent: "#ff8c82" } })} />);
+    const note = screen.getByRole("note");
+    expect(note).toHaveAttribute("data-variant", "tip");
+    expect(note).toHaveAttribute("data-accented");
+  });
+
   it("renders columns with headings and lists", () => {
     const onComplete = vi.fn();
     const config = columnsSchema.parse(createExample("columns"));

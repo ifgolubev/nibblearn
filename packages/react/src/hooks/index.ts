@@ -7,3 +7,4 @@ export * from "./useResolvedSrc";
 export * from "./usePersistedState";
 export * as stateGuards from "./stateGuards";
 export * from "./useFocusSync";
+export { useRevealAnswers } from "./useRevealAnswers";

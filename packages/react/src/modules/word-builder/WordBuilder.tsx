@@ -47,6 +47,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import { useFocusSync } from "../../hooks/useFocusSync";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
@@ -226,6 +227,8 @@ function PlacedTile({
  * -------------------------------------------------------------------------- */
 
 interface ItemViewProps {
+  /** Whether the correct order may be shown (`scoring.revealAnswers`). */
+  showAnswers: boolean;
   moduleId: string;
   runId: number;
   item: WordBuilderItem;
@@ -242,6 +245,7 @@ interface ItemViewProps {
 }
 
 function ItemView({
+  showAnswers,
   moduleId,
   runId,
   item,
@@ -490,7 +494,7 @@ function ItemView({
     if (!evaluation) return;
     setLocked(true);
     life.emit("module:interact", { itemIndex: index, action: "reveal" });
-    announce(`${t("word.correctAnswer")}: ${item.tokens.join(" ")}`);
+    if (showAnswers) announce(`${t("word.correctAnswer")}: ${item.tokens.join(" ")}`);
     onResolve({
       ...(item.id ? { id: item.id } : {}),
       correct: false,
@@ -501,7 +505,19 @@ function ItemView({
       ),
       placed: placedTexts,
     });
-  }, [evaluation, life, index, announce, t, item, attempts, placedTexts, onResolve, setLocked]);
+  }, [
+    evaluation,
+    life,
+    index,
+    announce,
+    t,
+    item,
+    attempts,
+    placedTexts,
+    onResolve,
+    setLocked,
+    showAnswers,
+  ]);
 
   const tileState = (i: number): TileState => {
     if (!evaluation) return "idle";
@@ -667,7 +683,7 @@ function ItemView({
       />
 
       <AnimatePresence initial={false}>
-        {locked && !solved && (
+        {locked && !solved && showAnswers && (
           <motion.div
             key="solution"
             className="nb-word__solution"
@@ -686,7 +702,9 @@ function ItemView({
         )}
       </AnimatePresence>
 
-      {locked && behavior.showExplanation && <Explanation text={item.explanation} />}
+      {locked && behavior.showExplanation && (showAnswers || solved) && (
+        <Explanation text={item.explanation} />
+      )}
 
       <div className="nb-word__footer">
         {editable ? (
@@ -696,8 +714,12 @@ function ItemView({
         )}
         <div className="nb-module__actions">
           {canReveal && (
-            <Button variant="ghost" onClick={reveal} leading={<Eye aria-hidden />}>
-              {t("common.showAnswer")}
+            <Button
+              variant="ghost"
+              onClick={reveal}
+              leading={showAnswers ? <Eye aria-hidden /> : undefined}
+            >
+              {showAnswers ? t("common.showAnswer") : t("common.giveUp")}
             </Button>
           )}
           {locked ? (
@@ -742,6 +764,7 @@ function WordBuilderRun({
   className,
 }: WordBuilderProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { items } = config.content;
@@ -844,7 +867,9 @@ function WordBuilderRun({
                     <span className="nb-word__summary-prompt">
                       <RichText text={it.prompt} />
                     </span>
-                    <AnswerLine tokens={it.tokens} display={it.display} />
+                    {(showAnswers || r.correct) && (
+                      <AnswerLine tokens={r.correct ? r.placed : it.tokens} display={it.display} />
+                    )}
                     {!r.correct && r.placed.length > 0 && (
                       <span className="nb-word__summary-meta">
                         {t("word.yourAnswer", { answer: r.placed.join(" ") })}
@@ -890,6 +915,7 @@ function WordBuilderRun({
           transition={{ duration: reduced ? 0 : 0.24, ease: [0.2, 0.8, 0.2, 1] }}
         >
           <ItemView
+            showAnswers={showAnswers}
             moduleId={config.id}
             runId={life.runId}
             item={item}

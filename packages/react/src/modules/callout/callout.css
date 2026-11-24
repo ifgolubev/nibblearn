@@ -25,6 +25,11 @@
   --_tone: var(--nb-fg-muted);
   --_bg: var(--nb-surface-2);
 }
+/* A block accent recolours any variant; the icon still tells them apart. */
+.nb-callout[data-accented] {
+  --_tone: var(--nb-accent);
+  --_bg: var(--nb-accent-soft);
+}
 .nb-callout__icon {
   flex: none;
   margin-top: 0.15em;

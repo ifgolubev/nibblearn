@@ -47,6 +47,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import { useFocusSync } from "../../hooks/useFocusSync";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
@@ -156,6 +157,7 @@ function InboxTriageRun({
   className,
 }: InboxTriageProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message: announcement, announce } = useAnnounce();
   const { owner, actions, messages } = config.content;
@@ -252,15 +254,26 @@ function InboxTriageRun({
       if (instant) {
         const expert = actionById.get(active.correctAction)?.label ?? active.correctAction;
         announce(
-          status === "correct"
-            ? `${t("inbox.status.correct")}.`
+          status === "correct" || !showAnswers
+            ? `${t(`inbox.status.${status}`)}.`
             : `${t(`inbox.status.${status}`)}. ${t("inbox.expertCall", { action: expert })}.`,
         );
       } else {
         announce(t("inbox.filedAs", { action: action.label }));
       }
     },
-    [active, finished, decisions, instant, life, actionById, announce, t, setDecisions],
+    [
+      active,
+      finished,
+      decisions,
+      instant,
+      life,
+      actionById,
+      announce,
+      t,
+      setDecisions,
+      showAnswers,
+    ],
   );
 
   const finish = useCallback(() => {
@@ -344,7 +357,12 @@ function InboxTriageRun({
         width="wide"
       >
         <div ref={summaryRef} tabIndex={-1} className="nb-inbox__done">
-          <TriageSummary config={config} decisions={decisions} onRetry={retry} />
+          <TriageSummary
+            config={config}
+            decisions={decisions}
+            onRetry={retry}
+            showAnswers={showAnswers}
+          />
         </div>
       </ModuleShell>
     );
@@ -488,6 +506,7 @@ function InboxTriageRun({
           <div className="nb-inbox__reader">
             {active ? (
               <MessageView
+                showAnswers={showAnswers}
                 key={active.id}
                 canFocus={life.autoFocus}
                 moduleId={config.id}
@@ -538,6 +557,8 @@ function InboxTriageRun({
  * -------------------------------------------------------------------------- */
 
 interface MessageViewProps {
+  /** Whether the expert's call may be shown (`scoring.revealAnswers`). */
+  showAnswers: boolean;
   moduleId: string;
   message: InboxMessage;
   ownerName: string;
@@ -554,6 +575,7 @@ interface MessageViewProps {
 }
 
 function MessageView({
+  showAnswers,
   moduleId,
   message: m,
   ownerName,
@@ -691,13 +713,15 @@ function MessageView({
                 {STATUS_ICON[status]}
               </span>
               <span className="nb-inbox__coach-title">{t(`inbox.status.${status}`)}</span>
-              {status !== "correct" && (
+              {status !== "correct" && showAnswers && (
                 <span className="nb-inbox__coach-expert" data-tone={toneOf(expert)}>
                   {t("inbox.expertCall", { action: expert?.label ?? m.correctAction })}
                 </span>
               )}
             </div>
-            <RichText className="nb-inbox__coach-text" text={m.explanation} paragraphs />
+            {(showAnswers || status === "correct") && (
+              <RichText className="nb-inbox__coach-text" text={m.explanation} paragraphs />
+            )}
           </motion.div>
         )}
 
@@ -733,10 +757,12 @@ function TriageSummary({
   config,
   decisions,
   onRetry,
+  showAnswers,
 }: {
   config: InboxTriageConfig;
   decisions: TriageDecisions;
   onRetry: () => void;
+  showAnswers: boolean;
 }) {
   const { t } = useNibblearn();
   const { actions, messages, summary } = config.content;
@@ -782,7 +808,9 @@ function TriageSummary({
                     {actionIcon(a)}
                   </span>
                   <span className="nb-sr-only">
-                    {t("inbox.callCount", { label: a.label, mine, expert: expertN })}
+                    {showAnswers
+                      ? t("inbox.callCount", { label: a.label, mine, expert: expertN })
+                      : `${a.label}: ${mine}`}
                   </span>
                   <span className="nb-inbox__chip-label" aria-hidden>
                     {a.label}
@@ -790,9 +818,11 @@ function TriageSummary({
                   <strong className="nb-inbox__chip-count" aria-hidden>
                     {mine}
                   </strong>
-                  <span className="nb-inbox__chip-expert" aria-hidden>
-                    {t("inbox.expertShort", { count: expertN })}
-                  </span>
+                  {showAnswers && (
+                    <span className="nb-inbox__chip-expert" aria-hidden>
+                      {t("inbox.expertShort", { count: expertN })}
+                    </span>
+                  )}
                 </li>
               );
             })}
@@ -809,8 +839,9 @@ function TriageSummary({
                 <ul className="nb-inbox__missed">
                   {missed.map((m) => (
                     <li key={m.id}>
-                      <strong>{m.from.name}</strong> · {m.subject} ·{" "}
-                      {t("inbox.expert", { action: labelOf(m.correctAction) })}
+                      <strong>{m.from.name}</strong> · {m.subject}
+                      {showAnswers &&
+                        ` · ${t("inbox.expert", { action: labelOf(m.correctAction) })}`}
                     </li>
                   ))}
                 </ul>
@@ -850,19 +881,23 @@ function TriageSummary({
                       >
                         {t("inbox.youChose", { action: labelOf(r.decision) })}
                       </span>
-                      <span
-                        className={clsx("nb-inbox__call", "nb-inbox__call--expert")}
-                        data-tone={toneOf(byId.get(r.correctAction))}
-                      >
-                        {t("inbox.expert", { action: labelOf(r.correctAction) })}
-                      </span>
-                      {m.acceptable.length > 0 && (
+                      {showAnswers && (
+                        <span
+                          className={clsx("nb-inbox__call", "nb-inbox__call--expert")}
+                          data-tone={toneOf(byId.get(r.correctAction))}
+                        >
+                          {t("inbox.expert", { action: labelOf(r.correctAction) })}
+                        </span>
+                      )}
+                      {showAnswers && m.acceptable.length > 0 && (
                         <span className="nb-inbox__also">
                           {t("inbox.alsoFine", { actions: m.acceptable.map(labelOf).join(", ") })}
                         </span>
                       )}
                     </div>
-                    <RichText className="nb-inbox__review-text" text={m.explanation} paragraphs />
+                    {(showAnswers || r.status === "correct") && (
+                      <RichText className="nb-inbox__review-text" text={m.explanation} paragraphs />
+                    )}
                   </div>
                 </li>
               );

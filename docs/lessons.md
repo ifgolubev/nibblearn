@@ -130,6 +130,17 @@ const s = computeLessonScore(lesson, progress.results);
 
 `scoring.passThreshold` on a module sets the score that counts as a pass for that module. When it is `0` (the default) the player uses `0.7`. It drives the pass/fail icons in the summary and the streak counter; the helpers `modulePassThreshold()` and `moduleResultPassed()` are exported from `@nibblearn/core` for your own reporting. The lesson-level gate remains `completion.threshold` (with `rule: "score"`).
 
+Where the threshold is used, and one place where it is not followed exactly:
+
+| Place                                                               | Threshold                                           |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| Lesson player (summary icons, streaks), `moduleResultPassed()`      | `scoring.passThreshold`, or 0.7 when it is `0`      |
+| `gradeModule().passed`, `scoring.revealAnswers: "after-pass"`       | the same                                            |
+| The result card at the end of an activity (success or "keep going") | never below 0.7, even when `passThreshold` is lower |
+| Branching scenario and conversation result cards                    | always 0.7                                          |
+
+So with a threshold below 0.7, an activity can count as passed while its own result card still encourages another try. `ModuleResult` itself carries no pass flag: decide with `moduleResultPassed()` or, on a server, `gradeModule()`. To show your own verdict, replace the card through `NibblearnProvider completion`.
+
 ## Review mode
 
 After finishing, the summary lists every module with its status and score. Selecting one opens it in **review mode**: a banner with "Back to summary" appears, navigation is unlocked (Next and Back work even for incomplete modules), and the completed module shows its completion card. Reviewing does not change saved results.

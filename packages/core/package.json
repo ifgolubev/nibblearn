@@ -1,10 +1,12 @@
 {
   "name": "@nibblearn/core",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Engine, schemas, validation and types for Nibblearn interactive learning content. Framework-agnostic.",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/nibblearn-core.global.js"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,6 +31,7 @@
         "default": "./dist/examples.cjs"
       }
     },
+    "./global": "./dist/nibblearn-core.global.js",
     "./schemas/*.json": "./dist/schemas/*.json",
     "./package.json": "./package.json"
   },
@@ -38,10 +41,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build && dts-bundle-generator -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/index.ts && dts-bundle-generator -o dist/examples.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/examples/index.ts && node ../../scripts/finish-dts.mjs dist && node ../../scripts/build-json-schemas.mjs",
+    "build": "vite build && vite build --config vite.global.config.ts && dts-bundle-generator -o dist/index.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/index.ts && dts-bundle-generator -o dist/examples.d.ts --project tsconfig.build.json --no-banner --export-referenced-types=false --silent src/examples/index.ts && node ../../scripts/finish-dts.mjs dist && node ../../scripts/build-json-schemas.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "check:package": "publint && attw --pack . --profile node16",
+    "check:package": "publint && attw --pack . --profile node16 --exclude-entrypoints global && node ../../scripts/check-core-global.mjs",
     "fields:docs": "node ../../scripts/extract-field-docs.mjs && prettier --write src/schema/field-docs.generated.ts"
   },
   "dependencies": {

@@ -34,6 +34,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -99,6 +100,7 @@ function LabelDiagramRun({
   className,
 }: LabelDiagramProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { behavior } = config;
@@ -350,8 +352,8 @@ function LabelDiagramRun({
   const reveal = useCallback(() => {
     setRevealed(true);
     life.emit("module:interact", { action: "reveal" });
-    announce(t("common.showAnswer"));
-  }, [life, announce, t, setRevealed]);
+    if (showAnswers) announce(t("common.showAnswer"));
+  }, [life, announce, t, setRevealed, showAnswers]);
 
   const score = evaluation
     ? labelDiagramScore(attempts, evaluation.correct, firstFraction ?? 0)
@@ -381,7 +383,13 @@ function LabelDiagramRun({
   };
 
   if (finished && evaluation) {
-    const withNotes = behavior.showExplanation && targets.some((tg) => tg.explanation);
+    // The notes name every target, and the explanation describes the solved diagram.
+    const withNotes =
+      showAnswers && behavior.showExplanation && targets.some((tg) => tg.explanation);
+    const withExplanation =
+      behavior.showExplanation &&
+      !!config.content.explanation &&
+      (showAnswers || evaluation.correct);
     return (
       <ModuleShell
         type="label-diagram"
@@ -405,7 +413,7 @@ function LabelDiagramRun({
           ]}
           onRetry={restart}
         >
-          {(withNotes || (behavior.showExplanation && config.content.explanation)) && (
+          {(withNotes || withExplanation) && (
             <div className="nb-label__notes">
               <h4 className="nb-label__notes-title">{t("label.explanations")}</h4>
               {withNotes && (
@@ -423,7 +431,7 @@ function LabelDiagramRun({
                   ))}
                 </ol>
               )}
-              {config.content.explanation && (
+              {withExplanation && config.content.explanation && (
                 <p className="nb-label__notes-extra">
                   <RichText text={config.content.explanation} />
                 </p>
@@ -454,7 +462,7 @@ function LabelDiagramRun({
       state: zoneState(tg.id),
       movable: zoneMovable(tg.id),
       targeting: targeting && zoneMovable(tg.id),
-      revealed,
+      revealed: revealed && showAnswers,
       onActivate: () => activateZone(tg.id),
       t,
     };
@@ -601,8 +609,12 @@ function LabelDiagramRun({
         </span>
         <div className="nb-module__actions">
           {canReveal && (
-            <Button variant="ghost" onClick={reveal} leading={<Eye aria-hidden />}>
-              {t("common.showAnswer")}
+            <Button
+              variant="ghost"
+              onClick={reveal}
+              leading={showAnswers ? <Eye aria-hidden /> : undefined}
+            >
+              {showAnswers ? t("common.showAnswer") : t("common.giveUp")}
             </Button>
           )}
           {canRetry && (

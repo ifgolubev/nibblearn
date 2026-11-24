@@ -4,6 +4,34 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added (server-side grading)
+
+- `@nibblearn/core`: `gradeModule(config, response)` scores a learner's answers without a browser, with the rules the components use (retries included), for 15 activity types (`gradableModuleTypes`, `isGradable`). It validates both arguments and never throws for bad input. Custom types plug in through `graders`.
+- Every scored activity reports `ModuleResult.response`: what the learner submitted, in order, without verdicts. It is collected from `module:answer` events and saved with the session.
+- `@nibblearn/core/global` (`dist/nibblearn-core.global.js`): the core as one dependency-free script that defines `NibblearnCore`, for JavaScript engines embedded in other servers. It needs no DOM, Node API, `Intl` or `eval`.
+- `getModuleLimits(type)`: list size limits by field path.
+- `version` in `@nibblearn/core` (and `NibblearnCore.version` in the global script): the package version, to check that a grading server and the browser run the same release.
+- `gradeModule` returns `score: 0` while a response is incomplete.
+
+### Added (holding answers back)
+
+- `scoring.revealAnswers` (`"always"`, `"after-pass"`, `"never"`; default `"always"`): when an activity may show correct answers. With `"after-pass"` they appear only once the activity is completed with a score that reaches `scoring.passThreshold`. Wrong answers are always marked. Applies to 11 activity types; see Embedding.
+
+### Added (editor)
+
+- `ModuleForm`: `hideDescriptions` leaves out help text.
+- Ids that point at another item of the block (category, quadrant, next node, start node, stage, target) are chosen by the item's title (`x-ui.ref` in the JSON Schema).
+- Coordinates are set on the image: click or drag, or arrow keys on the marker. The number fields stay.
+- Lists show how full they are and say when the limit is reached.
+
+### Changed
+
+- Callout: the block-level `title` and `instructions` are no longer rendered above the box and are left out of the form; the heading inside the box (`content.title`) is labelled "Heading". Stored values stay valid.
+- Callout: `appearance.accent` recolours every variant, not only `info`.
+- Carousel: slides can be dragged with the mouse by their image or background. Text stays selectable.
+- Accordion: an open panel has space between its header and its text.
+- Forms: a choice with a default value is no longer marked "optional" and has no empty option. The help text of `appearance.accent` no longer names a schema.
+
 ### Fixed (isolated stylesheet)
 
 - `styles.isolated.css` now also covers properties Nibblearn does not set itself: inside a block they fall back to the browser default instead of the page's value (`all: revert` at the lowest specificity of the stylesheet). Page rules such as `.reader a { font-weight: 700 }`, `.reader img { object-fit: contain }` or `.editor code { border: … }` no longer show through. The block root, elements with a class of your own and SVG are left alone.

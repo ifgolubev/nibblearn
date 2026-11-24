@@ -5,6 +5,8 @@ export * from "./schema/registry";
 export * from "./validate";
 export * from "./migrate";
 export * from "./json-schema";
+export * from "./grade";
+export * from "./version";
 export { humanizeKey, singular, type UiHint } from "./schema/field-meta";
 export * from "./to-text";
 export * from "./events";

@@ -38,6 +38,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -118,6 +119,7 @@ function sequenceScore(attempts: number, revealed: boolean, lastFraction: number
 
 function SequenceGame({ config, life, hideHeader, className }: GameProps) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { behavior } = config;
@@ -234,8 +236,8 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
   const reveal = useCallback(() => {
     setRevealed(true);
     life.emit("module:interact", { action: "reveal" });
-    announce(t("seq.correctOrder"));
-  }, [setRevealed, life, announce, t]);
+    if (showAnswers) announce(t("seq.correctOrder"));
+  }, [setRevealed, life, announce, t, showAnswers]);
 
   const finish = useCallback(() => {
     if (!evaluation) return;
@@ -299,7 +301,7 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
   }
 
   const activeItem = activeId ? byId.get(activeId) : undefined;
-  const showSolution = revealed;
+  const showSolution = revealed && showAnswers;
 
   return (
     <ModuleShell
@@ -446,7 +448,9 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
         )}
       </AnimatePresence>
 
-      {locked && behavior.showExplanation && <Explanation text={config.content.explanation} />}
+      {locked && behavior.showExplanation && (showAnswers || evaluation?.correct) && (
+        <Explanation text={config.content.explanation} />
+      )}
 
       <div className="nb-seq__footer">
         <span className="nb-muted nb-text-sm">
@@ -454,8 +458,12 @@ function SequenceGame({ config, life, hideHeader, className }: GameProps) {
         </span>
         <div className="nb-module__actions">
           {canReveal && (
-            <Button variant="ghost" onClick={reveal} leading={<Eye aria-hidden />}>
-              {t("seq.showSolution")}
+            <Button
+              variant="ghost"
+              onClick={reveal}
+              leading={showAnswers ? <Eye aria-hidden /> : undefined}
+            >
+              {showAnswers ? t("seq.showSolution") : t("common.giveUp")}
             </Button>
           )}
           {canRetry && (

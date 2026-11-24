@@ -1,5 +1,16 @@
 # @nibblearn/react
 
+## 0.5.0
+
+### Minor Changes
+
+- Server-side grading: `gradeModule(config, response)` in `@nibblearn/core` scores a learner's answers without a browser for 15 activity types, every scored activity reports `ModuleResult.response`, and `@nibblearn/core/global` is the core as one dependency-free script for engines embedded in other servers. Editor: pick linked items by title, set coordinates on the image, `hideDescriptions`, list limits (`getModuleLimits`). Callout no longer renders the block title and instructions above the box and its accent recolours every variant; carousel slides can be dragged with the mouse; accordion panels have top spacing. New `scoring.revealAnswers` (`always`, `after-pass`, `never`) holds correct answers back until the learner passes. `version` is exported from core and the global script.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @nibblearn/core@0.5.0
+
 ## 0.4.2
 
 ### Patch Changes

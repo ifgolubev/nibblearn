@@ -61,6 +61,23 @@ describe("Carousel", () => {
     expect(screen.getByRole("heading", { name: titles[3] })).toBeInTheDocument();
   });
 
+  it("drags with the mouse from the image or background, not from text", () => {
+    render(<Carousel config={config} />);
+    const slide = screen.getByRole("group", { name: "1 of 4" });
+    // Text stays selectable: a press on the heading does not start a drag.
+    const heading = screen.getByRole("heading", { name: titles[0] });
+    fireEvent.pointerDown(heading, { pointerType: "mouse", button: 0, clientX: 200 });
+    fireEvent.pointerUp(slide, { pointerType: "mouse", clientX: 100 });
+    expect(screen.getByRole("heading", { name: titles[0] })).toBeInTheDocument();
+    // The right button never drags.
+    fireEvent.pointerDown(slide, { pointerType: "mouse", button: 2, clientX: 200 });
+    fireEvent.pointerUp(slide, { pointerType: "mouse", clientX: 100 });
+    expect(screen.getByRole("heading", { name: titles[0] })).toBeInTheDocument();
+    fireEvent.pointerDown(slide, { pointerType: "mouse", button: 0, clientX: 200 });
+    fireEvent.pointerUp(slide, { pointerType: "mouse", clientX: 100 });
+    expect(screen.getByRole("heading", { name: titles[1] })).toBeInTheDocument();
+  });
+
   it("restores the slide and follows focus in preview", async () => {
     const user = userEvent.setup();
     const onStateChange = vi.fn();

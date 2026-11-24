@@ -29,6 +29,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -122,8 +123,11 @@ interface GameProps {
   className?: string;
 }
 
+const NO_CATEGORIES = new Map<string, Category>();
+
 function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { behavior } = config;
@@ -264,7 +268,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
       (!behavior.allowRetry || (behavior.maxAttempts > 0 && n >= behavior.maxAttempts));
     if (willReveal) {
       setRevealed(true);
-      setAssignments(Object.fromEntries(items.map((i) => [i.id, i.categoryId])));
+      if (showAnswers) setAssignments(Object.fromEntries(items.map((i) => [i.id, i.categoryId])));
     }
     life.emit("module:answer", {
       assignments,
@@ -297,6 +301,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
     setRevealed,
     setAssignments,
     setSelected,
+    showAnswers,
   ]);
 
   const retry = useCallback(() => {
@@ -312,10 +317,12 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
 
   const reveal = useCallback(() => {
     setRevealed(true);
-    setAssignments(Object.fromEntries(items.map((i) => [i.id, i.categoryId])));
+    if (showAnswers) {
+      setAssignments(Object.fromEntries(items.map((i) => [i.id, i.categoryId])));
+      announce(t("common.showAnswer"));
+    }
     life.emit("module:interact", { action: "reveal" });
-    announce(t("common.showAnswer"));
-  }, [setRevealed, setAssignments, items, life, announce, t]);
+  }, [setRevealed, setAssignments, items, life, announce, t, showAnswers]);
 
   const finish = useCallback(() => {
     if (!evaluation) return;
@@ -331,7 +338,7 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
   }, [evaluation, attempts, firstFraction, setFinished, life, total, revealed, announce, t]);
 
   const chipState = (itemId: string): ChipState => {
-    if (revealed && evaluation && !evaluation.items[itemId]) return "revealed";
+    if (revealed && showAnswers && evaluation && !evaluation.items[itemId]) return "revealed";
     if (evaluation) return evaluation.items[itemId] ? "correct" : "incorrect";
     if (lockedIds.includes(itemId)) return "locked";
     if (selected === itemId) return "selected";
@@ -448,7 +455,8 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
                 isMovable={isMovable}
                 selectedItem={selectedItem}
                 showExplanation={checked && behavior.showExplanation}
-                categoryById={categoryById}
+                // Without the categories, a wrong item does not say where it belongs.
+                categoryById={showAnswers ? categoryById : NO_CATEGORIES}
                 onSelect={toggleSelect}
                 onPlace={(id) => place(id, c.id)}
                 onRemove={(id) => place(id, undefined)}
@@ -498,8 +506,12 @@ function CategorySortGame({ config, life, hideHeader, className }: GameProps) {
         </span>
         <div className="nb-module__actions">
           {canReveal && (
-            <Button variant="ghost" onClick={reveal} leading={<Eye aria-hidden />}>
-              {t("common.showAnswer")}
+            <Button
+              variant="ghost"
+              onClick={reveal}
+              leading={showAnswers ? <Eye aria-hidden /> : undefined}
+            >
+              {showAnswers ? t("common.showAnswer") : t("common.giveUp")}
             </Button>
           )}
           {canRetry && (

@@ -11,6 +11,7 @@ import {
   getAnyModuleJsonSchema,
   getLessonJsonSchema,
   getModuleJsonSchema,
+  getModuleLimits,
   isSafeCssColor,
   isSafeImageSrc,
   isSafeLinkHref,
@@ -269,8 +270,59 @@ describe("fields a module does not use", () => {
     },
   );
 
+  it("callout: the block title and instructions are hidden, its heading is labelled", () => {
+    expect(widget("callout", "title")).toBe("hidden");
+    expect(widget("callout", "instructions")).toBe("hidden");
+    expect(widget("accordion", "title")).not.toBe("hidden");
+    const content = (
+      getModuleJsonSchema("callout")!.properties as {
+        content: { properties: Record<string, { title?: string }> };
+      }
+    ).content.properties;
+    expect(content.title!.title).toBe("Heading");
+  });
+
   it("activities keep them visible", () => {
     expect(widget("choice-challenge", "feedback")).not.toBe("hidden");
     expect(widget("flashcards", "scoring")).not.toBe("hidden");
+  });
+});
+
+describe("hints for forms", () => {
+  type Node = {
+    properties?: Record<string, Node>;
+    items?: Node;
+    description?: string;
+    "x-ui"?: { ref?: string[] };
+  };
+  const props = (type: string) => getModuleJsonSchema(type) as Node;
+
+  it("ids that point at another item name the lists it may be in", () => {
+    const sort = props("category-sort").properties!.content!.properties!;
+    expect(sort.items!.items!.properties!.categoryId!["x-ui"]?.ref).toEqual(["categories"]);
+    const stage = props("process-explorer").properties!.content!.properties!.stages!.items!;
+    expect(stage.properties!.dependsOn!.items!["x-ui"]?.ref).toEqual(["stages"]);
+    expect(
+      props("branching-scenario").properties!.content!.properties!.start!["x-ui"]?.ref,
+    ).toEqual(["nodes"]);
+  });
+
+  it("descriptions are written for authors, not for developers", () => {
+    const walk = (node: Node, out: string[]) => {
+      if (node.description) out.push(node.description);
+      for (const child of Object.values(node.properties ?? {})) walk(child, out);
+      if (node.items) walk(node.items, out);
+      return out;
+    };
+    for (const type of builtInModuleTypes)
+      for (const text of walk(props(type), [])) expect(text).not.toMatch(/[a-z]Schema\b/);
+  });
+
+  it("getModuleLimits lists list sizes by path", () => {
+    const limits = getModuleLimits("choice-challenge")!;
+    expect(limits["content.questions"]).toEqual({ min: 1, max: 50 });
+    expect(limits["content.questions.*.options"]?.max).toBeGreaterThan(1);
+    expect(getModuleLimits("flashcards")!["content.cards"]?.max).toBe(200);
+    expect(getModuleLimits("nope")).toBeUndefined();
   });
 });

@@ -14,7 +14,7 @@ import {
 } from "./form/context";
 import { Field } from "./form/fields";
 import { setAt, type Path } from "./form/path";
-import { toFormNode } from "./form/schema";
+import { toFormNode, withoutDescriptions } from "./form/schema";
 
 export interface ModuleFormProps {
   /** Module config in its input (authoring) form. */
@@ -41,6 +41,11 @@ export interface ModuleFormProps {
    * generated ids. Use it when your application assigns ids itself.
    */
   hideIds?: boolean;
+  /**
+   * Leave out the help text under fields (the descriptions from the schema). Labels, the
+   * "optional" marks and validation messages stay.
+   */
+  hideDescriptions?: boolean;
   className?: string;
 }
 
@@ -58,6 +63,7 @@ export function ModuleForm({
   schema: schemaOverride,
   hideFields,
   hideIds = false,
+  hideDescriptions = false,
   className,
 }: ModuleFormProps) {
   const t = useEditorT();
@@ -66,7 +72,11 @@ export function ModuleForm({
     () => schemaOverride ?? getModuleJsonSchema(type, { registry: registry.schemas }),
     [schemaOverride, type, registry],
   );
-  const root = useMemo(() => (schema ? toFormNode(schema) : null), [schema]);
+  const root = useMemo(() => {
+    if (!schema) return null;
+    const node = toFormNode(schema);
+    return hideDescriptions ? withoutDescriptions(node) : node;
+  }, [schema, hideDescriptions]);
   const formId = `nbe${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const { message, announce } = useAnnounce();
   const issueIndex = useMemo(() => issueMap(issues), [issues]);
@@ -110,8 +120,20 @@ export function ModuleForm({
       onPickImage,
       announce,
       isHidden,
+      showHelp: !hideDescriptions,
     }),
-    [formId, type, value, update, issueIndex, onFocusPath, onPickImage, announce, isHidden],
+    [
+      formId,
+      type,
+      value,
+      update,
+      issueIndex,
+      onFocusPath,
+      onPickImage,
+      announce,
+      isHidden,
+      hideDescriptions,
+    ],
   );
 
   if (!root) return null;

@@ -256,7 +256,8 @@ export const builtInModuleDefinitions = [
     category: "present",
     icon: "message-square-warning",
     schema: calloutSchema,
-    unusedFields: UNSCORED_BLOCK_FIELDS,
+    // A callout is a note inside the text: its own heading is `content.title`.
+    unusedFields: [...UNSCORED_BLOCK_FIELDS, "title", "instructions"],
   },
   {
     type: "accordion",

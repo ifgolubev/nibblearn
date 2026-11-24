@@ -32,6 +32,7 @@ import { useNibblearn } from "../../context/NibblearnProvider";
 import { useModuleLifecycle, type ModuleLifecycle } from "../../hooks/useModuleLifecycle";
 import { runKey } from "../runKey";
 import { usePersistedState } from "../../hooks/usePersistedState";
+import { useRevealAnswers } from "../../hooks/useRevealAnswers";
 import * as G from "../../hooks/stateGuards";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useAnnounce } from "../../hooks/useAnnounce";
@@ -455,11 +456,14 @@ function BudgetAllocatorRun({
   className,
 }: BudgetAllocatorProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
+  const showAnswers = useRevealAnswers(life, config.scoring);
   const reduced = useReducedMotion();
   const { message, announce } = useAnnounce();
   const { content, behavior } = config;
   const { channels, goal, totalBudget, kpiLabel } = content;
-  const { step, allowLock, showOptimal, scoreAgainstOptimal } = behavior;
+  const { step, allowLock, scoreAgainstOptimal } = behavior;
+  // The optimal split is this module's correct answer.
+  const showOptimal = behavior.showOptimal && showAnswers;
   const fmt = useFormatters(content.currency);
 
   const start = useMemo(() => initialShares(config), [config]);

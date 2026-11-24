@@ -57,28 +57,17 @@ function CalloutInner(props: CalloutProps) {
   return <CalloutRun key={runKey(life, config)} {...props} life={life} />;
 }
 
-function CalloutRun({
-  config,
-  life,
-  hideHeader,
-  className,
-}: CalloutProps & { life: ModuleLifecycle }) {
+function CalloutRun({ config, life, className }: CalloutProps & { life: ModuleLifecycle }) {
   const { t } = useNibblearn();
   const { variant, title, text } = config.content;
   const Icon = ICONS[variant];
   useBlockCompletion(life, "view", 1, 1);
   return (
-    <ModuleShell
-      type="callout"
-      id={config.id}
-      title={hideHeader ? undefined : config.title}
-      instructions={hideHeader ? undefined : config.instructions}
-      appearance={config.appearance}
-      className={className}
-    >
+    <ModuleShell type="callout" id={config.id} appearance={config.appearance} className={className}>
       <div
         className="nb-callout"
         data-variant={variant}
+        data-accented={config.appearance.accent ? "" : undefined}
         role="note"
         aria-label={title ?? t(`callout.${variant}`)}
       >

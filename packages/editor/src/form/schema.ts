@@ -212,3 +212,23 @@ export function toFormNode(schema: JsonSchema, depth = 0): FormNodeWithMeta {
       return meta(s, { kind: "unknown" });
   }
 }
+
+/** The same tree without field descriptions (for forms that show no help text). */
+export function withoutDescriptions(node: FormNodeWithMeta): FormNodeWithMeta {
+  const next = { ...node, description: undefined } as FormNodeWithMeta;
+  switch (next.kind) {
+    case "object":
+      next.fields = next.fields.map((f) => ({ ...f, node: withoutDescriptions(f.node) }));
+      break;
+    case "array":
+      next.item = withoutDescriptions(next.item);
+      break;
+    case "record":
+      next.value = withoutDescriptions(next.value);
+      break;
+    case "union":
+      next.variants = next.variants.map((v) => ({ ...v, node: withoutDescriptions(v.node) }));
+      break;
+  }
+  return next;
+}

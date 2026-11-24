@@ -21,6 +21,8 @@ export interface FormContextValue {
   announce: (message: string) => void;
   /** True for fields the host asked not to show (`hideFields`, `hideIds`). */
   isHidden: (path: Path, widget: string | undefined) => boolean;
+  /** False when the host asked for a form without help text (`hideDescriptions`). */
+  showHelp: boolean;
 }
 
 export const FormContext = createContext<FormContextValue | null>(null);

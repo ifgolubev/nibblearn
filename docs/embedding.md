@@ -196,6 +196,62 @@ It holds the same rules as `styles.css`, each raised by one id of specificity (`
 - What still gets through: page rules with `!important` and rules that use an id selector (`#content p`). Scope those to your own content, or exclude blocks with `:not(.nb-root *)`.
 - The block's root element (`.nb-root`) stays yours to size and place. Inside it, elements with a class of your own (a custom module, a completion screen you render) keep your styles; your elements without a class get browser defaults, like the library's.
 
+### Any activity graded by your server
+
+`onComplete` reports a `score`, but that number was computed in the learner's browser. When a result has to be trusted (a certificate, a dashboard, a gate before the next step), send the learner's answers to your server and compute the score there.
+
+Every scored activity reports what the learner submitted as `result.response`: the answers in order, without verdicts. `gradeModule()` from `@nibblearn/core` scores such a response against the config with the same rules the component uses, and needs no browser:
+
+```tsx
+// Browser: send the answers, not the score.
+<SequenceBuilder
+  config={config}
+  onComplete={(result) => api.submitAttempt(config.id, result.response)}
+/>
+```
+
+```ts
+// Server: the config comes from your own storage, never from the request.
+import { gradeModule } from "@nibblearn/core";
+
+const graded = gradeModule(storedConfig, request.body.response);
+if (!graded.success) return reply.code(400).send(graded.issues); // graded.reason says why
+const { score, correct, total, passed, complete, items } = graded.grade;
+```
+
+- `score` is 0–1 and counts retries the way the component does, so for an untampered response it equals `result.score`. `passed` compares it with `scoring.passThreshold`; `complete` is false when part of the activity was left unanswered (those parts score 0). `items` holds the verdict, the learner's answer and the expected answer per question, blank or message; decide yourself how much of it to send back.
+- While `complete` is false the `score` is 0, whatever the answers so far would be worth: an activity that was not finished has no result yet.
+- `passed` compares the score with the module's pass threshold: `scoring.passThreshold`, or 0.7 when it is `0` or not set (the same rule as `modulePassThreshold()` and the lesson player). Set the threshold you gate on in the config.
+- Nothing is thrown for bad input. `reason` is `"invalid-config"`, `"invalid-response"` (an answer does not fit the config: an unknown option, a step the scenario cannot reach, budget shares outside the limits) or `"not-gradable"`.
+- Gradable types are listed in `gradableModuleTypes` (`isGradable(type)` checks one): choice challenge, true / false, match pairs, sequence builder, category sort, fill in the blanks, spot the mistake, estimation, word builder, label the diagram, inbox triage, priority matrix, branching scenario, conversation and budget allocator. For your own module type pass `graders: { "my-type": (config, answers) => … }`.
+- A response is the list of `module:answer` payloads (`itemId`, `itemIndex`, `response`) in the order they happened. It is saved with the session, so it survives `initialState`. A session saved by a version before 0.5 has no such list; if it is restored halfway, the result carries no `response`.
+- The correct answers are still in the config the browser receives, except for a `choice-challenge` with `evaluation: "external"` (above). Server grading makes the stored score independent of what the page claims; it does not hide the answers from someone who reads the page source.
+
+**Servers that are not written in JavaScript.** `@nibblearn/core/global` is the whole core as one script with no dependencies (`dist/nibblearn-core.global.js`, zod included). It defines `NibblearnCore` and uses no DOM, no Node API, no `Intl` and no `eval`, so it runs in an embedded engine such as GraalJS on the JVM. Pass JSON strings in and out:
+
+```js
+// Evaluated once per engine context, after loading nibblearn-core.global.js.
+function grade(configJson, responseJson) {
+  return JSON.stringify(
+    NibblearnCore.gradeModule(JSON.parse(configJson), JSON.parse(responseJson)),
+  );
+}
+```
+
+`NibblearnCore.validateModule`, `validateLesson`, `getModuleLimits` and the rest of the core API are available the same way. `NibblearnCore.version` (also `version` from `@nibblearn/core` and `@nibblearn/react`) is the package version; all `@nibblearn/*` packages are released with the same number, so a server can check that its script matches what the browser runs.
+
+**Keeping the right answers back until the learner passes.** `scoring.revealAnswers` decides when an activity may show correct answers:
+
+| Value        | Correct answers are shown                                                         |
+| ------------ | --------------------------------------------------------------------------------- |
+| `always`     | As soon as an answer is checked (the default).                                    |
+| `after-pass` | Only once the activity is completed with a score that reaches the pass threshold. |
+| `never`      | Not at all.                                                                       |
+
+The learner always sees which of their own answers are wrong, and the explanation of an answer they got right. What is held back: missed options, the correct order or placement, the true value of an estimate, the expert's call in an inbox, the optimal budget split, mistakes that were not found, and explanations that give those away. Buttons that used to reveal the answer become "Finish without solving". Scores do not change. It applies to choice challenge, sequence builder, category sort, priority matrix, label the diagram, fill in the blanks, word builder, estimation, spot the mistake, inbox triage and budget allocator. A true / false statement has only two answers, so marking one wrong gives the other away.
+
+This is a display rule: the answers are still part of the config in the page.
+
 ## 2. Build a standalone lesson page
 
 The showcase ships an `/embed/:id` route that is exactly this: a page with no site chrome that renders one lesson and relays events to the parent window. Copy the pattern into your own app.

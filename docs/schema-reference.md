@@ -6,21 +6,22 @@ Field paths are relative to the module object. "text" means a string up to 4,000
 
 ## Common fields (every module)
 
-| Path                    | Type           | Default  | Description                                                                                         |
-| ----------------------- | -------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `id`                    | id             | required | Unique within the lesson. Used for progress and events.                                             |
-| `type`                  | string literal | required | The module type, e.g. `"flashcards"`.                                                               |
-| `title`                 | string (≤ 200) | —        | Module heading.                                                                                     |
-| `instructions`          | text           | —        | Short line under the title.                                                                         |
-| `feedback.correct`      | text           | —        | Shown on a correct answer (where the module has one).                                               |
-| `feedback.incorrect`    | text           | —        | Shown on an incorrect answer.                                                                       |
-| `feedback.complete`     | text           | —        | Shown on the completion card.                                                                       |
-| `scoring.weight`        | number ≥ 0     | `1`      | Relative weight in the lesson score.                                                                |
-| `scoring.passThreshold` | number 0–1     | `0`      | Score that counts as a pass for this module (summary icons, streaks). `0` means the default of 0.7. |
-| `appearance.accent`     | CSS color      | —        | Accent override for this module.                                                                    |
-| `appearance.compact`    | boolean        | `false`  | Denser layout.                                                                                      |
-| `appearance.hideHeader` | boolean        | `false`  | Hide title and instructions.                                                                        |
-| `meta`                  | object         | —        | Free-form, ignored by Nibblearn.                                                                    |
+| Path                    | Type                                | Default  | Description                                                                                                                                                                                                           |
+| ----------------------- | ----------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | id                                  | required | Unique within the lesson. Used for progress and events.                                                                                                                                                               |
+| `type`                  | string literal                      | required | The module type, e.g. `"flashcards"`.                                                                                                                                                                                 |
+| `title`                 | string (≤ 200)                      | —        | Module heading.                                                                                                                                                                                                       |
+| `instructions`          | text                                | —        | Short line under the title.                                                                                                                                                                                           |
+| `feedback.correct`      | text                                | —        | Shown on a correct answer (where the module has one).                                                                                                                                                                 |
+| `feedback.incorrect`    | text                                | —        | Shown on an incorrect answer.                                                                                                                                                                                         |
+| `feedback.complete`     | text                                | —        | Shown on the completion card.                                                                                                                                                                                         |
+| `scoring.weight`        | number ≥ 0                          | `1`      | Relative weight in the lesson score.                                                                                                                                                                                  |
+| `scoring.passThreshold` | number 0–1                          | `0`      | Score that counts as a pass for this module (summary icons, streaks). `0` means the default of 0.7.                                                                                                                   |
+| `scoring.revealAnswers` | `always` \| `after-pass` \| `never` | `always` | When correct answers may be shown: as soon as an answer is checked, only after the module is completed with a score that reaches `passThreshold`, or never. Which of the learner's answers are wrong is always shown. |
+| `appearance.accent`     | CSS color                           | —        | Accent override for this module.                                                                                                                                                                                      |
+| `appearance.compact`    | boolean                             | `false`  | Denser layout.                                                                                                                                                                                                        |
+| `appearance.hideHeader` | boolean                             | `false`  | Hide title and instructions.                                                                                                                                                                                          |
+| `meta`                  | object                              | —        | Free-form, ignored by Nibblearn.                                                                                                                                                                                      |
 
 > **Colour and URL fields are validated.** Colour fields accept plain CSS colours only (names, tokens, `#hex`, `rgb()`, `hsl()`, `oklch()` …); `url()` and `var()` are rejected. `fontFamily` accepts a plain font list. Image `src` accepts `http(s)`, relative, `blob:` and `data:image/*` URLs, and `asset:<key>` references resolved by the host (see [Embedding](./embedding.md#images-from-private-storage)). See [SECURITY.md](https://github.com/ifgolubev/nibblearn/blob/main/SECURITY.md).
 
@@ -1229,6 +1230,8 @@ Five blocks for structuring lesson content. They have no score; they count as co
 | `content.variant` | `info` \| `tip` \| `warning` \| `success` \| `note` | `info`   | Tone and icon.                |
 | `content.title`   | string ≤ 200                                        | —        | Short heading inside the box. |
 | `content.text`    | long text                                           | required | The callout text.             |
+
+A callout is a note inside the text: the block-level `title` and `instructions` are not rendered (use `content.title` for a heading). `appearance.accent` recolours the box of any variant; the icon still shows the variant.
 
 ### accordion
 

@@ -631,3 +631,42 @@ details:not([open]) > summary > .nbe-chevron,
 ) {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* ---------- Position on an image ---------- */
+.nbe-area__frame {
+  position: relative;
+  max-width: 28rem;
+  border: 1px solid var(--nb-border);
+  border-radius: var(--nb-radius-sm);
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+.nbe-area__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+.nbe-area__marker,
+.nbe-area__region {
+  position: absolute;
+  padding: 0;
+  border: 2px solid var(--nb-surface);
+  background: var(--nb-accent);
+  box-shadow: 0 0 0 2px var(--nb-accent);
+  cursor: inherit;
+}
+.nbe-area__marker {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--nb-radius-full);
+  transform: translate(-50%, -50%);
+}
+.nbe-area__region {
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: var(--nb-radius-sm);
+  background: color-mix(in srgb, var(--nb-accent) 25%, transparent);
+}
